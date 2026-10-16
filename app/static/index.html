@@ -9,13 +9,13 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cstyle%3Eg%7Bfill:%230d0d0d%7D%40media%28prefers-color-scheme:dark%29%7Bg%7Bfill:%23fff%7D%7D%3C/style%3E%3Cg%3E%3Cpath transform='rotate%280 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%2860 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28120 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28180 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28240 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28300 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Ccircle cx='12' cy='12' r='2.1'/%3E%3C/g%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css?v=__V__">
   <script>
     // explicit choice wins; otherwise follow the OS (like ChatGPT "System")
     (function () {
       var t = null;
-      try { t = localStorage.getItem('polyguard_theme'); } catch (e) {}
+      try { t = localStorage.getItem('unicollect_theme'); } catch (e) {}
       var dark = t ? t === 'dark' : !(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
       if (dark) document.documentElement.classList.add('dark');
     })();
@@ -28,7 +28,7 @@
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-inner">
       <div class="sb-top">
-        <button class="icon-btn logo-btn" onclick="createNewThread()" title="PolyGuard"><i data-mark=""></i></button>
+        <button class="icon-btn logo-btn" onclick="createNewThread()" title="Unicollect"><i data-mark=""></i></button>
         <button class="icon-btn" onclick="toggleSidebar()" title="بستن نوار کناری"><i data-i="sidebar"></i></button>
       </div>
 
@@ -49,6 +49,7 @@
             <span class="profile-status"><span id="status-dot" class="sdot warn"></span><span id="status-text">در حال اتصال…</span></span>
           </span>
         </button>
+        <div class="creator-watermark" aria-label="ساخته شده توسط موویکسو">ساخته شده توسط موویکسو</div>
       </div>
     </div>
   </aside>
@@ -70,14 +71,14 @@
           <div id="model-dropdown" class="dropdown" onclick="event.stopPropagation()">
             <button class="dd-item" onclick="setViewMode('detailed')">
               <div class="dd-text">
-                <div class="dd-title">PolyGuard 5-Ensemble</div>
+                <div class="dd-title">Unicollect 5-Ensemble</div>
                 <div class="dd-desc">رأی‌گیری اجماعی همراه با جزئیات هر مدل</div>
               </div>
               <i id="check-detailed" data-i="check" class="dd-check"></i>
             </button>
             <button class="dd-item" onclick="setViewMode('compact')">
               <div class="dd-text">
-                <div class="dd-title">PolyGuard Compact</div>
+                <div class="dd-title">Unicollect Compact</div>
                 <div class="dd-desc">فقط نتیجه نهایی، خلاصه و سریع</div>
               </div>
               <i id="check-compact" data-i="check" class="dd-check off"></i>
@@ -138,7 +139,6 @@
       </div>
     </div>
   </main>
-  <div class="creator-watermark" aria-label="ساخته شده توسط موویکسو">ساخته شده توسط موویکسو</div>
 </div>
 
 <!-- ============ SETTINGS MODAL ============ -->

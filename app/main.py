@@ -351,7 +351,7 @@ async def _lifespan(_app):
     yield
 
 
-app = FastAPI(title="PolyGuard Ensemble", lifespan=_lifespan)
+app = FastAPI(title="Unicollect Ensemble", lifespan=_lifespan)
 
 # The GitHub Pages status page (another origin) pings GET /health to show
 # whether the tunnel is live. Only GET is allowed cross-origin; /api/check

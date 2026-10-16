@@ -1,5 +1,5 @@
 /* ==================================================================
-   PolyGuard UI: monochrome (ChatGPT-style) theme.
+   Unicollect UI: monochrome (ChatGPT-style) theme.
    Motion rule: ONLY opacity (fade in/out) and scale (scale in/out).
    No translate / slide / rotate / position animations anywhere.
    ================================================================== */
@@ -71,7 +71,8 @@ html.dark {
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
-  font-family: 'Vazirmatn', 'IRANSansX', 'Tahoma', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
+  font-variant-numeric: proportional-nums;
   background: var(--main);
   color: var(--text);
   font-size: 15px;
@@ -85,7 +86,7 @@ button:focus-visible, .thread:focus-visible { outline: 2px solid var(--text2); o
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 textarea, input { font: inherit; color: inherit; }
 .hidden { display: none !important; }
-.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, 'Vazirmatn'; direction: ltr; unicode-bidi: isolate; }
+.mono { font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; direction: ltr; unicode-bidi: isolate; font-variant-numeric: proportional-nums; }
 /* اعداد ترکیبی (۰ / ۴) با فونت فارسی ولی جهت LTR */
 .num-ltr { font-family: 'Vazirmatn', system-ui, sans-serif; direction: ltr; unicode-bidi: isolate; }
 
@@ -169,7 +170,7 @@ html.ready .sidebar-inner { transition: opacity .17s ease, transform .22s var(--
 
 .sb-kbd { margin-inline-start: auto; opacity: 0; transition: opacity .15s; }
 .sb-item:hover .sb-kbd { opacity: 1; }
-.kbd { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 10.5px; line-height: 1; padding: 3px 6px; border-radius: 6px; border: 1px solid var(--border-strong); color: var(--text3); background: var(--main); direction: ltr; unicode-bidi: isolate; }
+.kbd { font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; font-size: 10.5px; line-height: 1; padding: 3px 6px; border-radius: 6px; border: 1px solid var(--border-strong); color: var(--text3); background: var(--main); direction: ltr; unicode-bidi: isolate; }
 
 .sb-label { padding: 12px 10px 6px; font-size: 12px; font-weight: 600; color: var(--text3); }
 .sb-threads { flex: 1; overflow-y: auto; padding-bottom: 8px; }
@@ -320,7 +321,7 @@ html.ink .ta-mirror { color: var(--text); }
 @keyframes stop-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(.82); } }
 .send-btn.busy { opacity: 1; transform: none; cursor: pointer; }
 
-.counter { font-size: 11px; color: var(--text3); font-family: ui-monospace, Menlo, Consolas, monospace; transition: opacity .2s ease, transform .22s var(--ease-out); }
+.counter { font-size: 11px; color: var(--text3); font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; transition: opacity .2s ease, transform .22s var(--ease-out); }
 .counter.off { opacity: 0; transform: scale(.8); }
 
 .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
@@ -481,8 +482,10 @@ details.breakdown[open] > summary .chev-ico { transform: scaleY(-1); }
 .kv { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; color: var(--text2); }
 .kv b { color: var(--text); font-weight: 600; }
 .kv.col-kv { flex-direction: column; align-items: stretch; border-bottom: 0; }
-.models-list { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--text); font-family: ui-monospace, Menlo, Consolas, monospace; direction: ltr; }
-.models-list .ml { display: flex; justify-content: space-between; }
+.models-list { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--text); font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; direction: rtl; }
+.models-list .ml { display: flex; align-items: center; justify-content: space-between; gap: 12px; direction: rtl; }
+.models-list .model-id { font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; font-weight: 500; letter-spacing: 0; text-align: left; }
+.models-list .ok, .models-list .err { white-space: nowrap; font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; }
 .models-list .ok { color: var(--text); } .models-list .err { color: var(--danger); }
 .modal-foot { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); }
 .btn-primary { background: var(--accent); color: #fff; padding: 8px 20px; border-radius: 9999px; font-size: 14px; font-weight: 500; transition: opacity .15s, transform .14s var(--ease-out); }
@@ -603,13 +606,74 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
 
 
 
-/* creator watermark */
+/* creator watermark: stays in the sidebar footer, never over content */
 .creator-watermark {
-  position: fixed; inset-inline-start: 18px; bottom: 12px; z-index: 8;
-  color: var(--text3); font-size: 11px; font-weight: 500;
-  letter-spacing: .01em; opacity: .72; pointer-events: none;
+  position: static; display: block; width: 100%;
+  margin-top: 4px; padding: 8px 8px 2px;
+  border-top: 1px solid var(--border);
+  color: var(--text3); font-size: 10.5px; font-weight: 500;
+  line-height: 1.6; letter-spacing: .01em;
+  text-align: center; pointer-events: none;
   direction: rtl; unicode-bidi: plaintext;
 }
+
+/* Persian typography normalization: keep labels, digits, and model statuses on one coherent face. */
+body, button, input, textarea, .kv, .models-list, .result, .stat, .tag, .thought-line, .thinking-block { font-synthesis: none; text-rendering: optimizeLegibility; }
+
+
+/* responsive hardening: no clipping, no fixed overlays, safe-area aware */
+html, body { min-width: 0; }
+.main, .body, .scroll, .col, .composer-area { min-width: 0; }
+.scroll { padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+.composer-area { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
 @media (max-width: 767px) {
-  .creator-watermark { inset-inline-start: 12px; bottom: 8px; font-size: 10px; }
+  .topbar { height: 52px; min-height: 52px; gap: 2px; }
+  .tb-start, .tb-end { min-width: 0; gap: 1px; }
+  .model-btn { max-width: min(58vw, 250px); overflow: hidden; }
+  .model-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .body { overflow: hidden; }
+  .col { padding-inline: 12px; }
+  #chat-stream { gap: 20px; padding-top: 8px; }
+  .bubble { max-width: 100%; padding: 9px 13px; }
+  .ubox { max-width: 92%; }
+  .bot-body { min-width: 0; }
+  .result { width: 100%; overflow: hidden; }
+  .res-head { min-width: 0; }
+  .res-txt { min-width: 0; overflow-wrap: anywhere; }
+  .res-sub { overflow-wrap: anywhere; }
+  .res-score { flex: 0 0 auto; }
+  .meter-legend { flex-wrap: wrap; gap: 5px 12px; }
+  .note-flow { align-items: stretch; }
+  .note-flow .np { max-width: 100%; }
+  .mrow-top { align-items: flex-start; }
+  .mrow-name { min-width: 0; flex: 1; }
+  .mrow-val { gap: 5px; }
+  .modal { padding: 10px; }
+  .modal-card { max-height: calc(100dvh - 20px); overflow: auto; padding-inline: 14px; }
+  .modal-foot { position: sticky; bottom: 0; background: var(--popup); padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  .creator-watermark { padding-bottom: 4px; font-size: 10px; }
+}
+@media (max-width: 430px) {
+  .topbar { padding-inline: 5px; }
+  .model-btn { max-width: 47vw; padding-inline: 5px; font-size: 14px; }
+  .model-sub, .chev { display: none; }
+  .tb-end .icon-btn { width: 32px; height: 32px; }
+  .hero { font-size: 20px; }
+  .composer { min-height: 86px; border-radius: 20px; }
+  .pill-btn { padding-inline: 8px; }
+  .pill-btn span { display: none; }
+  .cr-start { gap: 2px; }
+  .stats { gap: 6px; }
+  .stat { padding: 7px 8px; }
+  .stat .k { font-size: 10.5px; }
+  .stat .v { font-size: 13px; }
+  .res-score { font-size: 21px; }
+  .result { padding: 12px 11px 7px; border-radius: 18px; }
+}
+@media (max-width: 340px) {
+  .col { padding-inline: 8px; }
+  .ubox { max-width: 96%; }
+  .res-ico { width: 40px; height: 40px; }
+  .res-title { font-size: 14px; }
+  .res-sub { font-size: 12px; }
 }
