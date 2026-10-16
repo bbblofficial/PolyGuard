@@ -46,19 +46,31 @@ BASE_DIR = Path(__file__).resolve().parent
 MODELS_ROOT = Path(os.environ["MODELS_ROOT"])
 
 
+# Hard cap on request size. The tokenizer truncates to 512 tokens anyway, so
+# anything beyond a few thousand characters adds no signal - it only lets a
+# client tie up a worker thread tokenizing a huge string. Keep this generous
+# enough for real use (long posts, multi-paragraph messages) while blocking
+# pathological payloads.
+MAX_TEXT_LENGTH = 20_000
+
+
 class TextIn(BaseModel):
-    text: str   # no length limit
+    text: str   # length is enforced in the handler (see MAX_TEXT_LENGTH)
 
 
 state = {"models": {}, "errors": {}, "ready": False, "inflight": 0, "peak": 0}
 
 MODEL_SPECS = {
-    "persian":      {"dir": MODELS_ROOT / "persian",           "mode": "multilabel", "weight": 2.0, "lang": "fa",    "label": "Persian ParsBERT (تخصصی فارسی)",      "label_en": "Persian ParsBERT"},
+    "persian":      {"dir": MODELS_ROOT / "persian",           "mode": "binary",     "weight": 2.0, "lang": "fa",    "label": "Persian Offensive BERT (تخصصی فارسی)", "label_en": "Persian Offensive BERT"},
     "textdetox_lg": {"dir": MODELS_ROOT / "textdetox_large",   "mode": "binary",     "weight": 2.0, "lang": "multi", "label": "TextDetox XLM-R Large (۱۵ زبان)",     "label_en": "TextDetox XLM-R Large"},
-    "textdetox_sm": {"dir": MODELS_ROOT / "textdetox_base",    "mode": "binary",     "weight": 1.5, "lang": "multi", "label": "TextDetox XLM-R Base (۱۵ زبان)",      "label_en": "TextDetox XLM-R Base"},
+    "textdetox_sm": {"dir": MODELS_ROOT / "textdetox_base",    "mode": "binary",     "weight": 1.5, "lang": "multi", "label": "TextDetox Glot500 (چندزبانه)",        "label_en": "TextDetox Glot500"},
     "multilingual": {"dir": MODELS_ROOT / "multilingual",      "mode": "multilabel", "weight": 1.0, "lang": "multi", "label": "Unitary XLM-R (چندزبانه ۱۰۰+)",       "label_en": "Unitary XLM-R"},
     "twitter_off":  {"dir": MODELS_ROOT / "twitter_offensive", "mode": "binary",     "weight": 1.0, "lang": "en",    "label": "Twitter RoBERTa Offensive (انگلیسی)", "label_en": "Twitter RoBERTa Offensive"},
 }
+# "persian" is a 2-label (offensive / not-offensive) BERT classifier, so it is
+# scored the same way as the other binary models (softmax, P(label=1)) rather
+# than with sigmoid-max, which is only correct for genuinely multi-label
+# checkpoints such as "multilingual" below.
 
 # ------------------------------------------------------------------
 # Model loading - at import time, so it works with gunicorn --preload
@@ -83,10 +95,11 @@ def _load_one(name, spec):
 
 def _bootstrap():
     print("[Ensemble] Bootstrap starting...", flush=True)
-    # Serial checkpoint loading makes cold starts painfully slow. Two
-    # concurrent loads reduce startup time without the memory spike of loading
-    # the whole ensemble at once. Override for larger runners.
-    workers = max(1, min(int(os.environ.get("MODEL_LOAD_WORKERS", "2")),
+    # These checkpoints use roughly 6-8 GB on disk combined and need
+    # substantially more RAM while deserializing. Serial loading avoids
+    # swapping/OOM on the standard GitHub runner. Set MODEL_LOAD_WORKERS=2
+    # only on a larger host.
+    workers = max(1, min(int(os.environ.get("MODEL_LOAD_WORKERS", "1")),
                          len(MODEL_SPECS)))
     print(f"[Ensemble] Loading {len(MODEL_SPECS)} models with "
           f"{workers} concurrent loaders...", flush=True)
@@ -273,6 +286,9 @@ def check(data: TextIn):
     try:
         if not state["ready"] or not state["models"]:
             return {"error": state["errors"] or "no models loaded yet"}
+
+        if len(data.text) > MAX_TEXT_LENGTH:
+            return {"error": f"text too long ({len(data.text)} chars, max {MAX_TEXT_LENGTH})"}
 
         with _infer_sem:
             with _counter_lock:

@@ -10,7 +10,13 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  PERSIAN_MODEL_ID:      HamidRezaei/Persian-Offensive-Language-Detection
+  TEXTDETOX_LARGE_ID:    textdetox/twitter-xlmr-toxicity-classifier
+  TEXTDETOX_BASE_ID:     textdetox/xlmr-base-toxicity-classifier
+  MULTILINGUAL_MODEL_ID: unitary/multilingual-toxic-xlm-roberta
+  TWITTER_OFFENSIVE_ID:  cardiffnlp/twitter-roberta-base-offensive
   MODELS_ROOT: ${{ github.workspace }}/models
+  MODEL_DOWNLOAD_WORKERS: "3"
   OMP_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
   OPENBLAS_NUM_THREADS: "1"
@@ -63,7 +69,7 @@ jobs:
           chmod +x cloudflared
           ./cloudflared --version
 
-      - name: Start server (preloaded, multi-worker)
+      - name: Start server (no preload, single worker)
         run: |
           nohup ./scripts/start_server.sh > server.log 2>&1 &
 
