@@ -883,9 +883,17 @@ function onSendClick() {
   analyze();
 }
 function stopAnalysis() {
-  if (!state.isAnalyzing || !state.ctrl) return;
+  if (!state.isAnalyzing) return;
+  // Set the flag FIRST so any check that runs next sees it.
   state.userAborted = true;
-  state.ctrl.abort();
+  // Bump the token so an in-flight typewriter animation bails too.
+  streamToken++;
+  // Abort the network request if it's still open. If the fetch already
+  // resolved (very common, since models answer in ~200ms), abort() is a
+  // harmless no-op and the flag above is what stops the reveal.
+  if (state.ctrl) {
+    try { state.ctrl.abort(); } catch (e) { /* ignore */ }
+  }
 }
 
 function setBusy(on) {
@@ -986,17 +994,36 @@ async function analyze(overrideText) {
     // If the API already answered, the phases still play out in full;
     // if it hasn't, we wait for it in parallel. THINKING_SAFETY_MS caps
     // the total wait so a stuck phase timer can never freeze the UI.
+    // The loop also bails immediately when the user hits Stop.
     const THINKING_SAFETY_MS = 12000;
-    const phasesDone = (async () => {
-      while (!thinking.phaseDoneAt &&
-             (performance.now() - sentAt) < THINKING_SAFETY_MS) {
-        await sleep(60);
+    while (!thinking.phaseDoneAt
+           && !state.userAborted
+           && (performance.now() - sentAt) < THINKING_SAFETY_MS) {
+      await sleep(60);
+    }
+
+    // The user may have pressed Stop while we were waiting out the phases
+    // (after the fetch already succeeded). The earlier check can't see
+    // that, so run the same abort path again here.
+    if (state.userAborted) {
+      stopThinking();
+      const pendingNow = $('pending-turn');
+      if (pendingNow && !REDUCED_MOTION) {
+        pendingNow.classList.add('pending-fade');
+        await sleep(200);
       }
-    })();
-    await Promise.race([
-      phasesDone,
-      sleep(Math.max(0, THINKING_SAFETY_MS - (performance.now() - sentAt)))
-    ]);
+      if (createdThread && !thread.messages.length) {
+        state.threads = state.threads.filter(t => t.id !== thread.id);
+        if (state.activeThreadId === thread.id) state.activeThreadId = null;
+        saveState();
+        renderSidebarThreads();
+      }
+      renderActiveThread();
+      if (fromInput && !input.value) { input.value = text; onComposerInput(true); }
+      showToast('تحلیل متوقف شد');
+      return;
+    }
+
     const thinkingMs = Math.max(performance.now() - sentAt, MIN_THINKING_MS);
 
     const msg = { id: newId('msg'), text, result, ts: Date.now(), thinkingMs: Math.round(thinkingMs) };
@@ -1014,6 +1041,7 @@ async function analyze(overrideText) {
     }
 
     if (state.activeThreadId !== thread.id) return; // user moved away
+    if (state.userAborted) return;
     await revealNewTurn(msg);
   } finally {
     clearTimeout(timer);
