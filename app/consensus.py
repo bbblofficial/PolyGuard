@@ -41,20 +41,70 @@ def detect_script(text: str) -> str:
     return "mixed"
 
 
-def decide(raw: Dict[str, float], strict: bool = False) -> Tuple[str, Dict[str, bool], int, float, float]:
+
+# A language-specialist model (persian for Farsi, twitter_off for English)
+# that is *confident* the text is clean can veto a vote that comes only from
+# correlated models — e.g. two TextDetox variants trained on the same data.
+# Their agreement is not independent evidence.
+SPECIALIST_SAFE_FLOOR = 0.15
+
+# Models that share a training family. If every voting model belongs to the
+# same family, the vote count is downgraded (needs one more independent vote).
+CORRELATED_FAMILIES = {
+    "textdetox_lg": "textdetox",
+    "textdetox_sm": "textdetox",
+}
+
+# Which model is the "language specialist" for each script.
+SPECIALIST_BY_SCRIPT = {
+    "fa": "persian",
+    "en": "twitter_off",
+}
+
+
+def _specialist_vetoes(raw, script):
+    """True if the language specialist strongly disagrees with the vote."""
+    name = SPECIALIST_BY_SCRIPT.get(script or "")
+    if not name or name not in raw:
+        return False
+    return raw[name] < SPECIALIST_SAFE_FLOOR
+
+
+def _votes_are_correlated(votes):
+    """True if all *voting* models belong to the same training family."""
+    voters = [name for name, v in votes.items() if v]
+    if len(voters) < 2:
+        return False
+    families = {CORRELATED_FAMILIES.get(n, n) for n in voters}
+    return len(families) == 1
+
+
+def decide(raw: Dict[str, float], strict: bool = False,
+           script: str = None) -> Tuple[str, Dict[str, bool], int, float, float]:
     """raw = {model_name: toxic_probability}.
 
     Returns (decision, votes, votes_count, max_raw, confidence).
+
+    `script` ("fa" / "en" / "mixed" / None) tells us which model is the
+    language specialist. When both voting models come from the same training
+    family (e.g. two TextDetox variants) AND the specialist strongly says the
+    text is clean, we require one more independent vote before convicting.
     """
     votes = {name: s >= PER_MODEL_VOTE_THRESHOLD for name, s in raw.items()}
     votes_count = sum(votes.values())
     sorted_scores = sorted(raw.values(), reverse=True)
     max_raw = sorted_scores[0]
-    # The next-highest score from a *different* model.
     second_raw = sorted_scores[1] if len(sorted_scores) > 1 else 0.0
     strong = FINGILISH_STRONG_SINGLE if strict else STRONG_SINGLE_MODEL
 
-    if votes_count >= MIN_VOTES_FOR_TOXIC:
+    # Correlated votes + specialist disagreement -> demand more evidence.
+    min_votes_needed = MIN_VOTES_FOR_TOXIC
+    if (votes_count >= 2
+            and _votes_are_correlated(votes)
+            and _specialist_vetoes(raw, script)):
+        min_votes_needed = 3
+
+    if votes_count >= min_votes_needed:
         decision = "TOXIC"
     elif votes_count == 1 and max_raw >= strong:
         # A lone strong vote. Trust it only if at least one other applicable
@@ -64,12 +114,9 @@ def decide(raw: Dict[str, float], strict: bool = False) -> Tuple[str, Dict[str, 
         elif second_raw >= SOLO_VOTE_SUSPECT_FLOOR:
             decision = "SUSPECT"
         else:
-            # No other model sees anything at all: the classic
-            # "one checkpoint spikes to ~100% on clean text while every
-            # other model agrees it's safe" failure mode.
             decision = "SAFE"
-    elif max_raw >= WEAK_SUSPECT_THRESHOLD:
-        # A single model in the 0.60-0.90 range without corroboration:
+    elif votes_count >= 1 and max_raw >= WEAK_SUSPECT_THRESHOLD:
+        # A single weak vote, or correlated votes whose conviction was vetoed:
         # worth a human look, but not a conviction.
         decision = "SUSPECT"
     else:
@@ -78,6 +125,7 @@ def decide(raw: Dict[str, float], strict: bool = False) -> Tuple[str, Dict[str, 
     top2 = sorted_scores[:2]
     confidence = round(sum(top2) / len(top2), 4)
     return decision, votes, votes_count, max_raw, confidence
+
 
 
 def worst(decisions) -> str:

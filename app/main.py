@@ -256,7 +256,7 @@ def _run_ensemble(text: str, script: str, strict: bool = False) -> Dict:
     if not raw:
         return {"error": "no models applicable", "details": dict(state["errors"])}
 
-    decision, votes, votes_count, max_raw, confidence = decide(raw, strict=strict)
+    decision, votes, votes_count, max_raw, confidence = decide(raw, strict=strict, script=script)
     max_weighted = max(weighted.values())
 
     return {
