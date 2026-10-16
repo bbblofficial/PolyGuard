@@ -220,24 +220,8 @@ let sbTimer = 0;
 function toggleSidebar() {
   const app = $('app');
   if (isMobile()) { app.classList.toggle('mobile-open'); return; }
-  clearTimeout(sbTimer);
-  const collapsing = !app.classList.contains('collapsed');
-  if (REDUCED_MOTION) { app.classList.toggle('collapsed', collapsing); saveUiPrefs(); return; }
-  if (collapsing) {
-    app.classList.add('sb-hide');
-    sbTimer = setTimeout(() => {
-      app.classList.add('collapsed');
-      app.classList.remove('sb-hide');
-      reflowFade();
-      saveUiPrefs();
-    }, 170);
-  } else {
-    app.classList.add('sb-hide');
-    app.classList.remove('collapsed');
-    reflowFade();
-    requestAnimationFrame(() => requestAnimationFrame(() => app.classList.remove('sb-hide')));
-    saveUiPrefs();
-  }
+  app.classList.toggle('collapsed');
+  saveUiPrefs();
 }
 function reflowFade() {
   const b = document.querySelector('.main .body');
@@ -1376,3 +1360,116 @@ function exportCurrentThread() {
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
+
+/* ==== UNICOLLECT FIXER: HERO GREETING ==== */
+/*
+   Rotates the welcome-screen hero text. On each visit (and each new
+   chat), one of the following is picked:
+
+     • a greeting chosen from the *user's local hour*
+         صبحت بخیر   (05:00–11:59)
+         ظهرت بخیر   (12:00–15:59)
+         عصرت بخیر   (16:00–18:59)
+         شبت بخیر    (19:00–04:59)
+     • or one of a set of playful prompt lines, at random
+
+   Picked once on first load, and again whenever a fresh chat starts.
+*/
+(function () {
+  "use strict";
+
+  var HERO_STATIC = [
+    'چه متنی را برایتان بررسی کنم؟',
+    'بزن بریم سراغ بررسی!',
+    'دیگه چه فحش‌هایی قراره ببینم!',
+    'خب، چی آوردی برام؟',
+    'امروز چه متنی رو بررسی کنیم؟',
+    'متن بعدی رو بفرست تا ببینم',
+    'بذار ببینم چی آوردی',
+    'آماده‌ی بررسی‌ام، شروع کن!',
+    'چه خبر؟ متن جدیدی داری؟',
+    'بریم سراغ یه بررسی دیگه',
+    'چی تو سرت می‌گذره؟',
+    'متن بعدی رو بفرست',
+    'چه نوشته‌ای داری برای من؟',
+    'بیا شروع کنیم',
+    'منتظر متنتم...'
+  ];
+
+  function pickGreeting() {
+    var h = new Date().getHours();
+    if (h >= 5  && h < 12) return 'صبحت بخیر';
+    if (h >= 12 && h < 16) return 'ظهرت بخیر';
+    if (h >= 16 && h < 19) return 'عصرت بخیر';
+    return 'شبت بخیر';
+  }
+
+  function pickHeroText() {
+    // ~25% chance of a time-appropriate greeting
+    if (Math.random() < 0.25) return pickGreeting();
+    return HERO_STATIC[Math.floor(Math.random() * HERO_STATIC.length)];
+  }
+
+  var reduced = !!(window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function applyHero() {
+    var el = document.getElementById('hero-text');
+    if (!el) return;
+
+    var next = pickHeroText();
+    if (el.textContent === next) return;
+
+    if (reduced) {
+      el.textContent = next;
+      return;
+    }
+
+    // soft crossfade: fade out, swap the string, fade back in
+    el.style.transition = 'opacity .18s ease';
+    el.style.opacity = '0';
+    window.setTimeout(function () {
+      el.textContent = next;
+      // on the next frame, put opacity back so the fade-in runs
+      window.requestAnimationFrame(function () {
+        el.style.opacity = '';
+      });
+    }, 180);
+  }
+
+  // expose for the createNewThread hook below
+  window.updateHeroGreeting = applyHero;
+
+  // run once after the DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      // let the existing DOMContentLoaded handler run first
+      window.setTimeout(applyHero, 0);
+    });
+  } else {
+    applyHero();
+  }
+
+  // wrap createNewThread so every fresh chat also gets a fresh line
+  function hookNewThread() {
+    var orig = window.createNewThread;
+    if (typeof orig !== 'function' || orig.__heroWrapped) return;
+    var wrapped = function () {
+      var out = orig.apply(this, arguments);
+      window.setTimeout(applyHero, 40);
+      return out;
+    };
+    wrapped.__heroWrapped = true;
+    window.createNewThread = wrapped;
+  }
+
+  // createNewThread is defined by the main script; wait until it exists
+  if (typeof window.createNewThread === 'function') {
+    hookNewThread();
+  } else {
+    document.addEventListener('DOMContentLoaded', function () {
+      window.setTimeout(hookNewThread, 0);
+    });
+  }
+})();
+/* ==== /UNICOLLECT FIXER: HERO GREETING ==== */

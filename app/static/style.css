@@ -1034,3 +1034,41 @@ html.theme-anim .thinking-block {
   .dd-desc{ font-size: 11.5px; }
 }
 /* ==== /UNICOLLECT FIXER: DROPDOWN ==== */
+
+/* ==== UNICOLLECT FIXER: SIDEBAR SLIDE ==== */
+/*
+   Desktop sidebar slides off the inline-start edge, like the mobile
+   burger drawer. Scoped to (min-width: 768px) so the mobile rules in
+   @media (max-width: 767px) keep their own transform-based behaviour.
+*/
+@media (min-width: 768px) {
+
+  /* keep the full width; slide via margin instead of collapsing width */
+  .sidebar {
+    margin-inline-start: 0;
+  }
+
+  /* one transition for the whole slide; the inner element no longer
+     needs its own opacity / transform transition */
+  html.ready .sidebar {
+    transition: margin-inline-start .26s var(--ease-out);
+  }
+  html.ready .sidebar-inner {
+    transition: none;
+  }
+
+  /* collapsed: slide the whole box off-screen without shrinking it,
+     so the background and its contents move together as a single unit */
+  .app.collapsed .sidebar {
+    width: 260px;
+    margin-inline-start: -260px;
+  }
+
+  /* neutralize the old fade + scale on the inner content */
+  .app.collapsed .sidebar-inner,
+  .app.sb-hide .sidebar-inner {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* ==== /UNICOLLECT FIXER: SIDEBAR SLIDE ==== */
