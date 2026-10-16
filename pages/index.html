@@ -12,10 +12,10 @@
 <style>
   /* monochrome, like the app; motion = fade + scale only */
   :root { --bg:#ffffff; --card:#f9f9f9; --border:rgba(0,0,0,.1); --text:#0d0d0d; --text2:#5d5d5d; --text3:#8f8f8f;
-          --btn:#0d0d0d; --btnfg:#fff; --ok:#0d0d0d; --warn:#8f8f8f; --bad:#e02e2a; --accent:#0d0d0d; --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.45,.64,1); }
+          --btn:#0d0d0d; --btnfg:#fff; --ok:#16a34a; --warn:#d97706; --bad:#dc2626; --accent:#7c3aed; --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.45,.64,1); }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#212121; --card:#2a2a2a; --border:rgba(255,255,255,.1); --text:#ececec; --text2:#b4b4b4; --text3:#8e8e8e;
-            --btn:#fff; --btnfg:#000; --ok:#ffffff; --warn:#8e8e8e; --bad:#ff6b66; --accent:#ffffff; }
+            --btn:#fff; --btnfg:#000; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; --accent:#a78bfa; }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { height:100%; }
@@ -41,15 +41,15 @@
          background:transparent; color:var(--text); font:inherit; font-size:14px; font-weight:500; cursor:pointer; text-decoration:none; transition:background .15s, transform .12s, opacity .15s; }
   .btn:hover { background:color-mix(in srgb, var(--text) 7%, transparent); }
   .btn:active { transform:scale(.95); }
-  .btn.primary { background:var(--btn); color:var(--btnfg); border-color:transparent; }
-  .btn.primary:hover { opacity:.88; background:var(--btn); }
+  .btn.primary { background:var(--accent); color:#fff; border-color:transparent; }
+  .btn.primary:hover { opacity:.88; background:var(--accent); }
   .btn[aria-disabled="true"] { opacity:.35; pointer-events:none; }
   .meta { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:18px; font-size:12.5px; color:var(--text3); }
   .meta a { color:inherit; }
-  .pill { display:inline-flex; align-items:center; gap:7px; font-size:13px; padding:4px 12px; border-radius:9999px; background:color-mix(in srgb, var(--tone,var(--text3)) 14%, transparent); color:var(--tone,var(--text3)); margin-bottom:14px; transition:background .3s, color .3s; }
+  .pill { display:inline-flex; align-items:center; gap:7px; font-size:13px; padding:4px 12px; border-radius:9999px; background:color-mix(in srgb, var(--tone,var(--text3)) 20%, transparent); color:var(--tone,var(--text3)); margin-bottom:14px; transition:background .3s, color .3s; }
   .pill i { width:7px; height:7px; border-radius:50%; background:currentColor; }
   .pill.live { --tone:var(--ok); } .pill.wait { --tone:var(--warn); } .pill.wait i { animation:pulse 1.3s infinite; } .pill.off { --tone:var(--bad); }
-  .toast { position:fixed; top:16px; left:0; right:0; margin-inline:auto; width:max-content; transform:scale(.9); opacity:0; background:var(--btn); color:var(--btnfg); padding:8px 18px; border-radius:9999px; font-size:13px; transition:opacity .2s, transform .3s var(--spring); pointer-events:none; }
+  .toast { position:fixed; top:16px; left:0; right:0; margin-inline:auto; width:max-content; transform:scale(.9); opacity:0; background:var(--accent); color:#fff; padding:8px 18px; border-radius:9999px; font-size:13px; transition:opacity .2s, transform .3s var(--spring); pointer-events:none; }
   .toast.show { opacity:1; transform:scale(1); }
   @keyframes rise { from { opacity:0; transform:scale(.97); } }
   @keyframes pulse { 50% { opacity:.35; } }
