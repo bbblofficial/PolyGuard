@@ -15,17 +15,15 @@ FINGILISH_STRONG_SINGLE = 0.95
 
 # A lone model - however confident - is not allowed to convict on its own
 # unless at least one other applicable model is *also* at least mildly
-# suspicious of the text. Without this floor, a single miscalibrated
-# checkpoint (e.g. a narrow fine-tuned classifier that spikes to ~100% on
-# text every other model, including other models trained for the same
-# language, scores near 0%) can override a unanimous "safe" consensus from
-# every other model. That exact pattern - one model at 100%, the rest at
-# 0-2% - is what let the Persian model alone label ordinary, polite text as
-# TOXIC. Requiring a second, independent model to show at least some
-# suspicion before trusting a solo strong vote fixes that failure mode while
-# still letting a real specialist catch something the others miss, as long
-# as it isn't the *only* model raising any suspicion at all.
+# suspicious of the text.
 SOLO_VOTE_CORROBORATION_FLOOR = 0.30
+
+# If a solo strong vote has essentially *zero* corroboration - every other
+# applicable model sits below this floor - the outlier is treated as SAFE
+# rather than SUSPECT. A single checkpoint firing at 100% on ordinary text
+# while every other model confidently says "safe" is not a weak signal worth
+# reviewing; it is a miscalibration pattern.
+SOLO_VOTE_SUSPECT_FLOOR = 0.10
 
 SEVERITY = {"SAFE": 0, "SUSPECT": 1, "TOXIC": 2}
 
@@ -52,23 +50,27 @@ def decide(raw: Dict[str, float], strict: bool = False) -> Tuple[str, Dict[str, 
     votes_count = sum(votes.values())
     sorted_scores = sorted(raw.values(), reverse=True)
     max_raw = sorted_scores[0]
-    # The next-highest score from a *different* model - used to tell a real
-    # specialist catch apart from a lone miscalibrated outlier (see
-    # SOLO_VOTE_CORROBORATION_FLOOR above).
+    # The next-highest score from a *different* model.
     second_raw = sorted_scores[1] if len(sorted_scores) > 1 else 0.0
     strong = FINGILISH_STRONG_SINGLE if strict else STRONG_SINGLE_MODEL
 
     if votes_count >= MIN_VOTES_FOR_TOXIC:
         decision = "TOXIC"
-    elif (votes_count == 1 and max_raw >= strong
-          and second_raw >= SOLO_VOTE_CORROBORATION_FLOOR):
-        decision = "TOXIC"
+    elif votes_count == 1 and max_raw >= strong:
+        # A lone strong vote. Trust it only if at least one other applicable
+        # model is also at least mildly suspicious.
+        if second_raw >= SOLO_VOTE_CORROBORATION_FLOOR:
+            decision = "TOXIC"
+        elif second_raw >= SOLO_VOTE_SUSPECT_FLOOR:
+            decision = "SUSPECT"
+        else:
+            # No other model sees anything at all: the classic
+            # "one checkpoint spikes to ~100% on clean text while every
+            # other model agrees it's safe" failure mode.
+            decision = "SAFE"
     elif max_raw >= WEAK_SUSPECT_THRESHOLD:
-        # STRONG_SINGLE_MODEL/FINGILISH_STRONG_SINGLE are always >=
-        # WEAK_SUSPECT_THRESHOLD, so this branch also catches the
-        # uncorroborated solo-strong-vote case: it's still surfaced
-        # prominently as SUSPECT (not silently dropped to SAFE), just no
-        # longer auto-blocked as TOXIC on one model's say-so.
+        # A single model in the 0.60-0.90 range without corroboration:
+        # worth a human look, but not a conviction.
         decision = "SUSPECT"
     else:
         decision = "SAFE"

@@ -61,16 +61,64 @@ class TextIn(BaseModel):
 state = {"models": {}, "errors": {}, "ready": False, "inflight": 0, "peak": 0}
 
 MODEL_SPECS = {
-    "persian":      {"dir": MODELS_ROOT / "persian",           "mode": "binary",     "weight": 2.0, "lang": "fa",    "label": "Persian Offensive BERT (تخصصی فارسی)", "label_en": "Persian Offensive BERT"},
+    # The Persian checkpoint is a multi-label classifier
+    # (config.problem_type == "multi_label_classification") with a single
+    # output logit. It must be scored with sigmoid, NOT softmax: applying
+    # softmax to a single logit always returns 1.0, which is exactly the
+    # "everything is 100% toxic" bug.
+    "persian":      {"dir": MODELS_ROOT / "persian",           "mode": "multilabel", "weight": 2.0, "lang": "fa",    "label": "Persian Offensive BERT (تخصصی فارسی)", "label_en": "Persian Offensive BERT"},
     "textdetox_lg": {"dir": MODELS_ROOT / "textdetox_large",   "mode": "binary",     "weight": 2.0, "lang": "multi", "label": "TextDetox XLM-R Large (۱۵ زبان)",     "label_en": "TextDetox XLM-R Large"},
     "textdetox_sm": {"dir": MODELS_ROOT / "textdetox_base",    "mode": "binary",     "weight": 1.5, "lang": "multi", "label": "TextDetox Glot500 (چندزبانه)",        "label_en": "TextDetox Glot500"},
     "multilingual": {"dir": MODELS_ROOT / "multilingual",      "mode": "multilabel", "weight": 1.0, "lang": "multi", "label": "Unitary XLM-R (چندزبانه ۱۰۰+)",       "label_en": "Unitary XLM-R"},
     "twitter_off":  {"dir": MODELS_ROOT / "twitter_offensive", "mode": "binary",     "weight": 1.0, "lang": "en",    "label": "Twitter RoBERTa Offensive (انگلیسی)", "label_en": "Twitter RoBERTa Offensive"},
 }
-# "persian" is a 2-label (offensive / not-offensive) BERT classifier, so it is
-# scored the same way as the other binary models (softmax, P(label=1)) rather
-# than with sigmoid-max, which is only correct for genuinely multi-label
-# checkpoints such as "multilingual" below.
+
+# ------------------------------------------------------------------
+# Which output index is the "toxic/offensive" class?
+# ------------------------------------------------------------------
+_TOXIC_KEYWORDS = ("toxic", "offens", "hate", "abuse", "insult",
+                   "profan", "vulgar", "obscen", "hateful", "harass")
+_SAFE_KEYWORDS = ("non", "not", "clean", "safe", "normal", "neutral",
+                  "ok", "benign", "harmless")
+
+
+def _resolve_toxic_index(model) -> int:
+    """Return the output index whose class is the toxic/offensive one.
+
+    Reads model.config.id2label when available instead of hardcoding index 1,
+    because some checkpoints (notably the Persian offensive BERT) put the
+    offensive class at index 0.
+    """
+    cfg = getattr(model, "config", None)
+    id2label = getattr(cfg, "id2label", None) or {}
+
+    # Normalize keys to int
+    try:
+        labels = {int(k): str(v) for k, v in id2label.items()}
+    except (TypeError, ValueError):
+        labels = {}
+
+    if not labels:
+        return 1  # legacy default
+
+    # 1) a label that names the toxic class directly
+    for idx, name in labels.items():
+        n = name.lower()
+        if any(k in n for k in _TOXIC_KEYWORDS) and \
+           not any(s in n for s in _SAFE_KEYWORDS):
+            return idx
+
+    # 2) a label that names the safe class -> toxic is the other one
+    for idx, name in labels.items():
+        n = name.lower()
+        if any(k in n for k in _SAFE_KEYWORDS):
+            other = 1 - idx
+            if other in labels:
+                return other
+
+    # 3) can't tell -> keep old behavior
+    return 1
+
 
 # ------------------------------------------------------------------
 # Model loading - at import time, so it works with gunicorn --preload
@@ -83,6 +131,21 @@ def _load_one(name, spec):
             str(spec["dir"]), local_files_only=True
         )
         mdl.eval()
+
+        # --- DEBUG: show the model's real label mapping -------------
+        id2label = getattr(mdl.config, "id2label", {}) or {}
+        problem_type = getattr(mdl.config, "problem_type", None)
+        print(f"[Ensemble] '{name}' id2label={id2label} "
+              f"problem_type={problem_type} mode={spec['mode']}", flush=True)
+        try:
+            toxic_idx = _resolve_toxic_index(mdl)
+            print(f"[Ensemble] '{name}' -> using probs[{toxic_idx}] "
+                  f"as 'toxic' (only used for binary mode)", flush=True)
+        except Exception as e:
+            print(f"[Ensemble] '{name}' toxic-index detection failed: {e}",
+                  flush=True)
+        # ------------------------------------------------------------
+
         state["models"][name] = (
             mdl, tok, spec["mode"], spec["weight"],
             spec["lang"], spec["label"], spec["label_en"],
@@ -125,6 +188,13 @@ _bootstrap()
 # Scoring
 # ------------------------------------------------------------------
 def _score_multilabel(model, tokenizer, text):
+    """Sigmoid scoring for multi-label / multi-class-sigmoid models.
+
+    Works for any number of output logits, including a single one (the
+    Persian checkpoint). For a single logit this returns sigmoid(logit),
+    which is the correct probability - NOT softmax, which would always
+    return 1.0.
+    """
     inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
     with torch.inference_mode():
         logits = model(**inputs).logits
@@ -138,7 +208,7 @@ def _score_binary(model, tokenizer, text):
     probs = torch.softmax(logits, dim=-1).squeeze(0)
     if probs.numel() == 1:
         return float(probs.item())
-    return float(probs[1].item())
+    return float(probs[_resolve_toxic_index(model)].item())
 
 
 # ------------------------------------------------------------------

@@ -6,3 +6,5 @@ __pycache__/
 server.log
 tunnel.log
 cloudflared
+folder_structure.txt
+ee.py

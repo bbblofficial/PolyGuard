@@ -12,26 +12,35 @@ def test_single_strong_vote_with_corroboration_is_toxic():
     assert decide({"a": 0.95, "b": 0.4})[0] == "TOXIC"
 
 
-def test_single_strong_vote_without_corroboration_is_suspect_not_toxic():
+def test_single_strong_vote_without_corroboration_is_safe_not_suspect():
     # Regression test for the real bug report: one model (e.g. the Persian
     # checkpoint) spikes to ~100% on completely clean text while every
-    # other applicable model confidently disagrees (~0-2%). A lone outlier
-    # contradicted by the rest of the ensemble must not auto-convict.
+    # other applicable model confidently disagrees. A lone outlier
+    # contradicted by the rest of the ensemble must not auto-convict, and
+    # because there is essentially *no* other signal at all it should not
+    # even reach SUSPECT.
     decision, votes, votes_count, max_raw, confidence = decide(
         {"persian": 1.0, "textdetox_lg": 0.001, "textdetox_sm": 0.0, "multilingual": 0.015}
     )
-    assert decision == "SUSPECT"
+    assert decision == "SAFE"
     assert votes_count == 1
     assert max_raw == 1.0
 
 
+def test_single_strong_vote_with_only_weak_corroboration_is_suspect():
+    # Between SOLO_VOTE_SUSPECT_FLOOR (0.10) and SOLO_VOTE_CORROBORATION_FLOOR
+    # (0.30) - some other model sees *something*, so keep it on the radar.
+    assert decide({"a": 0.95, "b": 0.20})[0] == "SUSPECT"
+
+
 def test_single_vote_needs_more_when_strict():
     assert decide({"a": 0.92, "b": 0.1}, strict=True)[0] == "SUSPECT"
-    # Even at 0.99, an uncorroborated lone vote in strict (Fingilish) mode
-    # stays SUSPECT - a guessed transliteration gets even less benefit of
-    # the doubt than a native-script solo vote.
-    assert decide({"a": 0.99, "b": 0.1}, strict=True)[0] == "SUSPECT"
-    assert decide({"a": 0.99, "b": 0.5}, strict=True)[0] == "TOXIC"
+    # At 0.99 in strict (Fingilish) mode with second=0.10, we are exactly at
+    # the weak-corroboration floor -> SUSPECT, not SAFE.
+    assert decide({"a": 0.99, "b": 0.10}, strict=True)[0] == "SUSPECT"
+    assert decide({"a": 0.99, "b": 0.50}, strict=True)[0] == "TOXIC"
+    # In strict mode, no corroboration at all -> SAFE.
+    assert decide({"a": 0.99, "b": 0.01}, strict=True)[0] == "SAFE"
 
 
 def test_single_weak_vote_is_suspect():
