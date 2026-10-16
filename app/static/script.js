@@ -481,9 +481,9 @@ function renderActiveThread() {
     stream.innerHTML = '';
     return;
   }
-  setWelcome(false);
-  stream.innerHTML = thread.messages.map(m => buildTurnHTML(m)).join('');
-  scrollToBottom(false);
+  setWelcome(false);    stream.innerHTML = thread.messages.map(m => buildTurnHTML(m)).join('');
+    initBreakdowns(stream);
+    scrollToBottom(false);
 }
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
@@ -596,10 +596,10 @@ function stopThinking() {
 function replacePendingTurn(html) {
   const pending = $('pending-turn');
   const tpl = document.createElement('template');
-  tpl.innerHTML = html;
-  if (pending && pending.parentNode) pending.replaceWith(tpl.content);
-  else $('chat-stream').appendChild(tpl.content);
-}
+  tpl.innerHTML = html;    if (pending && pending.parentNode) pending.replaceWith(tpl.content);
+    else $('chat-stream').appendChild(tpl.content);
+    initBreakdowns($('chat-stream'));
+  }
 
 const DECISIONS = {
   TOXIC:   { icon: 'shieldx',     title: 'محتوای سمی شناسایی شد', text: 'بر اساس رأی‌گیری اجماعی مدل‌ها، این متن حاوی الفاظ توهین‌آمیز یا سمی است.' },
@@ -769,6 +769,54 @@ function buildTurnHTML(msg, opts) {
         <button class="icon-btn" onclick="reAnalyze('${mid}')" title="تحلیل مجدد">${svg('refresh')}</button>
       </div>
     </div></div>`;
+}
+
+
+/* انیمیشن باز/بسته شدن details.breakdown (ارتفاع نرم) */
+function initBreakdowns(root) {
+  (root || document).querySelectorAll('details.breakdown:not([data-bd])').forEach(d => {
+    d.dataset.bd = '1';
+    const summary = d.querySelector('summary');
+    const card = d.querySelector('.bd-card');
+    if (!summary || !card) return;
+
+    summary.addEventListener('click', e => {
+      e.preventDefault();
+      if (REDUCED_MOTION) { d.open = !d.open; return; }
+      if (card.classList.contains('animating')) return;
+      card.classList.add('animating');
+
+      if (!d.open) {
+        // ---- باز شدن ----
+        card.style.height = '0px';
+        d.open = true;
+        const target = card.scrollHeight;
+        requestAnimationFrame(() => {
+          card.style.transition = 'height .35s cubic-bezier(.22,1,.36,1)';
+          card.style.height = target + 'px';
+        });
+        setTimeout(() => {
+          card.style.transition = '';
+          card.style.height = '';
+          card.classList.remove('animating');
+        }, 380);
+      } else {
+        // ---- بسته شدن ----
+        const start = card.scrollHeight;
+        card.style.height = start + 'px';
+        requestAnimationFrame(() => {
+          card.style.transition = 'height .3s cubic-bezier(.22,1,.36,1)';
+          card.style.height = '0px';
+        });
+        setTimeout(() => {
+          d.open = false;
+          card.style.transition = '';
+          card.style.height = '';
+          card.classList.remove('animating');
+        }, 320);
+      }
+    });
+  });
 }
 
 /* ---------------- analyze ---------------- */

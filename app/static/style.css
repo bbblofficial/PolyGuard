@@ -389,8 +389,12 @@ details.breakdown > summary::-webkit-details-marker { display: none; }
 details.breakdown > summary:hover { color: var(--text); }
 details.breakdown > summary .chev-ico { display: inline-flex; }
 details.breakdown > summary svg.ic { width: 15px; height: 15px; }
-details.breakdown[open] > summary .chev-ico { transform: scaleY(-1); }   /* instant flip, not animated */
-details.breakdown[open] > .bd-card { animation: scale-in-soft .3s var(--ease-out) both; transform-origin: top center; }
+
+/* باز/بسته شدن details با انیمیشن ارتفاع (JS ارتفاع رو انیمیت می‌کنه) */
+details.breakdown > summary { transition: color .15s; }
+details.breakdown > summary .chev-ico { transition: transform .3s var(--ease-out); }
+details.breakdown[open] > summary .chev-ico { transform: scaleY(-1); }
+.bd-card.animating { overflow: hidden; will-change: height; }
 .bd-card { margin: 4px 0 6px; background: var(--main); border: 1px solid var(--border); border-radius: 16px; padding: 2px 16px; }
 .mrow { padding: 12px 0; border-bottom: 1px solid var(--border); }
 .mrow:last-of-type { border-bottom: 0; }
