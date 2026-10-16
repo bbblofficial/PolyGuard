@@ -15,7 +15,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$(mktemp -d)"
 trap 'rm -rf "$OUT"' EXIT
 
-cp "$ROOT/pages/index.html" "$OUT/index.html"
+cp -R "$ROOT/pages/." "$OUT/"
+# status.json is generated below; pages/assets and the informational routes ship too.
 touch "$OUT/.nojekyll"
 
 python3 - "$OUT/status.json" "$STATUS" "$URL" <<'PY'
@@ -26,7 +27,7 @@ repo = os.environ["GITHUB_REPOSITORY"]
 run_id = os.environ.get("GITHUB_RUN_ID", "")
 data = {
     "status": status,
-    "url": url or None,
+    "url_payload": __import__("base64").b64encode((url or "").encode()).decode() if url else None,
     "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
     "run_url": f"{server}/{repo}/actions/runs/{run_id}" if run_id else None,
     "run_number": os.environ.get("GITHUB_RUN_NUMBER"),

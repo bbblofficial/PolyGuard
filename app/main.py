@@ -70,11 +70,11 @@ MODEL_SPECS = {
     # output logit. It must be scored with sigmoid, NOT softmax: applying
     # softmax to a single logit always returns 1.0, which is exactly the
     # "everything is 100% toxic" bug.
-    "persian":      {"dir": MODELS_ROOT / "persian",           "mode": "multilabel", "weight": 2.0, "lang": "fa",    "label": "Persian Offensive BERT (تخصصی فارسی)", "label_en": "Persian Offensive BERT"},
-    "textdetox_lg": {"dir": MODELS_ROOT / "textdetox_large",   "mode": "binary",     "weight": 2.0, "lang": "multi", "label": "TextDetox XLM-R Large (۱۵ زبان)",     "label_en": "TextDetox XLM-R Large"},
-    "textdetox_sm": {"dir": MODELS_ROOT / "textdetox_base",    "mode": "binary",     "weight": 1.5, "lang": "multi", "label": "TextDetox Glot500 (چندزبانه)",        "label_en": "TextDetox Glot500"},
-    "multilingual": {"dir": MODELS_ROOT / "multilingual",      "mode": "multilabel", "weight": 1.0, "lang": "multi", "label": "Unitary XLM-R (چندزبانه ۱۰۰+)",       "label_en": "Unitary XLM-R"},
-    "twitter_off":  {"dir": MODELS_ROOT / "twitter_offensive", "mode": "binary",     "weight": 1.0, "lang": "en",    "label": "Twitter RoBERTa Offensive (انگلیسی)", "label_en": "Twitter RoBERTa Offensive"},
+    "persian":      {"dir": MODELS_ROOT / "persian",           "mode": "multilabel", "weight": 2.0, "lang": "fa",    "label": "Unicollect فارسی", "label_en": "Unicollect Persian"},
+    "textdetox_lg": {"dir": MODELS_ROOT / "textdetox_large",   "mode": "binary",     "weight": 2.0, "lang": "multi", "label": "Unicollect چندزبانه پرو",     "label_en": "Unicollect Multilingual Pro"},
+    "textdetox_sm": {"dir": MODELS_ROOT / "textdetox_base",    "mode": "binary",     "weight": 1.5, "lang": "multi", "label": "Unicollect چندزبانه سریع",        "label_en": "Unicollect Multilingual Swift"},
+    "multilingual": {"dir": MODELS_ROOT / "multilingual",      "mode": "multilabel", "weight": 1.0, "lang": "multi", "label": "Unicollect چندزبانه گسترده",       "label_en": "Unicollect Multilingual Broad"},
+    "twitter_off":  {"dir": MODELS_ROOT / "twitter_offensive", "mode": "binary",     "weight": 1.0, "lang": "en",    "label": "Unicollect انگلیسی", "label_en": "Unicollect English"},
 }
 
 # ------------------------------------------------------------------
@@ -365,7 +365,7 @@ def health():
     return {
         "status": "ok" if state["ready"] and state["models"] else
                   ("loading" if not state["ready"] else "error"),
-        "loaded_models": list(state["models"].keys()),
+        "loaded_models": [MODEL_SPECS[name]["label"] for name in state["models"]],
         "errors": dict(state["errors"]),
         "inflight": state["inflight"],
         "peak": state["peak"],

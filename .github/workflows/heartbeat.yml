@@ -1,0 +1,55 @@
+name: Unicollect Heartbeat
+
+on:
+  # Restart the six-hour service immediately after the deploy run ends.
+  workflow_run:
+    workflows: ["Unicollect Ensemble Web + Cloudflare Tunnel"]
+    types: [completed]
+  # Backup check in case GitHub misses/delays the workflow_run event.
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: unicollect-heartbeat
+  cancel-in-progress: true
+
+jobs:
+  restart:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check and restart Unicollect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          workflow="Unicollect Ensemble Web + Cloudflare Tunnel"
+
+          # workflow_run is the authoritative restart signal. The schedule is
+          # only a safety net and must not start a second deploy while one runs.
+          if [ "$EVENT_NAME" = "workflow_run" ]; then
+            if [ "$RUN_CONCLUSION" = "skipped" ]; then
+              echo "Deploy was skipped; no restart needed."
+              exit 0
+            fi
+            echo "Deploy run $RUN_ID ended with: $RUN_CONCLUSION"
+          fi
+
+          active=$(gh run list --repo "$GH_REPO" --workflow "$workflow" \
+            --status in_progress --status queued --limit 1 --json databaseId \
+            --jq 'length')
+          if [ "$active" != "0" ]; then
+            echo "A deploy is already active; leaving it alone."
+            exit 0
+          fi
+
+          echo "Starting a fresh six-hour deploy run..."
+          gh workflow run deploy.yml --repo "$GH_REPO" --ref main

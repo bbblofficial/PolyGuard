@@ -205,7 +205,7 @@ function renderHealthDetails(d) {
   if (c && d.concurrency) c.textContent = `${faDigits(d.concurrency)} (اوج ${faDigits(d.peak || 0)})`;
   const m = $('cfg-models');
   if (m) {
-    const ok = (d.loaded_models || []).map(x => `<div class="ml"><span class="model-id" dir="ltr">${escapeHtml(x)}</span><span class="ok">● آماده</span></div>`).join('');
+    const ok = (d.loaded_models || []).map(x => `<div class="ml"><span class="model-id">${escapeHtml(x)}</span><span class="ok">● آماده</span></div>`).join('');
     const er = Object.keys(d.errors || {}).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="err">● خطا</span></div>`).join('');
     m.innerHTML = (ok + er) || 'مدلی بارگذاری نشده';
   }
@@ -486,7 +486,8 @@ function renderActiveThread() {
     stream.innerHTML = '';
     return;
   }
-  setWelcome(false);    stream.innerHTML = thread.messages.map(m => buildTurnHTML(m)).join('');
+  setWelcome(false);
+      stream.innerHTML = thread.messages.map(m => buildTurnHTML(m)).join('');
     initBreakdowns(stream);
     scrollToBottom(false);
 }
@@ -517,7 +518,7 @@ function streamText(el, text, opts, token) {
   if (REDUCED_MOTION || !text) { el.textContent = text || ''; return Promise.resolve(); }
   const o = Object.assign({ cps: 70, maxMs: 1600, dot: true }, opts || {});
   // never take longer than maxMs, however long the text is
-  const cps = Math.max(o.cps, text.length / (o.maxMs / 1000));
+  const cps = Math.max(o.cps, text.length / Math.max(0.1, o.maxMs / 1000));
   const parts = splitWords(text);
   return new Promise(resolve => {
     el.textContent = '';
@@ -561,7 +562,7 @@ function streamText(el, text, opts, token) {
 /* ---------------- thinking indicator ----------------
    Animated mark (petal wave) + a status line that cross-fades between
    phases + an elapsed-time counter that appears after 2 s. */
-const THINK_PHASES = ['درحال فکر کردن', 'درحال بررسی', 'رای اجتماعی', 'پرسش از مدل ها'];
+const THINK_PHASES = ['درحال فکر کردن 1.', 'درحال بررسی 2.', 'رای اجتماعی 3.', 'پرسش از مدل ها 4.'];
 const thinking = { phaseTimer: 0, clockTimer: 0, t0: 0, phaseIndex: 0, phaseDoneAt: 0 };
 
 function startThinking() {
@@ -617,7 +618,8 @@ function stopThinking() {
 function replacePendingTurn(html) {
   const pending = $('pending-turn');
   const tpl = document.createElement('template');
-  tpl.innerHTML = html;    if (pending && pending.parentNode) pending.replaceWith(tpl.content);
+  tpl.innerHTML = html;
+      if (pending && pending.parentNode) pending.replaceWith(tpl.content);
     else $('chat-stream').appendChild(tpl.content);
     initBreakdowns($('chat-stream'));
   }
