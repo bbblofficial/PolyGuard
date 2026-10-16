@@ -85,7 +85,7 @@ button:focus-visible, .thread:focus-visible { outline: 2px solid var(--text2); o
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 textarea, input { font: inherit; color: inherit; }
 .hidden { display: none !important; }
-.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; direction: ltr; unicode-bidi: isolate; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, 'Vazirmatn'; direction: ltr; unicode-bidi: isolate; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -355,7 +355,7 @@ html.ink .ta-mirror { color: var(--text); }
 .res-title { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.5; }
 .res-sub { font-size: 13.5px; color: var(--text2); line-height: 1.7; }
 .res-score { font-size: 30px; font-weight: 600; color: var(--text); line-height: 1; letter-spacing: -.02em; }
-.res-score small { font-size: 14px; font-weight: 500; margin-inline-start: 1px; opacity: .7; }
+.res-score small { font-size: 14px; font-weight: 500; margin-inline-start: 2px; opacity: .75; font-family: inherit; }
 
 .meter { position: relative; height: 8px; border-radius: 9999px; background: var(--soft); margin: 18px 0 8px; }
 .meter-fill { height: 100%; border-radius: 9999px; background: var(--text); transform-origin: right center; }
@@ -380,7 +380,7 @@ html.ink .ta-mirror { color: var(--text); }
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
 .stat { background: var(--main); border: 1px solid var(--border); border-radius: 14px; padding: 8px 12px; }
 .stat .k { font-size: 11.5px; color: var(--text3); }
-.stat .v { font-size: 15px; font-weight: 600; margin-top: 1px; }
+.stat .v { font-size: 15px; font-weight: 600; margin-top: 1px; font-family: 'Vazirmatn', system-ui, sans-serif; }
 .stat .v.mono { text-align: right; }
 
 details.breakdown { margin-top: 6px; }
