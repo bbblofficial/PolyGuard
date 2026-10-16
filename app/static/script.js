@@ -591,10 +591,10 @@ function startThinking() {
       }, 200);
     }
     // Each stage stays visible for a natural, slightly unpredictable pause.
-    const delay = 300 + Math.random() * 700;
+    const delay = 700 + Math.random() * 1000;
     thinking.phaseTimer = setTimeout(nextPhase, delay);
   };
-  thinking.phaseTimer = setTimeout(nextPhase, 300 + Math.random() * 700);
+  thinking.phaseTimer = setTimeout(nextPhase, 700 + Math.random() * 1000);
   thinking.clockTimer = setInterval(() => {
     const t = $('think-time');
     if (!t) return;

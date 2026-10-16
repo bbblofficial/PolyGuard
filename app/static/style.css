@@ -549,11 +549,12 @@ details.breakdown[open] > summary .chev-ico { transform: scaleY(-1); }
 @media (max-width: 767px) {
   .sidebar {
     position: fixed; inset-block: 0; inset-inline-start: 0; width: 280px !important; z-index: 40;
-    opacity: 0; visibility: hidden; transform: scale(.97); transform-origin: right top; box-shadow: none;
+    opacity: 0; visibility: hidden; transform: translateX(105%); transform-origin: right top; box-shadow: none;
   }
   html.ready .sidebar { transition: opacity .2s ease, transform .26s var(--ease-out), visibility 0s linear .26s; }
   .sidebar-inner { width: 280px; opacity: 1 !important; transform: none !important; }
-  .app.mobile-open .sidebar { opacity: 1; visibility: visible; transform: scale(1); box-shadow: var(--shadow-pop); transition-delay: 0s; }
+  /* Mobile burger menu enters from the side, never by scaling. */
+  .app.mobile-open .sidebar { opacity: 1; visibility: visible; transform: translateX(0); box-shadow: var(--shadow-pop); transition-delay: 0s; }
   .backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 30; opacity: 0; visibility: hidden; transition: opacity .25s, visibility 0s linear .25s; }
   .app.mobile-open .backdrop { opacity: 1; visibility: visible; transition-delay: 0s; }
   .search-modal { padding: 0; align-items: stretch; }
