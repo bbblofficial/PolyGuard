@@ -86,6 +86,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 textarea, input { font: inherit; color: inherit; }
 .hidden { display: none !important; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, 'Vazirmatn'; direction: ltr; unicode-bidi: isolate; }
+/* اعداد ترکیبی (۰ / ۴) با فونت فارسی ولی جهت LTR */
+.num-ltr { font-family: 'Vazirmatn', system-ui, sans-serif; direction: ltr; unicode-bidi: isolate; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
