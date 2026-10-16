@@ -382,6 +382,10 @@ def check(data: TextIn):
         if len(data.text) > MAX_TEXT_LENGTH:
             return {"error": f"text too long ({len(data.text)} chars, max {MAX_TEXT_LENGTH})"}
 
+        if not data.text.strip():
+            # an empty/whitespace-only string used to run all 5 models for nothing
+            return {"error": "text is empty"}
+
         with _infer_sem:
             with _counter_lock:
                 state["inflight"] += 1
