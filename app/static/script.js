@@ -639,7 +639,27 @@ async function revealNewTurn(msg) {
   keepPinned(true);
 
   const r = msg.result;
-  if (!r || r.error || !r.decision || REDUCED_MOTION) return;
+
+  // ---------- error path ----------
+  // No result card, no border. Just the icon and the message typing
+  // itself out, like any other assistant reply.
+  if (!r || r.error || !r.decision) {
+    if (REDUCED_MOTION) return;
+    const e = r && r.error
+      ? (typeof r.error === 'string' ? r.error : JSON.stringify(r.error))
+      : 'پاسخی از سرور دریافت نشد';
+    const full = 'خطا در پردازش: ' + e;
+    await streamText(
+      $(`err-text-${msg.id}`),
+      full,
+      { cps: 90, maxMs: 2200, dot: false },
+      token
+    );
+    keepPinned(true);
+    return;
+  }
+
+  if (REDUCED_MOTION) return;
 
   const meta = DECISIONS[r.decision] || { title: 'نتیجه نامشخص', text: '' };
   const wrap = $(`botmsg-${msg.id}`);
@@ -693,11 +713,22 @@ function buildTurnHTML(msg, opts) {
   const mid = escapeHtml(msg.id);
 
   if (!r || r.error || !r.decision) {
-    const e = r && r.error ? (typeof r.error === 'string' ? r.error : JSON.stringify(r.error)) : 'پاسخی از سرور دریافت نشد';
+    const e = r && r.error
+      ? (typeof r.error === 'string' ? r.error : JSON.stringify(r.error))
+      : 'پاسخی از سرور دریافت نشد';
+    const full = 'خطا در پردازش: ' + e;
+    const errInner = animate
+      ? `<span class="err-text" id="err-text-${mid}"></span>`
+      : `<span class="err-text">${escapeHtml(full)}</span>`;
     return `${user}
-      <div class="msg bot fade"><div class="bot-body">
-        <div class="err-box">${svg('alert')}<span>خطا در پردازش: ${escapeHtml(e)}</span></div>
-        <div class="actions"><button class="icon-btn" onclick="reAnalyze('${mid}')" title="تلاش مجدد">${svg('refresh')}</button></div>
+      <div class="msg bot fade" id="botmsg-${mid}"><div class="bot-body">
+        <div class="err-line">
+          <span class="err-icon">${svg('alert')}</span>
+          ${errInner}
+        </div>
+        <div class="actions">
+          <button class="icon-btn" onclick="reAnalyze('${mid}')" title="تلاش مجدد">${svg('refresh')}</button>
+        </div>
       </div></div>`;
   }
 
@@ -1227,7 +1258,7 @@ function updateViewModeCheckmarks() {
 
 function updateModelButtonLabel() {
   const el = $('model-name');
-  if (el) el.textContent = state.viewMode === 'compact' ? 'Light' : 'Flash';
+  if (el) el.textContent = state.viewMode === 'compact' ? 'دقیق' : 'سریع';
 }
 
 function syncThemeIcon() {
@@ -1361,22 +1392,11 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
-/* ==== UNICOLLECT FIXER: HERO GREETING ==== */
-/*
-   Rotates the welcome-screen hero text. On each visit (and each new
-   chat), one of the following is picked:
-
-     • a greeting chosen from the *user's local hour*
-         صبحت بخیر   (05:00–11:59)
-         ظهرت بخیر   (12:00–15:59)
-         عصرت بخیر   (16:00–18:59)
-         شبت بخیر    (19:00–04:59)
-     • or one of a set of playful prompt lines, at random
-
-   Picked once on first load, and again whenever a fresh chat starts.
-*/
+/* ==== UNICOLLECT FIXER: HERO GREETING v3 ==== */
 (function () {
   "use strict";
+
+  var BUILD = 'hero-greeting-v3';
 
   var HERO_STATIC = [
     'چه متنی را برایتان بررسی کنم؟',
@@ -1404,72 +1424,102 @@ function escapeHtml(s) {
     return 'شبت بخیر';
   }
 
-  function pickHeroText() {
-    // ~25% chance of a time-appropriate greeting
-    if (Math.random() < 0.25) return pickGreeting();
-    return HERO_STATIC[Math.floor(Math.random() * HERO_STATIC.length)];
+  function pickHeroText(prev) {
+    if (Math.random() < 0.25) {
+      var g = pickGreeting();
+      if (g !== prev) return g;
+    }
+    for (var i = 0; i < 6; i++) {
+      var candidate = HERO_STATIC[
+        Math.floor(Math.random() * HERO_STATIC.length)
+      ];
+      if (candidate !== prev) return candidate;
+    }
+    return HERO_STATIC[0];
   }
 
   var reduced = !!(window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
+  var lastApplied = '';
+  var loggedOnce = false;
+  var appliedOnce = false;
+
   function applyHero() {
     var el = document.getElementById('hero-text');
-    if (!el) return;
+    if (!el) return false;
 
-    var next = pickHeroText();
-    if (el.textContent === next) return;
-
-    if (reduced) {
-      el.textContent = next;
-      return;
+    if (!appliedOnce) {
+      appliedOnce = true;
+      if (!loggedOnce && window.console && console.info) {
+        loggedOnce = true;
+        console.info('[Unicollect] ' + BUILD + ' active');
+      }
     }
 
-    // soft crossfade: fade out, swap the string, fade back in
+    var next = pickHeroText(lastApplied);
+    lastApplied = next;
+
+    if (el.textContent === next) return true;
+
+    if (reduced) { el.textContent = next; return true; }
+
     el.style.transition = 'opacity .18s ease';
     el.style.opacity = '0';
     window.setTimeout(function () {
       el.textContent = next;
-      // on the next frame, put opacity back so the fade-in runs
       window.requestAnimationFrame(function () {
         el.style.opacity = '';
       });
     }, 180);
+    return true;
   }
 
-  // expose for the createNewThread hook below
-  window.updateHeroGreeting = applyHero;
+  window.applyHeroGreeting = applyHero;
 
-  // run once after the DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      // let the existing DOMContentLoaded handler run first
-      window.setTimeout(applyHero, 0);
-    });
-  } else {
-    applyHero();
+  // --- Retry loop ----------------------------------------------------
+  // Try immediately. If the element isn't there yet, poll every 100 ms
+  // up to 30 times (3 s). Also re-try on DOMContentLoaded and window.load,
+  // in case the first paint happens before the DOM is fully ready.
+  var tries = 0;
+  function tryApply() {
+    if (applyHero()) return true;
+    if (++tries >= 30) return true;              // give up quietly
+    window.setTimeout(tryApply, 100);
+    return false;
   }
 
-  // wrap createNewThread so every fresh chat also gets a fresh line
-  function hookNewThread() {
-    var orig = window.createNewThread;
-    if (typeof orig !== 'function' || orig.__heroWrapped) return;
+  if (!tryApply()) {
+    document.addEventListener('DOMContentLoaded', tryApply, { once: true });
+    window.addEventListener('load', tryApply, { once: true });
+  }
+
+  // --- Hook chat lifecycle ------------------------------------------
+  function wrapFn(name) {
+    var orig = window[name];
+    if (typeof orig !== 'function' || orig.__heroWrappedV3) return false;
     var wrapped = function () {
       var out = orig.apply(this, arguments);
-      window.setTimeout(applyHero, 40);
+      window.setTimeout(applyHero, 20);
       return out;
     };
-    wrapped.__heroWrapped = true;
-    window.createNewThread = wrapped;
+    wrapped.__heroWrappedV3 = true;
+    window[name] = wrapped;
+    return true;
   }
 
-  // createNewThread is defined by the main script; wait until it exists
-  if (typeof window.createNewThread === 'function') {
-    hookNewThread();
-  } else {
-    document.addEventListener('DOMContentLoaded', function () {
-      window.setTimeout(hookNewThread, 0);
-    });
+  function hookAll() {
+    var a = wrapFn('renderActiveThread');
+    var b = wrapFn('createNewThread');
+    return a || b;
+  }
+
+  if (!hookAll()) {
+    var ht = 0;
+    var iv = window.setInterval(function () {
+      if (hookAll() || ++ht > 40) window.clearInterval(iv);
+    }, 50);
   }
 })();
-/* ==== /UNICOLLECT FIXER: HERO GREETING ==== */
+/* ==== /UNICOLLECT FIXER: HERO GREETING v3 ==== */
+

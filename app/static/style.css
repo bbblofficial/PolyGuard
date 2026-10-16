@@ -1072,3 +1072,100 @@ html.theme-anim .thinking-block {
   }
 }
 /* ==== /UNICOLLECT FIXER: SIDEBAR SLIDE ==== */
+
+/* ==== UNICOLLECT FIXER: FLAT ERROR ==== */
+/* Inline error: no card, no border, no background. Text streams in
+   word-by-word just like a normal result title. */
+
+.err-line{
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--danger);
+  font-size: 14.5px;
+  line-height: 1.8;
+  padding: 2px 0 4px;
+  max-width: 100%;
+}
+
+.err-line .err-icon{
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 3px;
+  color: var(--danger);
+  opacity: .9;
+}
+.err-line .err-icon svg.ic{
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.9;
+}
+
+.err-line .err-text{
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
+  color: var(--danger);
+}
+
+/* each streamed word fades in — same curve as the result title */
+.err-line .err-text .tw{
+  animation: tw-in .42s cubic-bezier(.2,.7,.3,1) both;
+}
+.err-line .err-text .stream-dot{
+  background: currentColor;
+}
+
+/* the retry action stays small and quiet, aligned with the text column */
+.err-line + .actions{
+  margin-top: 2px;
+  margin-inline-start: 30px;
+}
+
+/* on mobile keep the icon and text on the same baseline */
+@media (max-width: 480px){
+  .err-line{ font-size: 13.5px; gap: 8px; }
+  .err-line .err-icon{ width: 20px; height: 20px; margin-top: 3px; }
+  .err-line .err-icon svg.ic{ width: 18px; height: 18px; }
+}
+/* ==== /UNICOLLECT FIXER: FLAT ERROR ==== */
+
+/* ==== UNICOLLECT FIXER: KBD ICONS ==== */
+/* SVG key hints in the search modal footer, sized to match .kbd badges. */
+.kbd-ico{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 3px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  color: var(--text3);
+  background: var(--main);
+  vertical-align: -4px;
+  margin-inline-end: 3px;
+  box-sizing: border-box;
+}
+.kbd-ico.wide{ width: auto; padding: 3px 5px; }
+.kbd-ico svg{
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (max-width: 480px){
+  .kbd-ico{ width: 18px; height: 18px; }
+  .kbd-ico.wide{ padding: 3px 4px; }
+}
+/* ==== /UNICOLLECT FIXER: KBD ICONS ==== */

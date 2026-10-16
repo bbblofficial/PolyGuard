@@ -66,14 +66,14 @@
 
         <div class="dd-wrap">
           <button class="model-btn" onclick="toggleModelDropdown(event)">
-            <span class="model-name" id="model-name">Flash</span>
+            <span class="model-name" id="model-name">سریع</span>
             <i data-i="chevron" class="chev"></i>
           </button>
           <div id="model-dropdown" class="dropdown" onclick="event.stopPropagation()">
             <button class="dd-item" onclick="setViewMode('detailed')">
               <span class="dd-pip" aria-hidden="true"></span>
                 <div class="dd-text">
-                  <div class="dd-title">Flash</div>
+                  <div class="dd-title">سریع</div>
                   <div class="dd-desc">نمای کامل با ریز نمرهٔ همهٔ مدل‌ها</div>
                 </div>
               <i id="check-detailed" data-i="check" class="dd-check"></i>
@@ -81,8 +81,8 @@
             <button class="dd-item" onclick="setViewMode('compact')">
               <span class="dd-pip" aria-hidden="true"></span>
                 <div class="dd-text">
-                  <div class="dd-title">Light</div>
-                  <div class="dd-desc">فقط نتیجهٔ نهایی، سریع و خلاصه</div>
+                  <div class="dd-title">دقیق</div>
+                  <div class="dd-desc">فقط نتیجهٔ نهایی، بدون ریز نمرات</div>
                 </div>
               <i id="check-compact" data-i="check" class="dd-check off"></i>
             </button>
@@ -182,8 +182,8 @@
       <div id="search-results" class="search-results" role="listbox"></div>
     </div>
     <div class="search-foot">
-      <span><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> جابه‌جایی</span>
-      <span><kbd class="kbd">Enter</kbd> باز کردن</span>
+      <span><span class="kbd-ico" title="کلید بالا"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg></span><span class="kbd-ico" title="کلید پایین"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></span> جابه‌جایی</span>
+      <span><span class="kbd-ico wide" title="کلید Enter"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 4v7a4 4 0 0 1-4 4H4"/><path d="m9 10-5 5 5 5"/></svg></span> باز کردن</span>
       <span><kbd class="kbd">Esc</kbd> بستن</span>
     </div>
   </div>
