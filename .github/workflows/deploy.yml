@@ -15,8 +15,9 @@ env:
   TEXTDETOX_BASE_ID:     textdetox/xlmr-base-toxicity-classifier
   MULTILINGUAL_MODEL_ID: unitary/multilingual-toxic-xlm-roberta
   TWITTER_OFFENSIVE_ID:  cardiffnlp/twitter-roberta-base-offensive
+
   MODELS_ROOT: ${{ github.workspace }}/models
-  MODEL_DOWNLOAD_WORKERS: "3"
+
   OMP_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
   OPENBLAS_NUM_THREADS: "1"
@@ -36,8 +37,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-          cache-dependency-path: requirements.txt
 
       - name: Unit tests (no models needed)
         run: |
@@ -48,20 +47,35 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
-          pip install --quiet -r requirements.txt
+          pip install --quiet fastapi "uvicorn[standard]" gunicorn transformers sentencepiece protobuf huggingface_hub anyio
 
-      - name: Cache models
-        id: models-cache
-        uses: actions/cache@v4
-        with:
-          path: models
-          key: models-${{ hashFiles('scripts/download_models.py') }}
-
-      - name: Download models
-        if: steps.models-cache.outputs.cache-hit != 'true'
+      - name: Download all models to local folders
         run: |
-          python scripts/download_models.py
-          du -sh models/*
+          mkdir -p "$MODELS_ROOT/persian" "$MODELS_ROOT/textdetox_large" "$MODELS_ROOT/textdetox_base" "$MODELS_ROOT/multilingual" "$MODELS_ROOT/twitter_offensive"
+          python - <<'PY'
+          import os
+          from huggingface_hub import snapshot_download
+          jobs = [
+              ("PERSIAN_MODEL_ID",      "persian"),
+              ("TEXTDETOX_LARGE_ID",    "textdetox_large"),
+              ("TEXTDETOX_BASE_ID",     "textdetox_base"),
+              ("MULTILINGUAL_MODEL_ID", "multilingual"),
+              ("TWITTER_OFFENSIVE_ID",  "twitter_offensive"),
+          ]
+          root = os.environ["MODELS_ROOT"]
+          for env_key, sub in jobs:
+              repo_id = os.environ[env_key]
+              target = os.path.join(root, sub)
+              print(f"\nDownloading {repo_id} -> {target}", flush=True)
+              snapshot_download(
+                  repo_id=repo_id,
+                  local_dir=target,
+                  ignore_patterns=["*.h5", "*.msgpack", "*.onnx", "*.tflite", "*.ot", "*.mlmodelc"],
+              )
+              print(f"Done {repo_id}", flush=True)
+          PY
+          echo "--- model sizes ---"
+          du -sh "$MODELS_ROOT"/*
 
       - name: Install cloudflared
         run: |
@@ -69,11 +83,19 @@ jobs:
           chmod +x cloudflared
           ./cloudflared --version
 
-      - name: Start server (no preload, single worker)
+      - name: Start FastAPI server (preloaded, multi-worker, no OOM)
         run: |
-          nohup ./scripts/start_server.sh > server.log 2>&1 &
+          nohup gunicorn app.main:app \
+              --workers 2 \
+              --worker-class uvicorn.workers.UvicornWorker \
+              --preload \
+              --bind 0.0.0.0:8000 \
+              --timeout 180 \
+              --graceful-timeout 30 \
+              --keep-alive 5 \
+              > server.log 2>&1 &
 
-          echo "Waiting for models to load (parallel loading, usually much faster)..."
+          echo "Waiting for models to load in master (~120-300s)..."
           STATUS=""
           for i in $(seq 1 300); do
             STATUS=$(curl -fs http://localhost:8000/health 2>/dev/null || true)
@@ -112,8 +134,8 @@ jobs:
             cat tunnel.log
             exit 1
           fi
-          echo "PUBLIC_URL=$URL" >> "$GITHUB_ENV"
-          echo "### PolyGuard Ensemble is live at: $URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "PUBLIC_URL=$URL" >> $GITHUB_ENV
+          echo "### PolyGuard Ensemble is live at: $URL" >> $GITHUB_STEP_SUMMARY
           echo "$URL"
 
       - name: Keep service alive
@@ -124,7 +146,15 @@ jobs:
             sleep 60
             pgrep -f "gunicorn app.main:app" >/dev/null || {
               echo "Gunicorn died, restarting..."
-              nohup ./scripts/start_server.sh >> server.log 2>&1 &
+              nohup gunicorn app.main:app \
+                  --workers 2 \
+                  --worker-class uvicorn.workers.UvicornWorker \
+                  --preload \
+                  --bind 0.0.0.0:8000 \
+                  --timeout 180 \
+                  --graceful-timeout 30 \
+                  --keep-alive 5 \
+                  >> server.log 2>&1 &
             }
             pgrep -f "cloudflared tunnel" >/dev/null || {
               echo "Cloudflared died, restarting..."
