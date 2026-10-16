@@ -1,7 +1,6 @@
-const STORAGE_KEY = 'unicollect_threads_v4';
-const LEGACY_STORAGE_KEY = 'polyguard_threads_v4';
-const UI_KEY = 'unicollect_ui_v1';
-const THEME_KEY = 'unicollect_theme';
+const STORAGE_KEY = 'polyguard_threads_v4';
+const UI_KEY = 'polyguard_ui_v1';
+const THEME_KEY = 'polyguard_theme';
 const REQUEST_TIMEOUT_MS = 180000;
 const HEALTH_TIMEOUT_MS = 8000;
 const MAX_TEXT = 20000;
@@ -25,7 +24,6 @@ const $ = id => document.getElementById(id);
 function faDigits(v) {
   return String(v).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[+d]);
 }
-function fa(v) { return faDigits(v); }
 
 /* ---------------- icons (inline SVG, no external dependency) ---------------- */
 const ICONS = {
@@ -563,7 +561,7 @@ function streamText(el, text, opts, token) {
 /* ---------------- thinking indicator ----------------
    Animated mark (petal wave) + a status line that cross-fades between
    phases + an elapsed-time counter that appears after 2 s. */
-const THINK_PHASES = ['درحال فکر کردن', 'درحال بررسی', 'تشخیص زبان و فینگیلیش', 'پرسش از مدل‌ها', 'رأی اجتماعی', 'جمع‌بندی نتیجه'];
+const THINK_PHASES = ['درحال فکر کردن', 'درحال بررسی', 'رأی اجتماعی', 'پرسش از مدل‌ها', 'تایپینگ پاسخ', 'جمع‌بندی نتیجه'];
 const thinking = { phaseTimer: 0, clockTimer: 0, swapTimer: 0, t0: 0 };
 
 function startThinking() {
@@ -718,7 +716,7 @@ function buildTurnHTML(msg, opts) {
   let fing = '';
   if (r.fingilish_detected && r.fingilish_text) {
     const a = r.analysis || {};
-    const chip = (d) => d ? `<span class="tag ${d === 'SAFE' ? 'ok' : d === 'SUSPECT' ? 'warn' : 'bad'}">${escapeHtml(d)}</span>` : '';
+    const chip = (d) => { if (!d) return ''; const label = d === 'SAFE' ? 'سالم' : d === 'SUSPECT' ? 'مشکوک' : d === 'TOXIC' ? 'سمی' : 'نامشخص'; return `<span class="tag ${d === 'SAFE' ? 'ok' : d === 'SUSPECT' ? 'warn' : 'bad'}">${label}</span>`; };
     fing = `
       <div class="note ${revealCls}">
         <span class="note-ico">${svg('lang')}</span>
@@ -1316,7 +1314,7 @@ function exportCurrentThread() {
   const blob = new Blob([JSON.stringify(t, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `unicollect_${t.id}.json`;
+  a.href = url; a.download = `polyguard_${t.id}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1500); // revoking immediately breaks the download in Firefox
   showToast('فایل JSON دانلود شد');

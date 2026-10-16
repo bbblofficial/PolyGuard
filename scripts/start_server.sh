@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start Unicollect with gunicorn. --preload makes the Gunicorn MASTER import
+# Start PolyGuard with gunicorn. --preload makes the Gunicorn MASTER import
 # app.main (and so load all five models) once, before forking workers; the
 # forked workers then share that already-loaded memory via copy-on-write
 # instead of each worker re-loading all five models from disk on its own.
