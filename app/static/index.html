@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=__V__">
   <script>
     try { if (localStorage.getItem('polyguard_theme') === 'light') document.documentElement.classList.remove('dark'); } catch (e) {}
   </script>
@@ -25,13 +25,9 @@
 
       <nav class="sb-nav">
         <button class="sb-item" onclick="createNewThread()"><i data-i="edit"></i><span>گفتگوی جدید</span></button>
-        <button class="sb-item" onclick="toggleSearchInput()"><i data-i="search"></i><span>جستجوی گفتگوها</span></button>
+        <button class="sb-item" onclick="openSearch()"><i data-i="search"></i><span>جستجوی گفتگوها</span><kbd class="kbd sb-kbd">Ctrl K</kbd></button>
         <button class="sb-item" onclick="openSettingsModal()"><i data-i="layers"></i><span>مدل‌ها و وضعیت</span></button>
       </nav>
-
-      <div id="sidebar-search-box" class="sb-search hidden">
-        <input id="search-threads" type="text" oninput="renderSidebarThreads()" placeholder="جستجو در گفتگوها…" autocomplete="off">
-      </div>
 
       <div class="sb-label">گفتگوها</div>
       <div id="threads-list" class="sb-threads"></div>
@@ -62,7 +58,7 @@
             <span class="model-sub">5-Ensemble</span>
             <i data-i="chevron" class="chev"></i>
           </button>
-          <div id="model-dropdown" class="dropdown hidden" onclick="event.stopPropagation()">
+          <div id="model-dropdown" class="dropdown" onclick="event.stopPropagation()">
             <button class="dd-item" onclick="setViewMode('detailed')">
               <div class="dd-text">
                 <div class="dd-title">PolyGuard 5-Ensemble</div>
@@ -82,6 +78,7 @@
       </div>
 
       <div class="tb-end">
+        <button class="icon-btn" onclick="openSearch()" title="جستجو (Ctrl+K)"><i data-i="search"></i></button>
         <button class="icon-btn" onclick="exportCurrentThread()" title="خروجی JSON گفتگو"><i data-i="share"></i></button>
         <button class="icon-btn" onclick="toggleTheme()" title="تغییر حالت روز/شب"><i id="theme-icon" data-i="sun"></i></button>
       </div>
@@ -98,7 +95,7 @@
         <div class="col">
           <div class="composer">
             <textarea id="prompt-input" rows="1" dir="auto" maxlength="20000" placeholder="هر متنی را برای بررسی بنویسید…"
-                      oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+                      spellcheck="false" autocomplete="off" enterkeyhint="send"></textarea>
             <div class="composer-row">
               <div class="cr-start">
                 <button class="round-btn" onclick="pasteClipboard()" title="جای‌گذاری از کلیپ‌بورد"><i data-i="plus"></i></button>
@@ -112,12 +109,12 @@
           </div>
 
           <div id="chips" class="chips">
-            <button class="chip" onclick="useStarter('سلام وقت بخیر، از همکاری با شما بسیار خوشحالم.')"><i data-i="smile"></i><span>فارسی محترمانه</span></button>
-            <button class="chip" onclick="useStarter('Have a wonderful and productive day ahead!')"><i data-i="globe"></i><span>انگلیسی محترمانه</span></button>
-            <button class="chip" onclick="useStarter('You are completely stupid and useless')"><i data-i="alert"></i><span>توهین انگلیسی</span></button>
-            <button class="chip" onclick="useStarter('salam khoobi? man khoobam mersi')"><i data-i="lang"></i><span>فینگیلیش محترمانه</span></button>
-            <button class="chip" onclick="useStarter('to khar hasti')"><i data-i="shield"></i><span>توهین فینگیلیش ۱</span></button>
-            <button class="chip" onclick="useStarter('khafe sho ahmagh')"><i data-i="shield"></i><span>توهین فینگیلیش ۲</span></button>
+            <button class="chip" style="--i:0" onclick="useStarter('سلام وقت بخیر، از همکاری با شما بسیار خوشحالم.')"><i data-i="smile"></i><span>فارسی محترمانه</span></button>
+            <button class="chip" style="--i:1" onclick="useStarter('Have a wonderful and productive day ahead!')"><i data-i="globe"></i><span>انگلیسی محترمانه</span></button>
+            <button class="chip" style="--i:2" onclick="useStarter('You are completely stupid and useless')"><i data-i="alert"></i><span>توهین انگلیسی</span></button>
+            <button class="chip" style="--i:3" onclick="useStarter('salam khoobi? man khoobam mersi')"><i data-i="lang"></i><span>فینگیلیش محترمانه</span></button>
+            <button class="chip" style="--i:4" onclick="useStarter('to khar hasti')"><i data-i="shield"></i><span>توهین فینگیلیش ۱</span></button>
+            <button class="chip" style="--i:5" onclick="useStarter('khafe sho ahmagh')"><i data-i="shield"></i><span>توهین فینگیلیش ۲</span></button>
           </div>
 
           <p class="disclaimer">PolyGuard از ۵ مدل زبانی با رأی‌گیری اجماعی استفاده می‌کند و می‌تواند اشتباه کند. نتایج را بررسی کنید.</p>
@@ -128,8 +125,8 @@
 </div>
 
 <!-- ============ SETTINGS MODAL ============ -->
-<div id="settings-modal" class="modal hidden" onclick="if(event.target===this)closeSettingsModal()">
-  <div class="modal-card">
+<div id="settings-modal" class="modal" onclick="if(event.target===this)closeSettingsModal()">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="تنظیمات">
     <div class="modal-head">
       <h3>تنظیمات و وضعیت Ensemble</h3>
       <button class="icon-btn" onclick="closeSettingsModal()"><i data-i="x"></i></button>
@@ -152,8 +149,28 @@
   </div>
 </div>
 
-<div id="toast" class="toast hidden"><i data-i="check"></i><span id="toast-message">انجام شد</span></div>
+<!-- ============ SEARCH MODAL (Gemini-style) ============ -->
+<div id="search-modal" class="modal search-modal" onclick="if(event.target===this)closeSearch()">
+  <div class="search-card" role="dialog" aria-modal="true" aria-label="جستجوی گفتگوها">
+    <div class="search-head">
+      <i data-i="search" class="search-ico"></i>
+      <input id="search-input" type="text" dir="auto" placeholder="جستجو در گفتگوها…" autocomplete="off" spellcheck="false">
+      <button id="search-clear" class="icon-btn sm hidden-soft" onclick="clearSearch()" title="پاک کردن"><i data-i="x"></i></button>
+    </div>
+    <div class="search-body">
+      <div id="search-label" class="search-label">اخیر</div>
+      <div id="search-results" class="search-results" role="listbox"></div>
+    </div>
+    <div class="search-foot">
+      <span><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> جابه‌جایی</span>
+      <span><kbd class="kbd">Enter</kbd> باز کردن</span>
+      <span><kbd class="kbd">Esc</kbd> بستن</span>
+    </div>
+  </div>
+</div>
 
-<script src="/static/script.js"></script>
+<div id="toast" class="toast" role="status" aria-live="polite"><i data-i="check"></i><span id="toast-message">انجام شد</span></div>
+
+<script src="/static/script.js?v=__V__"></script>
 </body>
 </html>

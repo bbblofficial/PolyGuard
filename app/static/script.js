@@ -1,12 +1,18 @@
 const STORAGE_KEY = 'polyguard_threads_v4';
+const UI_KEY = 'polyguard_ui_v1';
+const REQUEST_TIMEOUT_MS = 180000;
+const REDUCED_MOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const state = {
   threads: [],
   activeThreadId: null,
   isAnalyzing: false,
   viewMode: 'detailed',
-  health: null
+  health: null,
+  justAddedThreadId: null
 };
+
+const $ = id => document.getElementById(id);
 
 /* ---------------- icons (inline SVG, no external dependency) ---------------- */
 const ICONS = {
@@ -35,8 +41,8 @@ const ICONS = {
   refresh:     '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
   lang:        '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
   info:        '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
-  // Claude-style 4-point sparkle, used by the "Thinking" indicator
-  sparkle:     '<path d="M12 2.5c.35 4.2 1.55 6.9 3.9 8.6 1.65 1.15 3.9 1.9 6.1 2.15.35.04.6.34.6.7s-.25.66-.6.7c-2.2.25-4.45 1-6.1 2.15-2.35 1.7-3.55 4.4-3.9 8.6-.03.35-.32.6-.65.6s-.62-.25-.65-.6c-.35-4.2-1.55-6.9-3.9-8.6-1.65-1.15-3.9-1.9-6.1-2.15-.35-.04-.6-.34-.6-.7s.25-.66.6-.7c2.2-.25 4.45-1 6.1-2.15 2.35-1.7 3.55-4.4 3.9-8.6.03-.35.32-.6.65-.6s.62.25.65.6z"/>'
+  clock:       '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  msg:         '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>'
 };
 
 function svg(name) {
@@ -48,27 +54,63 @@ function hydrateIcons(root) {
   });
 }
 
+// Claude-style spark: a starburst of rounded rays. Built once.
+const SPARK_RAYS = (() => {
+  let out = '';
+  const n = 12;
+  for (let k = 0; k < n; k++) {
+    const a = (k / n) * Math.PI * 2 - Math.PI / 2;
+    const r1 = 2.4, r2 = k % 2 ? 7.4 : 10;
+    const p = v => v.toFixed(2);
+    out += `<line class="ray" style="--k:${k}" x1="${p(12 + r1 * Math.cos(a))}" y1="${p(12 + r1 * Math.sin(a))}" x2="${p(12 + r2 * Math.cos(a))}" y2="${p(12 + r2 * Math.sin(a))}"/>`;
+  }
+  return out;
+})();
+function sparkSVG(animated) {
+  return `<svg class="ic spark${animated ? ' spark-live' : ''}" viewBox="0 0 24 24" aria-hidden="true">${SPARK_RAYS}</svg>`;
+}
+
 /* ---------------- init ---------------- */
 window.addEventListener('DOMContentLoaded', () => {
   hydrateIcons();
   loadState();
+  applyUiPrefs();
   syncThemeIcon();
   renderSidebarThreads();
   renderActiveThread();
+  initComposer();
+  initSearch();
   checkHealth();
-  setInterval(checkHealth, 12000);
-  if (window.innerWidth < 768) document.getElementById('app').classList.remove('collapsed');
-  document.getElementById('prompt-input').focus();
-  document.addEventListener('click', () => document.getElementById('model-dropdown').classList.add('hidden'));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettingsModal(); });
+  setInterval(() => { if (!document.hidden) checkHealth(); }, 12000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkHealth(); });
+  if (window.matchMedia('(hover: hover)').matches) $('prompt-input').focus();
+  document.addEventListener('click', closeModelDropdown);
+  document.addEventListener('keydown', onGlobalKey);
+  // allow CSS transitions only after first paint (prevents a flash of
+  // animating sidebar / modals on load)
+  requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.add('ready')));
 });
+
+function onGlobalKey(e) {
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault();
+    isOpen('search-modal') ? closeSearch() : openSearch();
+    return;
+  }
+  if (e.key === 'Escape') {
+    if (isOpen('search-modal')) return closeSearch();
+    if (isOpen('settings-modal')) return closeSettingsModal();
+    if ($('model-dropdown').classList.contains('open')) return closeModelDropdown();
+    closeMobileSidebar();
+  }
+}
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const p = JSON.parse(raw);
-      state.threads = p.threads || [];
+      state.threads = Array.isArray(p.threads) ? p.threads.filter(t => t && t.id && Array.isArray(t.messages)) : [];
       state.activeThreadId = p.activeThreadId || null;
       state.viewMode = p.viewMode || 'detailed';
     }
@@ -76,60 +118,79 @@ function loadState() {
   updateViewModeCheckmarks();
 }
 
+let saveTimer = 0;
 function saveState() {
+  // debounce: big histories make JSON.stringify noticeable
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        threads: state.threads, activeThreadId: state.activeThreadId, viewMode: state.viewMode
+      }));
+    } catch (e) {
+      console.warn(e);
+      showToast('حافظه مرورگر پر است؛ گفتگوهای قدیمی را پاک کنید');
+    }
+  }, 120);
+}
+window.addEventListener('pagehide', () => {
+  clearTimeout(saveTimer);
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       threads: state.threads, activeThreadId: state.activeThreadId, viewMode: state.viewMode
     }));
-  } catch (e) { console.warn(e); }
+  } catch (e) {}
+});
+
+function applyUiPrefs() {
+  try {
+    const ui = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
+    if (ui.collapsed && window.innerWidth >= 768) $('app').classList.add('collapsed');
+  } catch (e) {}
+}
+function saveUiPrefs() {
+  try { localStorage.setItem(UI_KEY, JSON.stringify({ collapsed: $('app').classList.contains('collapsed') })); } catch (e) {}
 }
 
 /* ---------------- health ---------------- */
 async function checkHealth() {
-  const dot = document.getElementById('status-dot');
-  const txt = document.getElementById('status-text');
+  const dot = $('status-dot');
+  const txt = $('status-text');
   try {
-    const r = await fetch('/health');
+    const r = await fetch('/health', { cache: 'no-store' });
     const d = await r.json();
     state.health = d;
     const n = (d.loaded_models || []).length;
-    if (d.status === 'ok') {
-      dot.className = 'sdot ok';
-      txt.textContent = `${n}/5 مدل فعال`;
-    } else if (d.status === 'loading') {
-      dot.className = 'sdot warn';
-      txt.textContent = `بارگذاری مدل‌ها (${n}/5)…`;
-    } else {
-      dot.className = 'sdot bad';
-      txt.textContent = 'خطا در بارگذاری';
-    }
-    const c = document.getElementById('cfg-concurrency');
-    if (c && d.concurrency) c.textContent = `${d.concurrency} (Peak ${d.peak || 0})`;
-    const m = document.getElementById('cfg-models');
-    if (m) {
-      const ok = (d.loaded_models || []).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="ok">● Ready</span></div>`).join('');
-      const er = Object.keys(d.errors || {}).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="err">● Error</span></div>`).join('');
-      m.innerHTML = (ok + er) || 'مدلی بارگذاری نشده';
-    }
+    let cls, label;
+    if (d.status === 'ok') { cls = 'sdot ok'; label = `${n}/5 مدل فعال`; }
+    else if (d.status === 'loading') { cls = 'sdot warn'; label = `بارگذاری مدل‌ها (${n}/5)…`; }
+    else { cls = 'sdot bad'; label = 'خطا در بارگذاری'; }
+    if (dot.className !== cls) dot.className = cls;
+    if (txt.textContent !== label) txt.textContent = label;
+    if (isOpen('settings-modal')) renderHealthDetails(d);
   } catch (e) {
     dot.className = 'sdot bad';
-    txt.textContent = 'سرور آفلاین';
+    txt.textContent = 'سرور در دسترس نیست';
+  }
+}
+function renderHealthDetails(d) {
+  const c = $('cfg-concurrency');
+  if (c && d.concurrency) c.textContent = `${d.concurrency} (Peak ${d.peak || 0})`;
+  const m = $('cfg-models');
+  if (m) {
+    const ok = (d.loaded_models || []).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="ok">● Ready</span></div>`).join('');
+    const er = Object.keys(d.errors || {}).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="err">● Error</span></div>`).join('');
+    m.innerHTML = (ok + er) || 'مدلی بارگذاری نشده';
   }
 }
 
 /* ---------------- sidebar ---------------- */
 function toggleSidebar() {
-  const app = document.getElementById('app');
+  const app = $('app');
   if (window.innerWidth < 768) app.classList.toggle('mobile-open');
-  else app.classList.toggle('collapsed');
+  else { app.classList.toggle('collapsed'); saveUiPrefs(); }
 }
-function closeMobileSidebar() { document.getElementById('app').classList.remove('mobile-open'); }
-
-function toggleSearchInput() {
-  const box = document.getElementById('sidebar-search-box');
-  box.classList.toggle('hidden');
-  if (!box.classList.contains('hidden')) document.getElementById('search-threads').focus();
-}
+function closeMobileSidebar() { $('app').classList.remove('mobile-open'); }
 
 function createNewThread() {
   if (state.isAnalyzing) return;
@@ -138,7 +199,7 @@ function createNewThread() {
   renderSidebarThreads();
   renderActiveThread();
   closeMobileSidebar();
-  document.getElementById('prompt-input').focus();
+  $('prompt-input').focus();
 }
 
 function selectThread(id) {
@@ -152,15 +213,21 @@ function selectThread(id) {
 
 function deleteThread(event, id) {
   event.stopPropagation();
-  state.threads = state.threads.filter(t => t.id !== id);
-  if (state.activeThreadId === id) state.activeThreadId = null;
-  saveState();
-  renderSidebarThreads();
-  renderActiveThread();
-  showToast('گفتگو حذف شد');
+  if (state.isAnalyzing && id === state.activeThreadId) return;
+  const row = event.target.closest('.thread');
+  const finish = () => {
+    state.threads = state.threads.filter(t => t.id !== id);
+    if (state.activeThreadId === id) { state.activeThreadId = null; renderActiveThread(); }
+    saveState();
+    renderSidebarThreads();
+    showToast('گفتگو حذف شد');
+  };
+  if (row && !REDUCED_MOTION) { row.classList.add('leaving'); setTimeout(finish, 180); }
+  else finish();
 }
 
 function clearAllHistory() {
+  if (state.isAnalyzing) return;
   if (!confirm('آیا تمام تاریخچه گفتگوها پاک شود؟')) return;
   state.threads = [];
   state.activeThreadId = null;
@@ -171,51 +238,188 @@ function clearAllHistory() {
   showToast('تاریخچه پاک شد');
 }
 
-function renderSidebarThreads() {
-  const box = document.getElementById('threads-list');
-  const q = (document.getElementById('search-threads')?.value || '').toLowerCase().trim();
-
-  const list = state.threads
-    .filter(t => !q || (t.title || '').toLowerCase().includes(q) ||
-                 (t.messages || []).some(m => (m.text || '').toLowerCase().includes(q)))
-    .sort((a, b) => b.updatedAt - a.updatedAt);
-
-  if (!list.length) {
-    box.innerHTML = `<div class="sb-empty">${q ? 'موردی یافت نشد' : 'هنوز گفتگویی ثبت نشده است'}</div>`;
-    return;
-  }
-
+function groupThreads(list) {
   const now = Date.now(), day = 86400000;
   const groups = { 'امروز': [], '۷ روز گذشته': [], 'قدیمی‌تر': [] };
   list.forEach(t => {
     const age = now - (t.updatedAt || t.createdAt || now);
     (age < day ? groups['امروز'] : age < day * 7 ? groups['۷ روز گذشته'] : groups['قدیمی‌تر']).push(t);
   });
+  return groups;
+}
+
+function lastDecision(t) {
+  const last = t.messages?.[t.messages.length - 1]?.result?.decision;
+  return last === 'TOXIC' ? 'dot-bad' : last === 'SUSPECT' ? 'dot-warn' : 'dot-ok';
+}
+
+function renderSidebarThreads() {
+  const box = $('threads-list');
+  const list = [...state.threads].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+  if (!list.length) {
+    box.innerHTML = `<div class="sb-empty">هنوز گفتگویی ثبت نشده است</div>`;
+    return;
+  }
 
   let html = '';
-  for (const [label, items] of Object.entries(groups)) {
+  for (const [label, items] of Object.entries(groupThreads(list))) {
     if (!items.length) continue;
     html += `<div class="sb-group-label">${label}</div>`;
     items.forEach(t => {
-      const last = t.messages?.[t.messages.length - 1]?.result?.decision;
-      const dotCls = last === 'TOXIC' ? 'dot-bad' : last === 'SUSPECT' ? 'dot-warn' : 'dot-ok';
+      const cls = ['thread', t.id === state.activeThreadId ? 'active' : '', t.id === state.justAddedThreadId ? 'entering' : ''].join(' ');
       html += `
-        <div class="thread ${t.id === state.activeThreadId ? 'active' : ''}" onclick="selectThread('${t.id}')">
-          <div class="t-left"><span class="t-dot ${dotCls}"></span><span class="t-title">${escapeHtml(t.title || 'تحلیل جدید')}</span></div>
+        <div class="${cls}" role="button" tabindex="0" onclick="selectThread('${t.id}')" onkeydown="if(event.key==='Enter')selectThread('${t.id}')">
+          <div class="t-left"><span class="t-dot ${lastDecision(t)}"></span><span class="t-title">${escapeHtml(t.title || 'تحلیل جدید')}</span></div>
           <button class="t-del" onclick="deleteThread(event,'${t.id}')" title="حذف">${svg('trash')}</button>
         </div>`;
     });
   }
+  state.justAddedThreadId = null;
   box.innerHTML = html;
+}
+
+/* ---------------- search modal (Gemini-style) ---------------- */
+const search = { sel: 0, items: [], raf: 0 };
+
+function initSearch() {
+  const inp = $('search-input');
+  inp.addEventListener('input', () => {
+    $('search-clear').classList.toggle('hidden-soft', !inp.value);
+    if (search.raf) return;
+    search.raf = requestAnimationFrame(() => { search.raf = 0; renderSearchResults(); });
+  });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!search.items.length) return;
+      const d = e.key === 'ArrowDown' ? 1 : -1;
+      search.sel = (search.sel + d + search.items.length) % search.items.length;
+      paintSearchSelection(true);
+    } else if (e.key === 'Enter' && !e.isComposing) {
+      e.preventDefault();
+      const it = search.items[search.sel];
+      if (it) pickSearchResult(it.id);
+    }
+  });
+}
+
+function openSearch() {
+  closeMobileSidebar();
+  closeModelDropdown();
+  const inp = $('search-input');
+  inp.value = '';
+  $('search-clear').classList.add('hidden-soft');
+  renderSearchResults();
+  openModal('search-modal');
+  // focus after the element is visible (iOS needs it inside the gesture)
+  inp.focus({ preventScroll: true });
+  setTimeout(() => inp.focus({ preventScroll: true }), 30);
+}
+function closeSearch() { closeModal('search-modal'); }
+function clearSearch() {
+  const inp = $('search-input');
+  inp.value = '';
+  $('search-clear').classList.add('hidden-soft');
+  renderSearchResults();
+  inp.focus();
+}
+
+function snippetAround(text, q, span) {
+  const i = text.toLowerCase().indexOf(q);
+  if (i < 0) return text.slice(0, span * 2);
+  const start = Math.max(0, i - span);
+  return (start > 0 ? '…' : '') + text.slice(start, i + q.length + span) + (i + q.length + span < text.length ? '…' : '');
+}
+function highlight(text, q) {
+  if (!q) return escapeHtml(text);
+  const lower = text.toLowerCase();
+  let out = '', pos = 0, i;
+  while ((i = lower.indexOf(q, pos)) !== -1) {
+    out += escapeHtml(text.slice(pos, i)) + '<mark>' + escapeHtml(text.slice(i, i + q.length)) + '</mark>';
+    pos = i + q.length;
+  }
+  return out + escapeHtml(text.slice(pos));
+}
+function relTime(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts, m = 60000, h = 60 * m, d = 24 * h;
+  const fa = n => Number(n).toLocaleString('fa-IR');
+  if (diff < m) return 'همین الان';
+  if (diff < h) return `${fa(Math.floor(diff / m))} دقیقه پیش`;
+  if (diff < d) return `${fa(Math.floor(diff / h))} ساعت پیش`;
+  if (diff < 7 * d) return `${fa(Math.floor(diff / d))} روز پیش`;
+  try { return new Date(ts).toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' }); } catch (e) { return ''; }
+}
+
+function renderSearchResults() {
+  const q = $('search-input').value.toLowerCase().trim();
+  const box = $('search-results');
+  const label = $('search-label');
+  const sorted = [...state.threads].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+  let items;
+  if (!q) {
+    items = sorted.slice(0, 20).map(t => ({ t, snippet: t.messages?.[t.messages.length - 1]?.text || '' }));
+    label.textContent = items.length ? 'گفتگوهای اخیر' : '';
+  } else {
+    items = [];
+    for (const t of sorted) {
+      const inTitle = (t.title || '').toLowerCase().includes(q);
+      const hit = (t.messages || []).find(m => (m.text || '').toLowerCase().includes(q));
+      if (inTitle || hit) items.push({ t, snippet: hit ? snippetAround(hit.text, q, 40) : (t.messages?.[0]?.text || '') });
+      if (items.length >= 50) break;
+    }
+    label.textContent = items.length ? `${items.length.toLocaleString('fa-IR')} نتیجه` : '';
+  }
+
+  search.items = items.map(x => x.t);
+  search.sel = 0;
+
+  if (!items.length) {
+    box.innerHTML = `<div class="search-empty">${svg(q ? 'search' : 'msg')}<span>${q ? 'گفتگویی با این عبارت پیدا نشد' : 'هنوز گفتگویی ثبت نشده است'}</span></div>`;
+    return;
+  }
+
+  box.innerHTML = items.map(({ t, snippet }, idx) => `
+    <button class="search-item${t.id === state.activeThreadId ? ' current' : ''}" role="option" data-idx="${idx}" style="--i:${Math.min(idx, 10)}"
+            onclick="pickSearchResult('${t.id}')" onmousemove="hoverSearch(${idx})">
+      <span class="si-ico">${svg('msg')}<span class="t-dot ${lastDecision(t)}"></span></span>
+      <span class="si-text">
+        <span class="si-title" dir="auto">${highlight(t.title || 'تحلیل جدید', q)}</span>
+        <span class="si-snip" dir="auto">${highlight(snippet.replace(/\s+/g, ' '), q)}</span>
+      </span>
+      <span class="si-time">${relTime(t.updatedAt || t.createdAt)}</span>
+    </button>`).join('');
+  paintSearchSelection(false);
+}
+function hoverSearch(idx) {
+  if (search.sel === idx) return;
+  search.sel = idx;
+  paintSearchSelection(false);
+}
+function paintSearchSelection(scroll) {
+  const nodes = $('search-results').querySelectorAll('.search-item');
+  nodes.forEach((n, i) => n.classList.toggle('sel', i === search.sel));
+  if (scroll && nodes[search.sel]) nodes[search.sel].scrollIntoView({ block: 'nearest' });
+}
+function pickSearchResult(id) {
+  closeSearch();
+  if (state.isAnalyzing) { showToast('صبر کنید تا تحلیل فعلی تمام شود'); return; }
+  selectThread(id);
 }
 
 /* ---------------- chat rendering ---------------- */
 function setWelcome(on) {
-  document.getElementById('main').classList.toggle('welcome', on);
+  $('main').classList.toggle('welcome', on);
 }
 
+// Any re-render cancels an in-flight typewriter run.
+let streamToken = 0;
+
 function renderActiveThread() {
-  const stream = document.getElementById('chat-stream');
+  streamToken++;
+  const stream = $('chat-stream');
   const thread = state.threads.find(t => t.id === state.activeThreadId);
   if (!thread || !thread.messages.length) {
     setWelcome(true);
@@ -227,38 +431,54 @@ function renderActiveThread() {
   scrollToBottom(false);
 }
 
-/* ---------------- Claude-style thinking + typing reveal ---------------- */
+/* ---------------- Claude-style typewriter ---------------- */
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-// Types `text` into `el` character by character with a blinking caret.
-function typeInto(el, text, charsPerSec) {
+// Claude streams text in small word-sized chunks at a steady pace and each
+// chunk softly fades in; there is no blinking caret. This reproduces that:
+// a requestAnimationFrame clock decides how many characters are "due",
+// whole words are appended as <span>s with a short opacity fade, and once
+// done the spans are collapsed back to a plain text node.
+function streamText(el, text, cps, token) {
   if (!el) return Promise.resolve();
+  if (REDUCED_MOTION || !text) { el.textContent = text; return Promise.resolve(); }
+  const parts = text.match(/\S+\s*|\s+/g) || [text];
   return new Promise(resolve => {
     el.textContent = '';
-    const caret = document.createElement('span');
-    caret.className = 'typing-caret';
-    el.appendChild(caret);
-    const delay = 1000 / Math.max(1, charsPerSec || 50);
-    let i = 0;
-    const tick = () => {
-      if (i >= text.length) { caret.remove(); resolve(); return; }
-      caret.insertAdjacentText('beforebegin', text[i]);
-      i++;
-      setTimeout(tick, delay);
+    let shown = 0, idx = 0, t0 = 0, last = 0;
+    const done = () => { el.textContent = text; el.classList.remove('streaming'); resolve(); };
+    el.classList.add('streaming');
+    const frame = now => {
+      if (token !== streamToken || !el.isConnected) return done();
+      if (!t0) t0 = now;
+      // slight ease-in so the first words don't pop all at once
+      const due = Math.floor(((now - t0) / 1000) * cps);
+      let chunk = '';
+      while (idx < parts.length && shown + chunk.length < due) chunk += parts[idx++];
+      if (chunk) {
+        const s = document.createElement('span');
+        s.className = 'tw';
+        s.textContent = chunk;
+        el.appendChild(s);
+        shown += chunk.length;
+        if (now - last > 120) { keepPinned(); last = now; }
+      }
+      if (idx >= parts.length) { setTimeout(() => { if (el.isConnected) done(); else resolve(); }, 260); return; }
+      requestAnimationFrame(frame);
     };
-    tick();
+    requestAnimationFrame(frame);
   });
 }
 
-// Renders every message normally, except the newest one (msgId), whose
-// title/subtitle stream in like Claude's typing animation; the rest of
-// that card (meter, stats, breakdown, timing) fades in right after, in a
-// short staggered cascade.
+// Renders every message normally, except the newest one (msgId): its
+// title/subtitle stream in like Claude, and the rest of the card (meter,
+// stats, breakdown, actions) cascades in.
 async function renderActiveThreadWithTyping(msgId) {
-  const stream = document.getElementById('chat-stream');
+  const stream = $('chat-stream');
   const thread = state.threads.find(t => t.id === state.activeThreadId);
   if (!thread || !thread.messages.length) return;
   setWelcome(false);
+  const token = ++streamToken;
 
   const last = thread.messages[thread.messages.length - 1];
   const older = thread.messages.slice(0, -1).map(m => buildTurnHTML(m)).join('');
@@ -268,15 +488,22 @@ async function renderActiveThreadWithTyping(msgId) {
   if (last.id !== msgId || !last.result || last.result.error) return;
 
   const meta = DECISIONS[last.result.decision] || { title: 'نتیجه نامشخص', text: '' };
-  await typeInto(document.getElementById(`type-title-${last.id}`), meta.title, 55);
-  await typeInto(document.getElementById(`type-sub-${last.id}`), meta.text, 70);
+  const wrap = $(`botmsg-${last.id}`);
+  const reveal = () => {
+    if (!wrap) return;
+    wrap.querySelectorAll('.reveal-item').forEach((el, idx) => {
+      if (REDUCED_MOTION) el.classList.add('show');
+      else setTimeout(() => el.classList.add('show'), idx * 70);
+    });
+    setTimeout(keepPinned, 450);
+  };
 
-  const wrap = document.getElementById(`botmsg-${last.id}`);
-  if (wrap) {
-    const items = wrap.querySelectorAll('.reveal-item');
-    items.forEach((el, idx) => setTimeout(() => el.classList.add('show'), idx * 55));
-  }
-  scrollToBottom(true);
+  await streamText($(`type-title-${last.id}`), meta.title, 60, token);
+  if (token !== streamToken) return reveal();
+  // the subtitle streams while the card body starts cascading in
+  const sub = streamText($(`type-sub-${last.id}`), meta.text, 120, token);
+  setTimeout(reveal, 120);
+  await sub;
 }
 
 const DECISIONS = {
@@ -286,15 +513,15 @@ const DECISIONS = {
 };
 
 function scriptLabel(s) { return s === 'fa' ? 'فارسی' : s === 'en' ? 'انگلیسی' : 'مختلط'; }
+function num(v, d) { const n = Number(v); return Number.isFinite(n) ? n : (d || 0); }
 
-// "✦ به مدت 1.0 ثانیه فکر کرد" — Claude-style thought-time header shown
-// above the result card. Rendered from the persisted msg.thinkingMs value.
+// "✦ ۱٫۲ ثانیه فکر کرد" - Claude-style thought-time header.
 function thoughtLineHTML(ms, revealCls) {
   if (typeof ms !== 'number') return '';
-  const secs = (ms / 1000).toFixed(1);
+  const secs = (ms / 1000).toLocaleString('fa-IR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   return `<div class="thought-line ${revealCls}" title="زمان صرف‌شده برای تحلیل این متن">
-    <span class="thought-sparkle">${svg('sparkle')}</span>
-    <span>به مدت ${secs} ثانیه فکر کرد</span>
+    <span class="thought-sparkle">${sparkSVG(false)}</span>
+    <span>${secs} ثانیه فکر کرد</span>
   </div>`;
 }
 
@@ -312,11 +539,11 @@ function userTurnHTML(msg) {
 }
 
 function buildTurnHTML(msg, opts) {
-  const animate = !!(opts && opts.animate);
+  const animate = !!(opts && opts.animate) && !REDUCED_MOTION;
   const user = userTurnHTML(msg);
   const r = msg.result;
 
-  if (!r || r.error) {
+  if (!r || r.error || !r.decision) {
     const e = r && r.error ? (typeof r.error === 'string' ? r.error : JSON.stringify(r.error)) : 'پاسخی از سرور دریافت نشد';
     return `${user}
       <div class="msg bot fade"><div class="bot-body">
@@ -326,14 +553,15 @@ function buildTurnHTML(msg, opts) {
   }
 
   const meta = DECISIONS[r.decision] || { icon: 'info', title: 'نتیجه نامشخص', text: 'پاسخ معتبری از سرور دریافت نشد.' };
-  const maxPct = Math.min(100, r.max_raw * 100);
+  const maxPct = Math.max(0, Math.min(100, num(r.max_raw) * 100));
   const titleInner = animate ? `<span class="type-target" id="type-title-${msg.id}"></span>` : escapeHtml(meta.title);
   const subInner = animate ? `<span class="type-target" id="type-sub-${msg.id}"></span>` : escapeHtml(meta.text);
   const revealCls = animate ? 'reveal-item' : '';
+  const votes = r.votes || {};
 
   const rows = Object.keys(r.raw_scores || {}).map(key => {
-    const raw = r.raw_scores[key];
-    const voted = r.votes[key];
+    const raw = num(r.raw_scores[key]);
+    const voted = !!votes[key];
     const w = (r.weights && r.weights[key]) || 1;
     const pct = Math.min(100, raw * 100).toFixed(1);
     const fill = voted ? 'f-bad' : raw >= 0.35 ? 'f-warn' : 'f-ok';
@@ -357,7 +585,7 @@ function buildTurnHTML(msg, opts) {
   let fing = '';
   if (r.fingilish_detected && r.fingilish_text) {
     const a = r.analysis || {};
-    const chip = (d) => d ? `<span class="tag ${d === 'SAFE' ? 'ok' : 'bad'}">${d}</span>` : '';
+    const chip = (d) => d ? `<span class="tag ${d === 'SAFE' ? 'ok' : 'bad'}">${escapeHtml(d)}</span>` : '';
     fing = `
       <div class="note ${revealCls}">
         <span class="note-ico">${svg('lang')}</span>
@@ -380,13 +608,12 @@ function buildTurnHTML(msg, opts) {
       <div class="bd-card">${rows}${skipped}</div>
     </details>`;
 
-  // Claude-style thought-time header, always the real measured time.
   const thought = thoughtLineHTML(msg.thinkingMs, revealCls);
 
   return `${user}
-    <div class="msg bot fade" id="botmsg-${msg.id}"><div class="bot-body">
+    <div class="msg bot fade${animate ? ' anim' : ''}" id="botmsg-${msg.id}"><div class="bot-body">
       ${thought}
-      <div class="result ${r.decision}">
+      <div class="result ${escapeHtml(r.decision)}">
         <div class="res-head">
           <span class="res-ico">${svg(meta.icon)}</span>
           <div class="res-txt">
@@ -403,10 +630,10 @@ function buildTurnHTML(msg, opts) {
         <div class="meter-legend ${revealCls}"><span><i class="lg"></i>آستانه رأی ۵۰٪</span><span><i class="lg"></i>حد قاطع ۹۰٪</span></div>
         ${fing}
         <div class="stats ${revealCls}">
-          <div class="stat"><div class="k">آرای سمیت</div><div class="v mono">${r.votes_count} / ${r.total_models}</div></div>
-          <div class="stat"><div class="k">اطمینان</div><div class="v mono">${(r.confidence * 100).toFixed(1)}%</div></div>
+          <div class="stat"><div class="k">آرای سمیت</div><div class="v mono">${num(r.votes_count)} / ${num(r.total_models)}</div></div>
+          <div class="stat"><div class="k">اطمینان</div><div class="v mono">${(num(r.confidence) * 100).toFixed(1)}%</div></div>
           <div class="stat"><div class="k">زبان</div><div class="v">${scriptLabel(r.script)}</div></div>
-          <div class="stat"><div class="k">زمان</div><div class="v mono">${r.latency_ms || 0} ms</div></div>
+          <div class="stat"><div class="k">زمان</div><div class="v mono">${num(r.latency_ms)} ms</div></div>
         </div>
         ${breakdown}
       </div>
@@ -419,24 +646,27 @@ function buildTurnHTML(msg, opts) {
 }
 
 /* ---------------- analyze ---------------- */
+let msgSeq = 0;
+function newId(prefix) { return `${prefix}_${Date.now().toString(36)}${(msgSeq++).toString(36)}`; }
+
 async function analyze(overrideText) {
-  const input = document.getElementById('prompt-input');
+  const input = $('prompt-input');
   const text = (typeof overrideText === 'string' ? overrideText : input.value).trim();
   if (!text || state.isAnalyzing) return;
 
   state.isAnalyzing = true;
-  const sendBtn = document.getElementById('send-btn');
+  const sendBtn = $('send-btn');
   sendBtn.disabled = true;
   sendBtn.classList.add('busy');
   if (typeof overrideText !== 'string') {
     input.value = '';
-    autoResize(input);
+    syncComposer();
   }
 
   let thread = state.threads.find(t => t.id === state.activeThreadId);
   if (!thread) {
     thread = {
-      id: 'th_' + Date.now(),
+      id: newId('th'),
       title: text.slice(0, 40) + (text.length > 40 ? '…' : ''),
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -444,72 +674,67 @@ async function analyze(overrideText) {
     };
     state.threads.unshift(thread);
     state.activeThreadId = thread.id;
+    state.justAddedThreadId = thread.id;
+    renderSidebarThreads();
   }
 
+  streamToken++; // stop any previous typewriter
   appendPendingTurn(text);
 
-  // Real clock, started the instant we send the request.
   const sentAt = performance.now();
-  // Minimum time the "Thinking" indicator stays on screen, so it never
-  // flashes on a fast reply. This is exactly 1 second per the spec.
-  const MIN_THINKING_MS = 1000;
+  // keep the Thinking indicator up long enough that it never just flashes
+  const MIN_THINKING_MS = 900;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const r = await fetch('/api/check', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    });
     let result;
-    try { result = await r.json(); }
-    catch (_) { result = { error: `پاسخ نامعتبر (HTTP ${r.status})` }; }
+    try {
+      const r = await fetch('/api/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+        signal: ctrl.signal
+      });
+      try { result = await r.json(); }
+      catch (_) { result = { error: `پاسخ نامعتبر از سرور (HTTP ${r.status})` }; }
+    } catch (e) {
+      result = { error: e.name === 'AbortError' ? 'زمان پاسخ‌گویی سرور تمام شد' : 'ارتباط با سرور برقرار نشد' };
+    }
 
-    // Genuine round-trip time (network + ۵ مدل + سرور) - measured, not staged.
     const realElapsedMs = performance.now() - sentAt;
-    const stillOwed = MIN_THINKING_MS - realElapsedMs;
-    if (stillOwed > 0) await sleep(stillOwed);
-
-    // The user-perceived thinking time (>= 1s). Persisted per message so
-    // the "✦ به مدت X.X ثانیه فکر کرد" header is accurate on reload.
+    if (MIN_THINKING_MS > realElapsedMs) await sleep(MIN_THINKING_MS - realElapsedMs);
     const thinkingMs = Math.max(realElapsedMs, MIN_THINKING_MS);
 
-    const msg = {
-      id: 'msg_' + Date.now(),
-      text, result,
-      ts: Date.now(),
-      thinkingMs: Math.round(thinkingMs)
-    };
+    const msg = { id: newId('msg'), text, result, ts: Date.now(), thinkingMs: Math.round(thinkingMs) };
     thread.messages.push(msg);
     thread.updatedAt = Date.now();
     saveState();
     renderSidebarThreads();
 
-    if (result && !result.error) {
-      // Gracefully fade the Thinking block out before the answer appears.
-      const pending = document.getElementById('pending-turn');
-      if (pending) {
-        pending.classList.add('pending-fade');
-        await sleep(220);
-      }
-      await renderActiveThreadWithTyping(msg.id);
-    } else {
-      renderActiveThread();
+    // fade the Thinking block out before the answer replaces it
+    const pending = $('pending-turn');
+    if (pending && !REDUCED_MOTION) {
+      pending.classList.add('pending-fade');
+      await sleep(200);
     }
-  } catch (e) {
-    showToast('خطا در ارتباط با سرور');
-    renderActiveThread();
+
+    if (state.activeThreadId !== thread.id) return; // user moved away
+    if (result && !result.error) await renderActiveThreadWithTyping(msg.id);
+    else renderActiveThread();
   } finally {
+    clearTimeout(timer);
     state.isAnalyzing = false;
-    document.getElementById('send-btn').classList.remove('busy');
-    autoResize(input);
-    input.focus();
+    sendBtn.classList.remove('busy');
+    syncComposer();
+    if (window.matchMedia('(hover: hover)').matches) input.focus({ preventScroll: true });
   }
 }
 
 function appendPendingTurn(text) {
   setWelcome(false);
-  const stream = document.getElementById('chat-stream');
-  const old = document.getElementById('pending-turn');
+  const stream = $('chat-stream');
+  const old = $('pending-turn');
   if (old) old.remove();
   const div = document.createElement('div');
   div.id = 'pending-turn';
@@ -517,10 +742,9 @@ function appendPendingTurn(text) {
   div.innerHTML = `
     <div class="msg user fade"><div class="ubox"><div class="bubble" dir="auto">${escapeHtml(text)}</div></div></div>
     <div class="msg bot fade"><div class="bot-body">
-      <div class="thinking-block">
-        <span class="thinking-sparkle">${svg('sparkle')}</span>
+      <div class="thinking-block" role="status" aria-live="polite">
+        <span class="thinking-sparkle">${sparkSVG(true)}</span>
         <span class="thinking-text">در حال فکر کردن</span>
-        <span class="thinking-dots"><i></i><i></i><i></i></span>
       </div>
     </div></div>`;
   stream.appendChild(div);
@@ -532,18 +756,51 @@ function reAnalyze(msgId) {
   if (msg) analyze(msg.text);
 }
 
-/* ---------------- composer ---------------- */
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
-  const c = document.getElementById('char-counter');
-  if (el.value.length) { c.textContent = el.value.length; c.classList.remove('hidden'); }
-  else c.classList.add('hidden');
-  document.getElementById('send-btn').disabled = !el.value.trim() || state.isAnalyzing;
+/* ---------------- composer (lag-free) ---------------- */
+// Native auto-grow where supported (Chrome/Edge 123+, Safari 18.2+): the
+// browser sizes the textarea itself, so typing never forces a JS layout.
+// Elsewhere we measure at most once per frame. Counter / send-button
+// updates only touch the DOM when their value actually changes.
+const HAS_FIELD_SIZING = !!(window.CSS && CSS.supports && CSS.supports('field-sizing', 'content'));
+const composer = { raf: 0, len: -1, canSend: null, h: 0 };
+
+function initComposer() {
+  const el = $('prompt-input');
+  if (HAS_FIELD_SIZING) document.documentElement.classList.add('field-sizing');
+  el.addEventListener('input', scheduleComposerSync, { passive: true });
+  el.addEventListener('keydown', handleKey);
+  syncComposer();
 }
+function scheduleComposerSync() {
+  if (composer.raf) return;
+  composer.raf = requestAnimationFrame(() => { composer.raf = 0; syncComposer(); });
+}
+function syncComposer() {
+  const el = $('prompt-input');
+  if (!HAS_FIELD_SIZING) {
+    el.style.height = 'auto';
+    const h = Math.min(el.scrollHeight, 200);
+    el.style.height = h + 'px';
+    composer.h = h;
+  }
+  const len = el.value.length;
+  if (len !== composer.len) {
+    composer.len = len;
+    const c = $('char-counter');
+    if (len > 200) { c.textContent = len.toLocaleString('fa-IR'); c.classList.remove('hidden'); }
+    else c.classList.add('hidden');
+  }
+  const canSend = len > 0 && !state.isAnalyzing && /\S/.test(el.value);
+  if (canSend !== composer.canSend) {
+    composer.canSend = canSend;
+    $('send-btn').disabled = !canSend;
+  }
+}
+// kept for backwards compatibility with older inline handlers
+function autoResize() { syncComposer(); }
 
 function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
     e.preventDefault();
     analyze();
   }
@@ -555,63 +812,91 @@ async function pasteClipboard() {
   try {
     const t = await navigator.clipboard.readText();
     if (t) {
-      const input = document.getElementById('prompt-input');
-      input.value = t;
-      autoResize(input);
+      const input = $('prompt-input');
+      input.value = t.slice(0, 20000);
+      syncComposer();
       input.focus();
     }
   } catch (e) { showToast('دسترسی به کلیپ‌بورد ممکن نیست'); }
 }
 
-/* ---------------- dropdown / theme / modal ---------------- */
+/* ---------------- dropdown / theme / modals ---------------- */
 function toggleModelDropdown(e) {
   e.stopPropagation();
-  document.getElementById('model-dropdown').classList.toggle('hidden');
+  $('model-dropdown').classList.toggle('open');
 }
+function closeModelDropdown() { $('model-dropdown').classList.remove('open'); }
 
 function setViewMode(mode) {
   state.viewMode = mode;
   saveState();
   updateViewModeCheckmarks();
   renderActiveThread();
-  document.getElementById('model-dropdown').classList.add('hidden');
+  closeModelDropdown();
 }
 
 function updateViewModeCheckmarks() {
-  const d = document.getElementById('check-detailed');
-  const c = document.getElementById('check-compact');
+  const d = $('check-detailed');
+  const c = $('check-compact');
   if (!d || !c) return;
   d.classList.toggle('hidden', state.viewMode !== 'detailed');
   c.classList.toggle('hidden', state.viewMode === 'detailed');
 }
 
 function syncThemeIcon() {
-  const icon = document.getElementById('theme-icon');
-  icon.innerHTML = svg(document.documentElement.classList.contains('dark') ? 'sun' : 'moon');
+  $('theme-icon').innerHTML = svg(document.documentElement.classList.contains('dark') ? 'sun' : 'moon');
 }
 
 function toggleTheme() {
   const root = document.documentElement;
+  if (!REDUCED_MOTION) {
+    root.classList.add('theme-anim');
+    clearTimeout(toggleTheme._t);
+    toggleTheme._t = setTimeout(() => root.classList.remove('theme-anim'), 320);
+  }
   root.classList.toggle('dark');
   try { localStorage.setItem('polyguard_theme', root.classList.contains('dark') ? 'dark' : 'light'); } catch (e) {}
   syncThemeIcon();
 }
 
-function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); checkHealth(); closeMobileSidebar(); }
-function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+let lastFocus = null;
+function isOpen(id) { return $(id).classList.contains('open'); }
+function openModal(id) {
+  lastFocus = document.activeElement;
+  $(id).classList.add('open');
+}
+function closeModal(id) {
+  const m = $(id);
+  if (!m.classList.contains('open')) return;
+  m.classList.remove('open');
+  if (lastFocus && lastFocus.focus && window.matchMedia('(hover: hover)').matches) lastFocus.focus({ preventScroll: true });
+}
+
+function openSettingsModal() {
+  closeMobileSidebar();
+  if (state.health) renderHealthDetails(state.health);
+  openModal('settings-modal');
+  checkHealth();
+}
+function closeSettingsModal() { closeModal('settings-modal'); }
 
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  document.getElementById('toast-message').textContent = msg;
-  t.classList.remove('hidden');
+  const t = $('toast');
+  $('toast-message').textContent = msg;
+  t.classList.add('show');
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => t.classList.add('hidden'), 2200);
+  showToast._t = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 /* ---------------- helpers ---------------- */
 function scrollToBottom(smooth) {
-  const c = document.getElementById('messages-container');
-  c.scrollTo({ top: c.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+  const c = $('messages-container');
+  c.scrollTo({ top: c.scrollHeight, behavior: smooth && !REDUCED_MOTION ? 'smooth' : 'auto' });
+}
+// Only follow new content if the user hasn't scrolled up to read.
+function keepPinned() {
+  const c = $('messages-container');
+  if (c.scrollHeight - c.scrollTop - c.clientHeight < 160) c.scrollTop = c.scrollHeight;
 }
 
 function findMessage(id) {
@@ -623,12 +908,18 @@ function findMessage(id) {
 }
 
 function copyText(s) {
-  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(s);
+  if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+    return navigator.clipboard.writeText(s).catch(() => legacyCopy(s));
+  }
+  legacyCopy(s);
+  return Promise.resolve();
+}
+function legacyCopy(s) {
   const ta = document.createElement('textarea');
-  ta.value = s; document.body.appendChild(ta); ta.select();
+  ta.value = s; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
   try { document.execCommand('copy'); } catch (e) {}
   ta.remove();
-  return Promise.resolve();
 }
 
 function copyUserText(id) {
@@ -646,7 +937,7 @@ function copyReport(id) {
   const m = findMessage(id);
   if (!m || !m.result) return;
   const r = m.result;
-  copyText(`متن: "${m.text}"\nنتیجه: ${r.decision} (اطمینان ${(r.confidence * 100).toFixed(1)}% | آرا ${r.votes_count}/${r.total_models})`)
+  copyText(`متن: "${m.text}"\nنتیجه: ${r.decision} (اطمینان ${(num(r.confidence) * 100).toFixed(1)}% | آرا ${num(r.votes_count)}/${num(r.total_models)})`)
     .then(() => showToast('گزارش کپی شد'));
 }
 
@@ -656,8 +947,9 @@ function exportCurrentThread() {
   const blob = new Blob([JSON.stringify(t, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `polyguard_${t.id}.json`; a.click();
-  URL.revokeObjectURL(url);
+  a.href = url; a.download = `polyguard_${t.id}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500); // revoking immediately breaks the download in Firefox
   showToast('فایل JSON دانلود شد');
 }
 

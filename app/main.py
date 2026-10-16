@@ -8,11 +8,12 @@ os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
-import re
+import hashlib
 import time
 import traceback
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Dict
 
@@ -21,8 +22,9 @@ torch.set_num_threads(1)
 
 from anyio import to_thread
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
@@ -43,7 +45,9 @@ _infer_sem = threading.Semaphore(MAX_CONCURRENT_INFERENCES)
 _counter_lock = threading.Lock()
 
 BASE_DIR = Path(__file__).resolve().parent
-MODELS_ROOT = Path(os.environ["MODELS_ROOT"])
+# Default to <repo>/models so a plain `uvicorn app.main:app` works locally
+# without exporting MODELS_ROOT first (it used to crash with KeyError).
+MODELS_ROOT = Path(os.environ.get("MODELS_ROOT") or (BASE_DIR.parent / "models"))
 
 
 # Hard cap on request size. The tokenizer truncates to 512 tokens anyway, so
@@ -120,6 +124,32 @@ def _resolve_toxic_index(model) -> int:
     return 1
 
 
+def _resolve_scoring(model, spec_mode: str):
+    """Pick the scoring strategy from the checkpoint itself, once, at load time.
+
+    The configured `mode` is only a hint. Getting this wrong silently breaks a
+    model, e.g. sigmoid-max over a 2-class softmax head (scores the *safe*
+    logit too, so clean text looks toxic) or softmax over a single logit
+    (always 1.0). Returns (strategy, index_or_indices).
+    """
+    cfg = getattr(model, "config", None)
+    n = int(getattr(cfg, "num_labels", 0) or 0)
+    problem_type = getattr(cfg, "problem_type", None)
+
+    if n == 1:
+        return "sigmoid1", 0
+    if problem_type == "multi_label_classification" or (spec_mode == "multilabel" and n > 2):
+        id2label = getattr(cfg, "id2label", None) or {}
+        try:
+            labels = {int(k): str(v).lower() for k, v in id2label.items()}
+        except (TypeError, ValueError):
+            labels = {}
+        idx = [i for i, name in labels.items()
+               if not any(sk in name for sk in _SAFE_KEYWORDS)]
+        return "sigmoid_max", (idx or list(range(n)))
+    return "softmax", _resolve_toxic_index(model)
+
+
 # ------------------------------------------------------------------
 # Model loading - at import time, so it works with gunicorn --preload
 # ------------------------------------------------------------------
@@ -137,17 +167,13 @@ def _load_one(name, spec):
         problem_type = getattr(mdl.config, "problem_type", None)
         print(f"[Ensemble] '{name}' id2label={id2label} "
               f"problem_type={problem_type} mode={spec['mode']}", flush=True)
-        try:
-            toxic_idx = _resolve_toxic_index(mdl)
-            print(f"[Ensemble] '{name}' -> using probs[{toxic_idx}] "
-                  f"as 'toxic' (only used for binary mode)", flush=True)
-        except Exception as e:
-            print(f"[Ensemble] '{name}' toxic-index detection failed: {e}",
-                  flush=True)
+        scoring = _resolve_scoring(mdl, spec["mode"])
+        print(f"[Ensemble] '{name}' -> scoring={scoring[0]} index={scoring[1]}",
+              flush=True)
         # ------------------------------------------------------------
 
         state["models"][name] = (
-            mdl, tok, spec["mode"], spec["weight"],
+            mdl, tok, scoring, spec["weight"],
             spec["lang"], spec["label"], spec["label_en"],
         )
         print(f"[Ensemble] OK '{name}' loaded", flush=True)
@@ -187,28 +213,17 @@ _bootstrap()
 # ------------------------------------------------------------------
 # Scoring
 # ------------------------------------------------------------------
-def _score_multilabel(model, tokenizer, text):
-    """Sigmoid scoring for multi-label / multi-class-sigmoid models.
-
-    Works for any number of output logits, including a single one (the
-    Persian checkpoint). For a single logit this returns sigmoid(logit),
-    which is the correct probability - NOT softmax, which would always
-    return 1.0.
-    """
+def _score(model, tokenizer, text, scoring):
+    """Toxic probability for one model, using the strategy resolved at load."""
+    strategy, idx = scoring
     inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
     with torch.inference_mode():
-        logits = model(**inputs).logits
-    return float(torch.sigmoid(logits).squeeze(0).max().item())
-
-
-def _score_binary(model, tokenizer, text):
-    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
-    with torch.inference_mode():
-        logits = model(**inputs).logits
-    probs = torch.softmax(logits, dim=-1).squeeze(0)
-    if probs.numel() == 1:
-        return float(probs.item())
-    return float(probs[_resolve_toxic_index(model)].item())
+        logits = model(**inputs).logits.squeeze(0)
+    if strategy == "sigmoid1":
+        return float(torch.sigmoid(logits.reshape(-1)[0]).item())
+    if strategy == "sigmoid_max":
+        return float(torch.sigmoid(logits[idx]).max().item())
+    return float(torch.softmax(logits, dim=-1)[idx].item())
 
 
 # ------------------------------------------------------------------
@@ -218,7 +233,7 @@ def _run_ensemble(text: str, script: str, strict: bool = False) -> Dict:
     models_snapshot = list(state["models"].items())
 
     raw, weighted, weights, labels, labels_en, skipped = {}, {}, {}, {}, {}, []
-    for name, (mdl, tok, mode, weight, lang, label, label_en) in models_snapshot:
+    for name, (mdl, tok, scoring, weight, lang, label, label_en) in models_snapshot:
         if script == "fa" and lang == "en":
             skipped.append(name)
             continue
@@ -227,8 +242,7 @@ def _run_ensemble(text: str, script: str, strict: bool = False) -> Dict:
             continue
 
         try:
-            s = _score_binary(mdl, tok, text) if mode == "binary" \
-                else _score_multilabel(mdl, tok, text)
+            s = _score(mdl, tok, text, scoring)
         except Exception as exc:
             print(f"[Ensemble] inference error in {name}: {exc}", flush=True)
             s = 0.0
@@ -327,15 +341,23 @@ def ensemble_predict(text: str) -> Dict:
 # ------------------------------------------------------------------
 # FastAPI
 # ------------------------------------------------------------------
-app = FastAPI(title="PolyGuard Ensemble")
-
-
-@app.on_event("startup")
-async def _on_startup():
+@asynccontextmanager
+async def _lifespan(_app):
+    # (replaces the deprecated @app.on_event("startup"))
     to_thread.current_default_thread_limiter().total_tokens = MAX_THREADPOOL_TOKENS
     print(f"[Ensemble] Worker ready. cpu={CPU_COUNT} "
           f"parallel_inferences={MAX_CONCURRENT_INFERENCES} "
           f"threadpool={MAX_THREADPOOL_TOKENS}", flush=True)
+    yield
+
+
+app = FastAPI(title="PolyGuard Ensemble", lifespan=_lifespan)
+
+# The GitHub Pages status page (another origin) pings GET /health to show
+# whether the tunnel is live. Only GET is allowed cross-origin; /api/check
+# stays same-origin.
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"],
+                   allow_headers=[])
 
 
 @app.get("/health")
@@ -375,10 +397,25 @@ def check(data: TextIn):
         return {"error": f"{type(exc).__name__}: {exc}"}
 
 
+def _asset_version() -> str:
+    h = hashlib.sha1()
+    for f in ("style.css", "script.js"):
+        try:
+            h.update((BASE_DIR / "static" / f).read_bytes())
+        except OSError:
+            pass
+    return h.hexdigest()[:10]
+
+
+# Cache-bust CSS/JS on every deploy, otherwise browsers (and the Cloudflare
+# edge) can keep serving the previous script.js after an update.
+_INDEX_HTML = (BASE_DIR / "static" / "index.html").read_text(encoding="utf-8") \
+    .replace("__V__", _asset_version())
+
+
 @app.get("/")
 def index():
-    return FileResponse(BASE_DIR / "static" / "index.html",
-                        headers={"Cache-Control": "no-cache"})
+    return HTMLResponse(_INDEX_HTML, headers={"Cache-Control": "no-cache"})
 
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
