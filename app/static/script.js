@@ -221,8 +221,61 @@ function renderActiveThread() {
     return;
   }
   setWelcome(false);
-  stream.innerHTML = thread.messages.map(buildTurnHTML).join('');
+  stream.innerHTML = thread.messages.map(m => buildTurnHTML(m)).join('');
   scrollToBottom(false);
+}
+
+/* ---------------- Claude-style typing reveal for the newest answer ---------------- */
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+// Types `text` into `el` character by character with a blinking caret.
+// Purely cosmetic pacing - it never affects what elapsed time gets reported.
+function typeInto(el, text, charsPerSec) {
+  if (!el) return Promise.resolve();
+  return new Promise(resolve => {
+    el.textContent = '';
+    const caret = document.createElement('span');
+    caret.className = 'typing-caret';
+    el.appendChild(caret);
+    const delay = 1000 / Math.max(1, charsPerSec || 50);
+    let i = 0;
+    const tick = () => {
+      if (i >= text.length) { caret.remove(); resolve(); return; }
+      caret.insertAdjacentText('beforebegin', text[i]);
+      i++;
+      setTimeout(tick, delay);
+    };
+    tick();
+  });
+}
+
+// Renders every message normally, except the newest one (msgId), whose
+// title/subtitle stream in like Claude's typing animation; the rest of
+// that card (meter, stats, breakdown, real elapsed time) fades in right
+// after, in a short staggered cascade.
+async function renderActiveThreadWithTyping(msgId) {
+  const stream = document.getElementById('chat-stream');
+  const thread = state.threads.find(t => t.id === state.activeThreadId);
+  if (!thread || !thread.messages.length) return;
+  setWelcome(false);
+
+  const last = thread.messages[thread.messages.length - 1];
+  const older = thread.messages.slice(0, -1).map(m => buildTurnHTML(m)).join('');
+  stream.innerHTML = older + buildTurnHTML(last, { animate: last.id === msgId });
+  scrollToBottom(true);
+
+  if (last.id !== msgId || !last.result || last.result.error) return;
+
+  const meta = DECISIONS[last.result.decision] || { title: 'نتیجه نامشخص', text: '' };
+  await typeInto(document.getElementById(`type-title-${last.id}`), meta.title, 55);
+  await typeInto(document.getElementById(`type-sub-${last.id}`), meta.text, 70);
+
+  const wrap = document.getElementById(`botmsg-${last.id}`);
+  if (wrap) {
+    const items = wrap.querySelectorAll('.reveal-item');
+    items.forEach((el, idx) => setTimeout(() => el.classList.add('show'), idx * 55));
+  }
+  scrollToBottom(true);
 }
 
 const DECISIONS = {
@@ -246,7 +299,8 @@ function userTurnHTML(msg) {
     </div>`;
 }
 
-function buildTurnHTML(msg) {
+function buildTurnHTML(msg, opts) {
+  const animate = !!(opts && opts.animate);
   const user = userTurnHTML(msg);
   const r = msg.result;
 
@@ -261,6 +315,13 @@ function buildTurnHTML(msg) {
 
   const meta = DECISIONS[r.decision] || { icon: 'info', title: 'نتیجه نامشخص', text: 'پاسخ معتبری از سرور دریافت نشد.' };
   const maxPct = Math.min(100, r.max_raw * 100);
+  // Title/subtitle are typed in live when animate=true (empty targets,
+  // filled by typeInto() after this HTML is inserted). Everything below
+  // them (meter, stats, breakdown, timing) fades in with reveal-item once
+  // typing finishes - see renderActiveThreadWithTyping().
+  const titleInner = animate ? `<span class="type-target" id="type-title-${msg.id}"></span>` : escapeHtml(meta.title);
+  const subInner = animate ? `<span class="type-target" id="type-sub-${msg.id}"></span>` : escapeHtml(meta.text);
+  const revealCls = animate ? 'reveal-item' : '';
 
   const rows = Object.keys(r.raw_scores || {}).map(key => {
     const raw = r.raw_scores[key];
@@ -290,7 +351,7 @@ function buildTurnHTML(msg) {
     const a = r.analysis || {};
     const chip = (d) => d ? `<span class="tag ${d === 'SAFE' ? 'ok' : 'bad'}">${d}</span>` : '';
     fing = `
-      <div class="note">
+      <div class="note ${revealCls}">
         <span class="note-ico">${svg('lang')}</span>
         <div class="note-body">
           <div class="note-title">فینگیلیش تشخیص داده شد</div>
@@ -306,38 +367,47 @@ function buildTurnHTML(msg) {
 
   const detailed = state.viewMode === 'detailed';
   const breakdown = `
-    <details class="breakdown" ${detailed ? 'open' : ''}>
+    <details class="breakdown ${revealCls}" ${detailed ? 'open' : ''}>
       <summary>ریز نمرات مدل‌ها ${svg('chevron')}</summary>
       <div class="bd-card">${rows}${skipped}</div>
     </details>`;
 
+  // The number shown here is always the real, measured round-trip time
+  // (sent -> full response in hand) captured client-side in analyze() -
+  // never an invented value, and it's independent of the Thinking/typing
+  // animation, which only paces *when* things appear on screen.
+  const timing = (typeof msg.elapsedMs === 'number')
+    ? `<div class="timing-note ${revealCls}">${svg('info')}<span>پاسخ واقعاً در ${(msg.elapsedMs / 1000).toFixed(1)} ثانیه آماده شد</span></div>`
+    : '';
+
   return `${user}
-    <div class="msg bot fade"><div class="bot-body">
+    <div class="msg bot fade" id="botmsg-${msg.id}"><div class="bot-body">
       <div class="result ${r.decision}">
         <div class="res-head">
           <span class="res-ico">${svg(meta.icon)}</span>
           <div class="res-txt">
-            <div class="res-title">${meta.title}</div>
-            <div class="res-sub">${meta.text}</div>
+            <div class="res-title">${titleInner}</div>
+            <div class="res-sub">${subInner}</div>
           </div>
-          <div class="res-score mono" title="بیشترین نمره‌ی خام">${maxPct.toFixed(0)}<small>%</small></div>
+          <div class="res-score mono ${revealCls}" title="بیشترین نمره‌ی خام">${maxPct.toFixed(0)}<small>%</small></div>
         </div>
-        <div class="meter">
+        <div class="meter ${revealCls}">
           <div class="meter-fill" style="width:${maxPct}%"></div>
           <i class="tick" style="inset-inline-start:50%"></i>
           <i class="tick" style="inset-inline-start:90%"></i>
         </div>
-        <div class="meter-legend"><span><i class="lg"></i>آستانه رأی ۵۰٪</span><span><i class="lg"></i>حد قاطع ۹۰٪</span></div>
+        <div class="meter-legend ${revealCls}"><span><i class="lg"></i>آستانه رأی ۵۰٪</span><span><i class="lg"></i>حد قاطع ۹۰٪</span></div>
         ${fing}
-        <div class="stats">
+        <div class="stats ${revealCls}">
           <div class="stat"><div class="k">آرای سمیت</div><div class="v mono">${r.votes_count} / ${r.total_models}</div></div>
           <div class="stat"><div class="k">اطمینان</div><div class="v mono">${(r.confidence * 100).toFixed(1)}%</div></div>
           <div class="stat"><div class="k">زبان</div><div class="v">${scriptLabel(r.script)}</div></div>
           <div class="stat"><div class="k">زمان</div><div class="v mono">${r.latency_ms || 0} ms</div></div>
         </div>
         ${breakdown}
+        ${timing}
       </div>
-      <div class="actions">
+      <div class="actions ${revealCls}">
         <button class="icon-btn" onclick="copyReport('${msg.id}')" title="کپی گزارش">${svg('copy')}</button>
         <button class="icon-btn" onclick="copyMessageJSON('${msg.id}')" title="کپی JSON">${svg('code')}</button>
         <button class="icon-btn" onclick="reAnalyze('${msg.id}')" title="تحلیل مجدد">${svg('refresh')}</button>
@@ -375,6 +445,11 @@ async function analyze(overrideText) {
 
   appendPendingTurn(text);
 
+  // Real clock, started the instant we send the request - this is the
+  // number we report at the end, in full, with no padding added to it.
+  const sentAt = performance.now();
+  const MIN_THINKING_MS = 500; // "Thinking…" stays up at least this long so it doesn't flash on a fast reply - pure UX pacing, not part of the reported time
+
   try {
     const r = await fetch('/api/check', {
       method: 'POST',
@@ -385,11 +460,19 @@ async function analyze(overrideText) {
     try { result = await r.json(); }
     catch (_) { result = { error: `پاسخ نامعتبر (HTTP ${r.status})` }; }
 
-    thread.messages.push({ id: 'msg_' + Date.now(), text, result, ts: Date.now() });
+    // Genuine round-trip time (network + ۵ مدل + سرور) - measured, not staged.
+    const realElapsedMs = performance.now() - sentAt;
+    const stillOwed = MIN_THINKING_MS - realElapsedMs;
+    if (stillOwed > 0) await sleep(stillOwed);
+
+    const msg = { id: 'msg_' + Date.now(), text, result, ts: Date.now(), elapsedMs: Math.round(realElapsedMs) };
+    thread.messages.push(msg);
     thread.updatedAt = Date.now();
     saveState();
     renderSidebarThreads();
-    renderActiveThread();
+
+    if (result && !result.error) await renderActiveThreadWithTyping(msg.id);
+    else renderActiveThread();
   } catch (e) {
     showToast('خطا در ارتباط با سرور');
     renderActiveThread();
@@ -411,7 +494,7 @@ function appendPendingTurn(text) {
   div.style.display = 'contents';
   div.innerHTML = `
     <div class="msg user fade"><div class="ubox"><div class="bubble" dir="auto">${escapeHtml(text)}</div></div></div>
-    <div class="msg bot fade"><div class="bot-body"><div class="pending"><span class="thinking"></span><span class="shimmer">در حال بررسی با ۵ مدل…</span></div></div></div>`;
+    <div class="msg bot fade"><div class="bot-body"><div class="pending"><span class="thinking"></span><span class="shimmer">Thinking…</span></div></div></div>`;
   stream.appendChild(div);
   scrollToBottom(true);
 }
