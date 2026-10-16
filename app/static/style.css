@@ -1169,3 +1169,33 @@ html.theme-anim .thinking-block {
   .kbd-ico.wide{ padding: 3px 4px; }
 }
 /* ==== /UNICOLLECT FIXER: KBD ICONS ==== */
+
+/* ==== UNICOLLECT FIXER: HERO LINES ==== */
+/* Two stacked lines inside .hero: greeting above, prompt below. */
+.hero-text{
+  display: block;
+  line-height: 1.35;
+}
+.hero-text.hero-greeting{
+  font-size: .72em;
+  font-weight: 500;
+  color: var(--text2);
+  letter-spacing: 0;
+  margin-bottom: 4px;
+}
+.hero-text.hero-prompt{
+  /* inherits size and weight from .hero */
+}
+
+/* both lines animate in together the first time the welcome screen shows */
+.main.welcome .hero-greeting{
+  animation: scale-in-soft .5s var(--ease-out) .10s both;
+}
+.main.welcome .hero-prompt{
+  animation: scale-in-soft .5s var(--ease-out) .16s both;
+}
+
+@media (max-width: 520px){
+  .hero-text.hero-greeting{ font-size: .78em; }
+}
+/* ==== /UNICOLLECT FIXER: HERO LINES ==== */

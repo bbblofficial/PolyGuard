@@ -1420,14 +1420,14 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
-/* ==== UNICOLLECT FIXER: HERO GREETING v4 ==== */
+/* ==== UNICOLLECT FIXER: HERO GREETING v5 ==== */
 (function () {
   "use strict";
 
-  var BUILD = 'hero-greeting-v4';
+  var BUILD = 'hero-greeting-v5';
 
-  // ---------- static pool -------------------------------------------
-  var HERO_STATIC = [
+  // ---------- static pool for the second line -----------------------
+  var PROMPT_POOL = [
     'چه متنی را برایتان بررسی کنم؟',
     'بزن بریم سراغ بررسی!',
     'دیگه چه فحش‌هایی قراره ببینم!',
@@ -1455,19 +1455,16 @@ function escapeHtml(s) {
     'چه خبر جدید؟'
   ];
 
-  // ---------- shuffle bag for statics -------------------------------
   var bag = [];
   function refillBag() {
-    bag = HERO_STATIC.slice();
-    // Fisher–Yates shuffle
+    bag = PROMPT_POOL.slice();
     for (var i = bag.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
       var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
     }
   }
-  function popStatic(prev) {
+  function popPrompt(prev) {
     if (!bag.length) refillBag();
-    // rarely: the first pop equals prev -> swap with the next one
     if (bag.length > 1 && bag[bag.length - 1] === prev) {
       var t = bag[bag.length - 1];
       bag[bag.length - 1] = bag[bag.length - 2];
@@ -1476,7 +1473,7 @@ function escapeHtml(s) {
     return bag.pop();
   }
 
-  // ---------- greeting picker ---------------------------------------
+  // ---------- greeting picker (depends only on the hour) ------------
   function pickGreeting() {
     var h = new Date().getHours();
     if (h >= 5  && h < 12) return 'صبحت بخیر';
@@ -1485,52 +1482,57 @@ function escapeHtml(s) {
     return 'شبت بخیر';
   }
 
-  var GREETING_CHANCE = 0.12;   // was 0.25 in v1–v3 — too often
-
-  function pickHeroText(prev) {
-    if (Math.random() < GREETING_CHANCE) {
-      var g = pickGreeting();
-      if (g !== prev) {
-        return { text: g, reason: 'greeting (hour=' + new Date().getHours() + ')' };
-      }
-    }
-    return { text: popStatic(prev), reason: 'static (bag=' + bag.length + ' left)' };
-  }
-
-  // ---------- crossfade swap ----------------------------------------
+  // ---------- swap helpers ------------------------------------------
   var reduced = !!(window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-  var lastApplied = '';
+  var lastGreeting = '';
+  var lastPrompt = '';
   var loggedBuild = false;
 
-  function applyHero() {
-    var el = document.getElementById('hero-text');
+  function crossfade(el, next, onSwap) {
     if (!el) return false;
+    if (el.textContent === next) return true;
+
+    if (reduced) {
+      el.textContent = next;
+      if (onSwap) onSwap();
+      return true;
+    }
+    el.style.transition = 'opacity .18s ease';
+    el.style.opacity = '0';
+    window.setTimeout(function () {
+      el.textContent = next;
+      if (onSwap) onSwap();
+      window.requestAnimationFrame(function () { el.style.opacity = ''; });
+    }, 180);
+    return true;
+  }
+
+  function applyHero() {
+    var gEl = document.getElementById('hero-greeting');
+    var pEl = document.getElementById('hero-prompt');
+    if (!gEl && !pEl) return false;
 
     if (!loggedBuild && window.console && console.info) {
       loggedBuild = true;
       console.info('[Unicollect] ' + BUILD + ' active');
     }
 
-    var picked = pickHeroText(lastApplied);
-    var next = picked.text;
-    lastApplied = next;
+    var g = pickGreeting();
+    var p = popPrompt(lastPrompt);
 
-    if (el.textContent === next) return true;
+    crossfade(gEl, g);
+    crossfade(pEl, p);
 
-    if (window.console && console.info) {
-      console.info('[Unicollect] hero pick:', picked.reason, '->', next);
+    if (window.console && console.info && (g !== lastGreeting || p !== lastPrompt)) {
+      console.info('[Unicollect] hero:',
+        'greeting=' + g,
+        'prompt=' + p,
+        'bag=' + bag.length + ' left');
     }
-
-    if (reduced) { el.textContent = next; return true; }
-
-    el.style.transition = 'opacity .18s ease';
-    el.style.opacity = '0';
-    window.setTimeout(function () {
-      el.textContent = next;
-      window.requestAnimationFrame(function () { el.style.opacity = ''; });
-    }, 180);
+    lastGreeting = g;
+    lastPrompt = p;
     return true;
   }
 
@@ -1549,7 +1551,7 @@ function escapeHtml(s) {
     window.addEventListener('load', tryApply, { once: true });
   }
 
-  // Re-pick whenever the page is brought back to the foreground
+  // refresh the second line when the user comes back to the tab
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden) applyHero();
   });
@@ -1558,13 +1560,13 @@ function escapeHtml(s) {
   // ---------- chat lifecycle hooks ----------------------------------
   function wrapFn(name) {
     var orig = window[name];
-    if (typeof orig !== 'function' || orig.__heroWrappedV4) return false;
+    if (typeof orig !== 'function' || orig.__heroWrappedV5) return false;
     var wrapped = function () {
       var out = orig.apply(this, arguments);
       window.setTimeout(applyHero, 20);
       return out;
     };
-    wrapped.__heroWrappedV4 = true;
+    wrapped.__heroWrappedV5 = true;
     window[name] = wrapped;
     return true;
   }
@@ -1580,5 +1582,5 @@ function escapeHtml(s) {
     }, 50);
   }
 })();
-/* ==== /UNICOLLECT FIXER: HERO GREETING v4 ==== */
+/* ==== /UNICOLLECT FIXER: HERO GREETING v5 ==== */
 
