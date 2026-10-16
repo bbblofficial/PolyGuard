@@ -67,7 +67,7 @@ jobs:
         run: |
           nohup ./scripts/start_server.sh > server.log 2>&1 &
 
-          echo "Waiting for models to load (~120-300s)..."
+          echo "Waiting for models to load (parallel loading, usually much faster)..."
           STATUS=""
           for i in $(seq 1 300); do
             STATUS=$(curl -fs http://localhost:8000/health 2>/dev/null || true)

@@ -12,6 +12,7 @@ import re
 import time
 import traceback
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict
 
@@ -82,8 +83,23 @@ def _load_one(name, spec):
 
 def _bootstrap():
     print("[Ensemble] Bootstrap starting...", flush=True)
-    for name, spec in MODEL_SPECS.items():
-        _load_one(name, spec)
+    # Serial checkpoint loading makes cold starts painfully slow. Two
+    # concurrent loads reduce startup time without the memory spike of loading
+    # the whole ensemble at once. Override for larger runners.
+    workers = max(1, min(int(os.environ.get("MODEL_LOAD_WORKERS", "2")),
+                         len(MODEL_SPECS)))
+    print(f"[Ensemble] Loading {len(MODEL_SPECS)} models with "
+          f"{workers} concurrent loaders...", flush=True)
+    with ThreadPoolExecutor(max_workers=workers,
+                            thread_name_prefix="model-loader") as pool:
+        futures = {
+            pool.submit(_load_one, name, spec): name
+            for name, spec in MODEL_SPECS.items()
+        }
+        for future in as_completed(futures):
+            # _load_one logs and records its own errors. Re-raise unexpected
+            # loader failures so they are visible in server.log.
+            future.result()
     state["ready"] = True
     print(f"[Ensemble] Ready. Loaded: {list(state['models'].keys())} "
           f"Errors: {list(state['errors'].keys())}", flush=True)
