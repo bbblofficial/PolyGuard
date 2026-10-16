@@ -54,20 +54,15 @@ function hydrateIcons(root) {
   });
 }
 
-// Claude-style spark: a starburst of rounded rays. Built once.
-const SPARK_RAYS = (() => {
-  let out = '';
-  const n = 12;
-  for (let k = 0; k < n; k++) {
-    const a = (k / n) * Math.PI * 2 - Math.PI / 2;
-    const r1 = 2.4, r2 = k % 2 ? 7.4 : 10;
-    const p = v => v.toFixed(2);
-    out += `<line class="ray" style="--k:${k}" x1="${p(12 + r1 * Math.cos(a))}" y1="${p(12 + r1 * Math.sin(a))}" x2="${p(12 + r2 * Math.cos(a))}" y2="${p(12 + r2 * Math.sin(a))}"/>`;
-  }
-  return out;
-})();
+// PolyGuard brand mark: a hexagon ("Poly") around a diamond core with a
+// glowing center dot. Replaces the old Claude-style starburst.
+const SPARK_SVG = `
+  <polygon class="hex" points="12,2.2 20.5,7.1 20.5,16.9 12,21.8 3.5,16.9 3.5,7.1"/>
+  <polygon class="dia" points="12,7.6 16.6,12 12,16.4 7.4,12"/>
+  <circle class="core" cx="12" cy="12" r="1.6"/>
+`;
 function sparkSVG(animated) {
-  return `<svg class="ic spark${animated ? ' spark-live' : ''}" viewBox="0 0 24 24" aria-hidden="true">${SPARK_RAYS}</svg>`;
+  return `<svg class="ic spark${animated ? ' spark-live' : ''}" viewBox="0 0 24 24" aria-hidden="true">${SPARK_SVG}</svg>`;
 }
 
 /* ---------------- init ---------------- */

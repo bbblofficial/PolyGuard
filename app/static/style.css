@@ -19,7 +19,7 @@
   --info: #2f7de1;
   --shadow-composer: 0 0 0 1px rgba(0,0,0,.08), 0 6px 24px rgba(0,0,0,.06);
   --shadow-pop: 0 10px 40px rgba(0,0,0,.14);
-  --claude: #d97757;
+  --brand: #d97757;
   --mark: rgba(217,119,87,.22);
   --ease-out: cubic-bezier(.22,1,.36,1);
   --ease-spring: cubic-bezier(.34,1.4,.64,1);
@@ -45,7 +45,7 @@ html.dark {
   --info: #5aa2ff;
   --shadow-composer: none;
   --shadow-pop: 0 10px 40px rgba(0,0,0,.5);
-  --claude: #e08a6d;
+  --brand: #e08a6d;
   --mark: rgba(224,138,109,.28);
 }
 
@@ -401,7 +401,7 @@ html.dark .bar { background: rgba(255,255,255,.08); }
 .stat .v.mono { text-align: right; }
 
 /* ============================================================
-   Claude-style "Thinking" indicator + thought-time header
+   "Thinking" indicator + thought-time header
    ============================================================ */
 .thinking-block {
   display: inline-flex; align-items: center; gap: 10px;
@@ -410,22 +410,44 @@ html.dark .bar { background: rgba(255,255,255,.08); }
 }
 #pending-turn.pending-fade .thinking-block { opacity: 0; transform: translateY(-4px); }
 
-/* the spark: slow spin + rays breathing in a wave around the circle */
-svg.ic.spark { stroke: var(--claude); stroke-width: 2.1; }
+/* PolyGuard brand mark (replaces the old Claude-style starburst) */
+svg.ic.spark { stroke: var(--brand); stroke-width: 1.9; fill: none; }
 .thinking-sparkle { display: inline-flex; width: 22px; height: 22px; align-items: center; justify-content: center; }
-.thinking-sparkle svg.ic { width: 22px; height: 22px; animation: spark-spin 7s linear infinite; }
-.spark-live .ray {
+.thinking-sparkle svg.ic { width: 22px; height: 22px; }
+
+/* hexagon slowly rotates; diamond core + center pulse */
+.spark .hex {
   transform-box: view-box; transform-origin: 12px 12px;
-  animation: ray-breathe 1.3s ease-in-out infinite;
-  animation-delay: calc(var(--k) * -0.108s);
+  animation: spark-hex-spin 12s linear infinite;
 }
-@keyframes spark-spin { to { transform: rotate(360deg); } }
-@keyframes ray-breathe {
-  0%, 100% { transform: scale(.55); opacity: .55; }
-  50%      { transform: scale(1);   opacity: 1; }
+.spark .dia {
+  transform-box: view-box; transform-origin: 12px 12px;
+  fill: color-mix(in srgb, var(--brand) 22%, transparent);
+}
+.spark .core { fill: var(--brand); stroke: none; }
+
+.spark-live .hex {
+  animation: spark-hex-spin 6s linear infinite;
+}
+.spark-live .dia {
+  transform-box: view-box; transform-origin: 12px 12px;
+  animation: spark-dia-pulse 1.6s ease-in-out infinite;
+}
+.spark-live .core {
+  transform-box: view-box; transform-origin: 12px 12px;
+  animation: spark-core-pulse 1.6s ease-in-out infinite;
 }
 
-/* shimmer sweep across the label, like Claude's "Thinking…" */
+@keyframes spark-hex-spin { to { transform: rotate(360deg); } }
+@keyframes spark-dia-pulse {
+  0%, 100% { transform: scale(.85) rotate(0deg);   opacity: .70; }
+  50%      { transform: scale(1.05) rotate(45deg); opacity: 1;   }
+}
+@keyframes spark-core-pulse {
+  0%, 100% { transform: scale(1.0); opacity: .55; }
+  50%      { transform: scale(1.6); opacity: 1;   }
+}
+/* shimmer sweep across the label, like the "Thinking…" */
 .thinking-text {
   background: linear-gradient(90deg, var(--text3) 0%, var(--text3) 35%, var(--text) 50%, var(--text3) 65%, var(--text3) 100%);
   background-size: 200% 100%;

@@ -76,14 +76,12 @@
 
 <script>
 (function () {
-  // Claude-like spark logo
-  var rays = '';
-  for (var k = 0; k < 12; k++) {
-    var a = k / 12 * Math.PI * 2, r2 = k % 2 ? 7.4 : 10;
-    rays += '<line x1="' + (12 + 2.4 * Math.cos(a)).toFixed(2) + '" y1="' + (12 + 2.4 * Math.sin(a)).toFixed(2) +
-            '" x2="' + (12 + r2 * Math.cos(a)).toFixed(2) + '" y2="' + (12 + r2 * Math.sin(a)).toFixed(2) + '"/>';
-  }
-  document.getElementById('spark').innerHTML = rays;
+  // PolyGuard brand mark: hexagon + diamond core + glowing center dot.
+document.getElementById('spark').innerHTML =
+  '<polygon points="12,2.2 20.5,7.1 20.5,16.9 12,21.8 3.5,16.9 3.5,7.1"/>' +
+  '<polygon points="12,7.6 16.6,12 12,16.4 7.4,12" style="fill:color-mix(in srgb,currentColor 22%,transparent)"/>' +
+  '<circle cx="12" cy="12" r="1.6" style="fill:currentColor;stroke:none"/>';
+
 
   var $ = function (id) { return document.getElementById(id); };
   var current = null;
