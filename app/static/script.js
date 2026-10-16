@@ -34,7 +34,9 @@ const ICONS = {
   code:        '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
   refresh:     '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
   lang:        '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
-  info:        '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'
+  info:        '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  // Claude-style 4-point sparkle, used by the "Thinking" indicator
+  sparkle:     '<path d="M12 2.5c.35 4.2 1.55 6.9 3.9 8.6 1.65 1.15 3.9 1.9 6.1 2.15.35.04.6.34.6.7s-.25.66-.6.7c-2.2.25-4.45 1-6.1 2.15-2.35 1.7-3.55 4.4-3.9 8.6-.03.35-.32.6-.65.6s-.62-.25-.65-.6c-.35-4.2-1.55-6.9-3.9-8.6-1.65-1.15-3.9-1.9-6.1-2.15-.35-.04-.6-.34-.6-.7s.25-.66.6-.7c2.2-.25 4.45-1 6.1-2.15 2.35-1.7 3.55-4.4 3.9-8.6.03-.35.32-.6.65-.6s.62.25.65.6z"/>'
 };
 
 function svg(name) {
@@ -225,11 +227,10 @@ function renderActiveThread() {
   scrollToBottom(false);
 }
 
-/* ---------------- Claude-style typing reveal for the newest answer ---------------- */
+/* ---------------- Claude-style thinking + typing reveal ---------------- */
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 // Types `text` into `el` character by character with a blinking caret.
-// Purely cosmetic pacing - it never affects what elapsed time gets reported.
 function typeInto(el, text, charsPerSec) {
   if (!el) return Promise.resolve();
   return new Promise(resolve => {
@@ -251,8 +252,8 @@ function typeInto(el, text, charsPerSec) {
 
 // Renders every message normally, except the newest one (msgId), whose
 // title/subtitle stream in like Claude's typing animation; the rest of
-// that card (meter, stats, breakdown, real elapsed time) fades in right
-// after, in a short staggered cascade.
+// that card (meter, stats, breakdown, timing) fades in right after, in a
+// short staggered cascade.
 async function renderActiveThreadWithTyping(msgId) {
   const stream = document.getElementById('chat-stream');
   const thread = state.threads.find(t => t.id === state.activeThreadId);
@@ -286,6 +287,17 @@ const DECISIONS = {
 
 function scriptLabel(s) { return s === 'fa' ? 'فارسی' : s === 'en' ? 'انگلیسی' : 'مختلط'; }
 
+// "✦ به مدت 1.0 ثانیه فکر کرد" — Claude-style thought-time header shown
+// above the result card. Rendered from the persisted msg.thinkingMs value.
+function thoughtLineHTML(ms, revealCls) {
+  if (typeof ms !== 'number') return '';
+  const secs = (ms / 1000).toFixed(1);
+  return `<div class="thought-line ${revealCls}" title="زمان صرف‌شده برای تحلیل این متن">
+    <span class="thought-sparkle">${svg('sparkle')}</span>
+    <span>به مدت ${secs} ثانیه فکر کرد</span>
+  </div>`;
+}
+
 function userTurnHTML(msg) {
   return `
     <div class="msg user fade">
@@ -315,10 +327,6 @@ function buildTurnHTML(msg, opts) {
 
   const meta = DECISIONS[r.decision] || { icon: 'info', title: 'نتیجه نامشخص', text: 'پاسخ معتبری از سرور دریافت نشد.' };
   const maxPct = Math.min(100, r.max_raw * 100);
-  // Title/subtitle are typed in live when animate=true (empty targets,
-  // filled by typeInto() after this HTML is inserted). Everything below
-  // them (meter, stats, breakdown, timing) fades in with reveal-item once
-  // typing finishes - see renderActiveThreadWithTyping().
   const titleInner = animate ? `<span class="type-target" id="type-title-${msg.id}"></span>` : escapeHtml(meta.title);
   const subInner = animate ? `<span class="type-target" id="type-sub-${msg.id}"></span>` : escapeHtml(meta.text);
   const revealCls = animate ? 'reveal-item' : '';
@@ -372,16 +380,12 @@ function buildTurnHTML(msg, opts) {
       <div class="bd-card">${rows}${skipped}</div>
     </details>`;
 
-  // The number shown here is always the real, measured round-trip time
-  // (sent -> full response in hand) captured client-side in analyze() -
-  // never an invented value, and it's independent of the Thinking/typing
-  // animation, which only paces *when* things appear on screen.
-  const timing = (typeof msg.elapsedMs === 'number')
-    ? `<div class="timing-note ${revealCls}">${svg('info')}<span>پاسخ واقعاً در ${(msg.elapsedMs / 1000).toFixed(1)} ثانیه آماده شد</span></div>`
-    : '';
+  // Claude-style thought-time header, always the real measured time.
+  const thought = thoughtLineHTML(msg.thinkingMs, revealCls);
 
   return `${user}
     <div class="msg bot fade" id="botmsg-${msg.id}"><div class="bot-body">
+      ${thought}
       <div class="result ${r.decision}">
         <div class="res-head">
           <span class="res-ico">${svg(meta.icon)}</span>
@@ -405,7 +409,6 @@ function buildTurnHTML(msg, opts) {
           <div class="stat"><div class="k">زمان</div><div class="v mono">${r.latency_ms || 0} ms</div></div>
         </div>
         ${breakdown}
-        ${timing}
       </div>
       <div class="actions ${revealCls}">
         <button class="icon-btn" onclick="copyReport('${msg.id}')" title="کپی گزارش">${svg('copy')}</button>
@@ -445,10 +448,11 @@ async function analyze(overrideText) {
 
   appendPendingTurn(text);
 
-  // Real clock, started the instant we send the request - this is the
-  // number we report at the end, in full, with no padding added to it.
+  // Real clock, started the instant we send the request.
   const sentAt = performance.now();
-  const MIN_THINKING_MS = 500; // "Thinking…" stays up at least this long so it doesn't flash on a fast reply - pure UX pacing, not part of the reported time
+  // Minimum time the "Thinking" indicator stays on screen, so it never
+  // flashes on a fast reply. This is exactly 1 second per the spec.
+  const MIN_THINKING_MS = 1000;
 
   try {
     const r = await fetch('/api/check', {
@@ -465,14 +469,32 @@ async function analyze(overrideText) {
     const stillOwed = MIN_THINKING_MS - realElapsedMs;
     if (stillOwed > 0) await sleep(stillOwed);
 
-    const msg = { id: 'msg_' + Date.now(), text, result, ts: Date.now(), elapsedMs: Math.round(realElapsedMs) };
+    // The user-perceived thinking time (>= 1s). Persisted per message so
+    // the "✦ به مدت X.X ثانیه فکر کرد" header is accurate on reload.
+    const thinkingMs = Math.max(realElapsedMs, MIN_THINKING_MS);
+
+    const msg = {
+      id: 'msg_' + Date.now(),
+      text, result,
+      ts: Date.now(),
+      thinkingMs: Math.round(thinkingMs)
+    };
     thread.messages.push(msg);
     thread.updatedAt = Date.now();
     saveState();
     renderSidebarThreads();
 
-    if (result && !result.error) await renderActiveThreadWithTyping(msg.id);
-    else renderActiveThread();
+    if (result && !result.error) {
+      // Gracefully fade the Thinking block out before the answer appears.
+      const pending = document.getElementById('pending-turn');
+      if (pending) {
+        pending.classList.add('pending-fade');
+        await sleep(220);
+      }
+      await renderActiveThreadWithTyping(msg.id);
+    } else {
+      renderActiveThread();
+    }
   } catch (e) {
     showToast('خطا در ارتباط با سرور');
     renderActiveThread();
@@ -494,7 +516,13 @@ function appendPendingTurn(text) {
   div.style.display = 'contents';
   div.innerHTML = `
     <div class="msg user fade"><div class="ubox"><div class="bubble" dir="auto">${escapeHtml(text)}</div></div></div>
-    <div class="msg bot fade"><div class="bot-body"><div class="pending"><span class="thinking"></span><span class="shimmer">Thinking…</span></div></div></div>`;
+    <div class="msg bot fade"><div class="bot-body">
+      <div class="thinking-block">
+        <span class="thinking-sparkle">${svg('sparkle')}</span>
+        <span class="thinking-text">در حال فکر کردن</span>
+        <span class="thinking-dots"><i></i><i></i><i></i></span>
+      </div>
+    </div></div>`;
   stream.appendChild(div);
   scrollToBottom(true);
 }

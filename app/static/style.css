@@ -349,3 +349,92 @@ html.dark .bar { background: rgba(255,255,255,.08); }
 }
 
 .stat .v.mono { text-align: right; }
+
+/* ============================================================
+   Claude-style "Thinking" indicator + thought-time header
+   ============================================================ */
+
+/* The live indicator shown while the request is in flight. */
+.thinking-block {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--composer) 55%, transparent);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text2);
+  transition: opacity .22s ease, transform .22s ease;
+  will-change: opacity, transform;
+}
+
+/* The rotating 4-point sparkle. */
+.thinking-sparkle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  animation: sparkle-pulse 2.4s ease-in-out infinite;
+  transform-origin: center;
+}
+.thinking-sparkle svg.ic { width: 16px; height: 16px; }
+
+/* Shimmering "در حال فکر کردن" text. */
+.thinking-text {
+  background: linear-gradient(
+    90deg,
+    var(--text3) 0%,
+    var(--text) 45%,
+    var(--text) 55%,
+    var(--text3) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Animated three-dot tail. */
+.thinking-dots { display: inline-flex; gap: 3px; align-items: center; }
+.thinking-dots i {
+  display: block;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .35;
+  animation: thinking-dot 1.4s ease-in-out infinite;
+}
+.thinking-dots i:nth-child(2) { animation-delay: .18s; }
+.thinking-dots i:nth-child(3) { animation-delay: .36s; }
+
+/* Fade-out applied right before the result card replaces the indicator. */
+#pending-turn.pending-fade .thinking-block {
+  opacity: 0;
+  transform: translateY(-3px);
+}
+
+/* The "✦ به مدت X.X ثانیه فکر کرد" line above each result card. */
+.thought-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--text3);
+  padding: 2px 4px 10px;
+  line-height: 1.4;
+}
+.thought-sparkle { display: inline-flex; color: var(--text2); }
+.thought-sparkle svg.ic { width: 13px; height: 13px; }
+
+/* Keyframes */
+@keyframes sparkle-pulse {
+  0%   { transform: rotate(0deg)   scale(1);    opacity: .85; }
+  50%  { transform: rotate(180deg) scale(1.12); opacity: 1;   }
+  100% { transform: rotate(360deg) scale(1);    opacity: .85; }
+}
+@keyframes thinking-dot {
+  0%, 60%, 100% { opacity: .3; transform: translateY(0);    }
+  30%           { opacity: 1;  transform: translateY(-3px); }
+}
