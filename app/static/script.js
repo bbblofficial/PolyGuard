@@ -202,7 +202,7 @@ async function checkHealth() {
 function fa(n) { return Number(n).toLocaleString('fa-IR'); }
 function renderHealthDetails(d) {
   const c = $('cfg-concurrency');
-  if (c && d.concurrency) c.textContent = `${d.concurrency} (Peak ${d.peak || 0})`;
+  if (c && d.concurrency) c.textContent = `${faDigits(d.concurrency)} (اوج ${faDigits(d.peak || 0)})`;
   const m = $('cfg-models');
   if (m) {
     const ok = (d.loaded_models || []).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="ok">● Ready</span></div>`).join('');
