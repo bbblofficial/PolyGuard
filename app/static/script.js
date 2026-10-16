@@ -562,38 +562,54 @@ function streamText(el, text, opts, token) {
    Animated mark (petal wave) + a status line that cross-fades between
    phases + an elapsed-time counter that appears after 2 s. */
 const THINK_PHASES = ['درحال فکر کردن', 'درحال بررسی', 'رای اجتماعی', 'پرسش از مدل ها'];
-const thinking = { phaseTimer: 0, clockTimer: 0, swapTimer: 0, t0: 0 };
+const thinking = { phaseTimer: 0, clockTimer: 0, t0: 0, phaseIndex: 0, phaseDoneAt: 0 };
 
 function startThinking() {
   stopThinking();
   thinking.t0 = performance.now();
-  let i = 0;
+  thinking.phaseIndex = 0;
+  thinking.phaseDoneAt = 0;
   const label = () => $('think-text');
-  thinking.phaseTimer = setInterval(() => {
+  const nextPhase = () => {
     const el = label();
     if (!el) return stopThinking();
-    if (i >= THINK_PHASES.length - 1) return;      // stay on the last phase
-    i++;
-    if (REDUCED_MOTION) { el.textContent = THINK_PHASES[i]; return; }
-    el.classList.add('swap');
-    thinking.swapTimer = setTimeout(() => {
-      el.textContent = THINK_PHASES[i];
-      el.classList.remove('swap');
-    }, 200);
-  }, 1600);
+    if (thinking.phaseIndex >= THINK_PHASES.length - 1) {
+      thinking.phaseDoneAt = performance.now();
+      thinking.phaseTimer = 0;
+      return;
+    }
+    thinking.phaseIndex += 1;
+    const phase = THINK_PHASES[thinking.phaseIndex];
+    if (REDUCED_MOTION) {
+      el.textContent = phase;
+    } else {
+      el.classList.add('swap');
+      setTimeout(() => {
+        if (!el.isConnected) return;
+        el.textContent = phase;
+        el.classList.remove('swap');
+      }, 200);
+    }
+    // Each stage stays visible for a natural, slightly unpredictable pause.
+    const delay = 300 + Math.random() * 700;
+    thinking.phaseTimer = setTimeout(nextPhase, delay);
+  };
+  thinking.phaseTimer = setTimeout(nextPhase, 300 + Math.random() * 700);
   thinking.clockTimer = setInterval(() => {
     const t = $('think-time');
     if (!t) return;
-    const s = Math.floor((performance.now() - thinking.t0) / 1000);
-    const v = s >= 2 ? `${fa(s)} ثانیه` : '';
-    if (t.textContent !== v) t.textContent = v;
+    const sec = Math.floor((performance.now() - thinking.t0) / 1000);
+    const value = sec >= 2 ? `${fa(sec)} ثانیه` : '';
+    if (t.textContent !== value) t.textContent = value;
   }, 250);
 }
 function stopThinking() {
-  clearInterval(thinking.phaseTimer);
+  clearTimeout(thinking.phaseTimer);
   clearInterval(thinking.clockTimer);
-  clearTimeout(thinking.swapTimer);
-  thinking.phaseTimer = thinking.clockTimer = thinking.swapTimer = 0;
+  thinking.phaseTimer = 0;
+  thinking.clockTimer = 0;
+  thinking.phaseIndex = 0;
+  thinking.phaseDoneAt = 0;
 }
 
 /* Swap the pending (thinking) turn for the finished one WITHOUT
@@ -934,8 +950,13 @@ async function analyze(overrideText) {
     }
 
     const realElapsedMs = performance.now() - sentAt;
-    if (MIN_THINKING_MS > realElapsedMs) await sleep(MIN_THINKING_MS - realElapsedMs);
-    const thinkingMs = Math.max(realElapsedMs, MIN_THINKING_MS);
+    // Never reveal the answer before all four thinking stages have appeared.
+    // Slow model responses can naturally exceed this; fast responses wait here.
+    const phaseDoneAt = thinking.phaseDoneAt || (performance.now() + MIN_THINKING_MS);
+    const revealAt = Math.max(sentAt + MIN_THINKING_MS, phaseDoneAt);
+    const remaining = revealAt - performance.now();
+    if (remaining > 0) await sleep(remaining);
+    const thinkingMs = Math.max(performance.now() - sentAt, MIN_THINKING_MS);
 
     const msg = { id: newId('msg'), text, result, ts: Date.now(), thinkingMs: Math.round(thinkingMs) };
     thread.messages.push(msg);
