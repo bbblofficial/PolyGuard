@@ -20,6 +20,11 @@ const state = {
 
 const $ = id => document.getElementById(id);
 
+/* تبدیل ارقام لاتین به ارقام فارسی (۰-۹) */
+function faDigits(v) {
+  return String(v).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[+d]);
+}
+
 /* ---------------- icons (inline SVG, no external dependency) ---------------- */
 const ICONS = {
   shield:      '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
@@ -698,7 +703,7 @@ function buildTurnHTML(msg, opts) {
       <div class="mrow">
         <div class="mrow-top">
           <div class="mrow-name">${tag}<span class="n">${escapeHtml(r.labels?.[key] || key)}</span></div>
-          <div class="mrow-val mono"><span>${pct}%</span><span class="wt">×${w}</span></div>
+          <div class="mrow-val mono"><span>${faDigits(pct)}٪</span><span class="wt">×${faDigits(w)}</span></div>
         </div>
         <div class="bar"><div class="${fill}" style="width:${pct}%"></div></div>
       </div>`;
@@ -746,7 +751,7 @@ function buildTurnHTML(msg, opts) {
             <div class="res-title">${titleInner}</div>
             <div class="res-sub">${subInner}</div>
           </div>
-          <div class="res-score mono ${revealCls}" title="بیشترین نمره‌ی خام">${maxPct.toFixed(0)}<small>%</small></div>
+          <div class="res-score mono ${revealCls}" title="بیشترین نمره‌ی خام">${faDigits(maxPct.toFixed(0))}<small>٪</small></div>
         </div>
         <div class="meter ${revealCls}">
           <div class="meter-fill" style="width:${maxPct}%"></div>
@@ -756,10 +761,10 @@ function buildTurnHTML(msg, opts) {
         <div class="meter-legend ${revealCls}"><span><i class="lg"></i>آستانه رأی ${fa(Math.round(voteThr * 100))}٪</span><span><i class="lg"></i>حد قاطع ۹۰٪</span></div>
         ${fing}
         <div class="stats ${revealCls}">
-          <div class="stat"><div class="k">آرای سمیت</div><div class="v mono">${num(r.votes_count)} / ${num(r.total_models)}</div></div>
-          <div class="stat" title="میانگین دو نمره‌ی بالاتر مدل‌ها"><div class="k">میانگین ۲ نمره‌ی برتر</div><div class="v mono">${(num(r.confidence) * 100).toFixed(1)}%</div></div>
+          <div class="stat"><div class="k">آرای سمیت</div><div class="v mono">${faDigits(num(r.votes_count))} / ${faDigits(num(r.total_models))}</div></div>
+          <div class="stat" title="میانگین دو نمره‌ی بالاتر مدل‌ها"><div class="k">میانگین ۲ نمره‌ی برتر</div><div class="v mono">${faDigits((num(r.confidence) * 100).toFixed(1))}٪</div></div>
           <div class="stat"><div class="k">زبان</div><div class="v">${scriptLabel(r.script)}</div></div>
-          <div class="stat"><div class="k">زمان سرور</div><div class="v mono">${num(r.latency_ms)} ms</div></div>
+          <div class="stat"><div class="k">زمان سرور</div><div class="v">${faDigits(num(r.latency_ms))} میلی‌ثانیه</div></div>
         </div>
         ${breakdown}
       </div>
@@ -1299,7 +1304,7 @@ function copyReport(id) {
   const m = findMessage(id);
   if (!m || !m.result) return;
   const r = m.result;
-  copyText(`متن: "${m.text}"\nنتیجه: ${r.decision} (میانگین ۲ نمره‌ی برتر ${(num(r.confidence) * 100).toFixed(1)}% | آرا ${num(r.votes_count)}/${num(r.total_models)})`)
+  copyText(`متن: "${m.text}"\nنتیجه: ${r.decision} (میانگین ۲ نمره‌ی برتر ${faDigits((num(r.confidence) * 100).toFixed(1))}٪ | آرا ${faDigits(num(r.votes_count))}/${faDigits(num(r.total_models))})`)
     .then(() => showToast('گزارش کپی شد'));
 }
 
