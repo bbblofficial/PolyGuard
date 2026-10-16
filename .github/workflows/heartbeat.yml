@@ -31,7 +31,7 @@ jobs:
           RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
           set -euo pipefail
-          workflow="Unicollect Ensemble Web + Cloudflare Tunnel"
+          workflow="deploy.yml"
 
           # workflow_run is the authoritative restart signal. The schedule is
           # only a safety net and must not start a second deploy while one runs.
@@ -43,9 +43,12 @@ jobs:
             echo "Deploy run $RUN_ID ended with: $RUN_CONCLUSION"
           fi
 
+          # `gh run list --status` is a single-value flag, not a
+          # repeatable one — passing it twice keeps only the last value.
+          # Filter both live states in jq instead.
           active=$(gh run list --repo "$GH_REPO" --workflow "$workflow" \
-            --status in_progress --status queued --limit 1 --json databaseId \
-            --jq 'length')
+            --limit 20 --json status \
+            --jq '[.[] | select(.status == "in_progress" or .status == "queued")] | length')
           if [ "$active" != "0" ]; then
             echo "A deploy is already active; leaving it alone."
             exit 0

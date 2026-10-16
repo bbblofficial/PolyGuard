@@ -1420,12 +1420,13 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
-/* ==== UNICOLLECT FIXER: HERO GREETING v3 ==== */
+/* ==== UNICOLLECT FIXER: HERO GREETING v4 ==== */
 (function () {
   "use strict";
 
-  var BUILD = 'hero-greeting-v3';
+  var BUILD = 'hero-greeting-v4';
 
+  // ---------- static pool -------------------------------------------
   var HERO_STATIC = [
     'چه متنی را برایتان بررسی کنم؟',
     'بزن بریم سراغ بررسی!',
@@ -1441,9 +1442,41 @@ function escapeHtml(s) {
     'متن بعدی رو بفرست',
     'چه نوشته‌ای داری برای من؟',
     'بیا شروع کنیم',
-    'منتظر متنتم...'
+    'منتظر متنتم...',
+    'یه متن قشنگ بیار برام',
+    'خب دیگه، شروع کن!',
+    'متن بعدی رو بیار وسط',
+    'چی آماده کردی امروز؟',
+    'بذار یه نگاه بندازم',
+    'خب، بررسی کنیم',
+    'بریم یه گشت تو متنت بزنیم',
+    'می‌خوای ببینی چقدر سالمه؟',
+    'شروع کن، گوش می‌دم',
+    'چه خبر جدید؟'
   ];
 
+  // ---------- shuffle bag for statics -------------------------------
+  var bag = [];
+  function refillBag() {
+    bag = HERO_STATIC.slice();
+    // Fisher–Yates shuffle
+    for (var i = bag.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+    }
+  }
+  function popStatic(prev) {
+    if (!bag.length) refillBag();
+    // rarely: the first pop equals prev -> swap with the next one
+    if (bag.length > 1 && bag[bag.length - 1] === prev) {
+      var t = bag[bag.length - 1];
+      bag[bag.length - 1] = bag[bag.length - 2];
+      bag[bag.length - 2] = t;
+    }
+    return bag.pop();
+  }
+
+  // ---------- greeting picker ---------------------------------------
   function pickGreeting() {
     var h = new Date().getHours();
     if (h >= 5  && h < 12) return 'صبحت بخیر';
@@ -1452,43 +1485,43 @@ function escapeHtml(s) {
     return 'شبت بخیر';
   }
 
+  var GREETING_CHANCE = 0.12;   // was 0.25 in v1–v3 — too often
+
   function pickHeroText(prev) {
-    if (Math.random() < 0.25) {
+    if (Math.random() < GREETING_CHANCE) {
       var g = pickGreeting();
-      if (g !== prev) return g;
+      if (g !== prev) {
+        return { text: g, reason: 'greeting (hour=' + new Date().getHours() + ')' };
+      }
     }
-    for (var i = 0; i < 6; i++) {
-      var candidate = HERO_STATIC[
-        Math.floor(Math.random() * HERO_STATIC.length)
-      ];
-      if (candidate !== prev) return candidate;
-    }
-    return HERO_STATIC[0];
+    return { text: popStatic(prev), reason: 'static (bag=' + bag.length + ' left)' };
   }
 
+  // ---------- crossfade swap ----------------------------------------
   var reduced = !!(window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   var lastApplied = '';
-  var loggedOnce = false;
-  var appliedOnce = false;
+  var loggedBuild = false;
 
   function applyHero() {
     var el = document.getElementById('hero-text');
     if (!el) return false;
 
-    if (!appliedOnce) {
-      appliedOnce = true;
-      if (!loggedOnce && window.console && console.info) {
-        loggedOnce = true;
-        console.info('[Unicollect] ' + BUILD + ' active');
-      }
+    if (!loggedBuild && window.console && console.info) {
+      loggedBuild = true;
+      console.info('[Unicollect] ' + BUILD + ' active');
     }
 
-    var next = pickHeroText(lastApplied);
+    var picked = pickHeroText(lastApplied);
+    var next = picked.text;
     lastApplied = next;
 
     if (el.textContent === next) return true;
+
+    if (window.console && console.info) {
+      console.info('[Unicollect] hero pick:', picked.reason, '->', next);
+    }
 
     if (reduced) { el.textContent = next; return true; }
 
@@ -1496,52 +1529,50 @@ function escapeHtml(s) {
     el.style.opacity = '0';
     window.setTimeout(function () {
       el.textContent = next;
-      window.requestAnimationFrame(function () {
-        el.style.opacity = '';
-      });
+      window.requestAnimationFrame(function () { el.style.opacity = ''; });
     }, 180);
     return true;
   }
 
   window.applyHeroGreeting = applyHero;
 
-  // --- Retry loop ----------------------------------------------------
-  // Try immediately. If the element isn't there yet, poll every 100 ms
-  // up to 30 times (3 s). Also re-try on DOMContentLoaded and window.load,
-  // in case the first paint happens before the DOM is fully ready.
+  // ---------- bootstrap ---------------------------------------------
   var tries = 0;
   function tryApply() {
     if (applyHero()) return true;
-    if (++tries >= 30) return true;              // give up quietly
+    if (++tries >= 30) return true;
     window.setTimeout(tryApply, 100);
     return false;
   }
-
   if (!tryApply()) {
     document.addEventListener('DOMContentLoaded', tryApply, { once: true });
     window.addEventListener('load', tryApply, { once: true });
   }
 
-  // --- Hook chat lifecycle ------------------------------------------
+  // Re-pick whenever the page is brought back to the foreground
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) applyHero();
+  });
+  window.addEventListener('focus', function () { applyHero(); });
+
+  // ---------- chat lifecycle hooks ----------------------------------
   function wrapFn(name) {
     var orig = window[name];
-    if (typeof orig !== 'function' || orig.__heroWrappedV3) return false;
+    if (typeof orig !== 'function' || orig.__heroWrappedV4) return false;
     var wrapped = function () {
       var out = orig.apply(this, arguments);
       window.setTimeout(applyHero, 20);
       return out;
     };
-    wrapped.__heroWrappedV3 = true;
+    wrapped.__heroWrappedV4 = true;
     window[name] = wrapped;
     return true;
   }
-
   function hookAll() {
     var a = wrapFn('renderActiveThread');
     var b = wrapFn('createNewThread');
     return a || b;
   }
-
   if (!hookAll()) {
     var ht = 0;
     var iv = window.setInterval(function () {
@@ -1549,5 +1580,5 @@ function escapeHtml(s) {
     }, 50);
   }
 })();
-/* ==== /UNICOLLECT FIXER: HERO GREETING v3 ==== */
+/* ==== /UNICOLLECT FIXER: HERO GREETING v4 ==== */
 
