@@ -1,0 +1,127 @@
+name: PolyGuard Ensemble Web + Cloudflare Tunnel
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: polyguard-deploy
+  cancel-in-progress: true
+
+env:
+  MODELS_ROOT: ${{ github.workspace }}/models
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  TOKENIZERS_PARALLELISM: "false"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Unit tests (no models needed)
+        run: |
+          pip install --quiet pytest
+          python -m pytest -q
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet -r requirements.txt
+
+      - name: Cache models
+        id: models-cache
+        uses: actions/cache@v4
+        with:
+          path: models
+          key: models-${{ hashFiles('scripts/download_models.py') }}
+
+      - name: Download models
+        if: steps.models-cache.outputs.cache-hit != 'true'
+        run: |
+          python scripts/download_models.py
+          du -sh models/*
+
+      - name: Install cloudflared
+        run: |
+          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared
+          chmod +x cloudflared
+          ./cloudflared --version
+
+      - name: Start server (preloaded, multi-worker)
+        run: |
+          nohup ./scripts/start_server.sh > server.log 2>&1 &
+
+          echo "Waiting for models to load (~120-300s)..."
+          STATUS=""
+          for i in $(seq 1 300); do
+            STATUS=$(curl -fs http://localhost:8000/health 2>/dev/null || true)
+            if echo "$STATUS" | grep -q '"status":"ok"'; then
+              echo "Ready after ${i} checks (~$((i*2))s)"
+              break
+            fi
+            if [ $((i % 15)) -eq 0 ]; then
+              echo "  ... loading (${i}/300) - $STATUS"
+            fi
+            sleep 2
+          done
+          echo "$STATUS"
+          if ! echo "$STATUS" | grep -q '"status":"ok"'; then
+            echo "Models never became healthy"
+            tail -n 120 server.log || true
+            exit 1
+          fi
+
+      - name: Smoke tests
+        continue-on-error: true
+        run: python scripts/smoke_test.py http://localhost:8000
+
+      - name: Start Cloudflare Quick Tunnel
+        run: |
+          nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
+          echo "Waiting for trycloudflare URL..."
+          URL=""
+          for i in $(seq 1 60); do
+            URL=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel.log | head -n1 || true)
+            [ -n "$URL" ] && break
+            sleep 2
+          done
+          if [ -z "$URL" ]; then
+            echo "Could not obtain tunnel URL"
+            cat tunnel.log
+            exit 1
+          fi
+          echo "PUBLIC_URL=$URL" >> "$GITHUB_ENV"
+          echo "### PolyGuard Ensemble is live at: $URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL"
+
+      - name: Keep service alive
+        run: |
+          echo "Service running at: $PUBLIC_URL"
+          echo "Will self-terminate after ~5 hours."
+          for i in $(seq 1 300); do
+            sleep 60
+            pgrep -f "gunicorn app.main:app" >/dev/null || {
+              echo "Gunicorn died, restarting..."
+              nohup ./scripts/start_server.sh >> server.log 2>&1 &
+            }
+            pgrep -f "cloudflared tunnel" >/dev/null || {
+              echo "Cloudflared died, restarting..."
+              nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate >> tunnel.log 2>&1 &
+            }
+          done

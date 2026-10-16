@@ -1,0 +1,9 @@
+# torch is installed separately (CPU wheel) - see the workflow / README
+fastapi
+uvicorn[standard]
+gunicorn
+transformers
+sentencepiece
+protobuf
+huggingface_hub
+anyio

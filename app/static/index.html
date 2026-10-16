@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PolyGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    try { if (localStorage.getItem('polyguard_theme') === 'light') document.documentElement.classList.remove('dark'); } catch (e) {}
+  </script>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-top">
+        <button class="icon-btn logo-btn" onclick="createNewThread()" title="PolyGuard"><i data-i="shield"></i></button>
+        <button class="icon-btn" onclick="toggleSidebar()" title="بستن نوار کناری"><i data-i="sidebar"></i></button>
+      </div>
+
+      <nav class="sb-nav">
+        <button class="sb-item" onclick="createNewThread()"><i data-i="edit"></i><span>گفتگوی جدید</span></button>
+        <button class="sb-item" onclick="toggleSearchInput()"><i data-i="search"></i><span>جستجوی گفتگوها</span></button>
+        <button class="sb-item" onclick="openSettingsModal()"><i data-i="layers"></i><span>مدل‌ها و وضعیت</span></button>
+      </nav>
+
+      <div id="sidebar-search-box" class="sb-search hidden">
+        <input id="search-threads" type="text" oninput="renderSidebarThreads()" placeholder="جستجو در گفتگوها…" autocomplete="off">
+      </div>
+
+      <div class="sb-label">گفتگوها</div>
+      <div id="threads-list" class="sb-threads"></div>
+
+      <div class="sb-footer">
+        <button class="profile" onclick="openSettingsModal()">
+          <span class="avatar">PG</span>
+          <span class="profile-text">
+            <span class="profile-name">PolyGuard Core</span>
+            <span class="profile-status"><span id="status-dot" class="sdot warn"></span><span id="status-text">در حال اتصال…</span></span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </aside>
+  <div id="backdrop" class="backdrop" onclick="toggleSidebar()"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main id="main" class="main welcome">
+    <header class="topbar">
+      <div class="tb-start">
+        <button id="open-sidebar-btn" class="icon-btn" onclick="toggleSidebar()" title="باز کردن نوار کناری"><i data-i="sidebar"></i></button>
+        <button id="new-chat-top-btn" class="icon-btn" onclick="createNewThread()" title="گفتگوی جدید"><i data-i="edit"></i></button>
+
+        <div class="dd-wrap">
+          <button class="model-btn" onclick="toggleModelDropdown(event)">
+            <span class="model-name">PolyGuard</span>
+            <span class="model-sub">5-Ensemble</span>
+            <i data-i="chevron" class="chev"></i>
+          </button>
+          <div id="model-dropdown" class="dropdown hidden" onclick="event.stopPropagation()">
+            <button class="dd-item" onclick="setViewMode('detailed')">
+              <div class="dd-text">
+                <div class="dd-title">PolyGuard 5-Ensemble</div>
+                <div class="dd-desc">رأی‌گیری اجماعی همراه با جزئیات هر مدل</div>
+              </div>
+              <i id="check-detailed" data-i="check"></i>
+            </button>
+            <button class="dd-item" onclick="setViewMode('compact')">
+              <div class="dd-text">
+                <div class="dd-title">PolyGuard Compact</div>
+                <div class="dd-desc">فقط نتیجه نهایی، خلاصه و سریع</div>
+              </div>
+              <i id="check-compact" data-i="check" class="hidden"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tb-end">
+        <button class="icon-btn" onclick="exportCurrentThread()" title="خروجی JSON گفتگو"><i data-i="share"></i></button>
+        <button class="icon-btn" onclick="toggleTheme()" title="تغییر حالت روز/شب"><i id="theme-icon" data-i="sun"></i></button>
+      </div>
+    </header>
+
+    <div class="body">
+      <h1 id="hero" class="hero">چه متنی را برایتان بررسی کنم؟</h1>
+
+      <section id="messages-container" class="scroll">
+        <div id="chat-stream" class="col"></div>
+      </section>
+
+      <div class="composer-area">
+        <div class="col">
+          <div class="composer">
+            <textarea id="prompt-input" rows="1" dir="auto" placeholder="هر متنی را برای بررسی بنویسید…"
+                      oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+            <div class="composer-row">
+              <div class="cr-start">
+                <button class="round-btn" onclick="pasteClipboard()" title="جای‌گذاری از کلیپ‌بورد"><i data-i="plus"></i></button>
+                <button class="pill-btn" onclick="openSettingsModal()"><i data-i="sliders"></i><span>۵ مدل فعال</span></button>
+              </div>
+              <div class="cr-end">
+                <span id="char-counter" class="counter hidden"></span>
+                <button id="send-btn" class="send-btn" onclick="analyze()" disabled title="ارسال"><i data-i="arrowup"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <div id="chips" class="chips">
+            <button class="chip" onclick="useStarter('سلام وقت بخیر، از همکاری با شما بسیار خوشحالم.')"><i data-i="smile"></i><span>فارسی محترمانه</span></button>
+            <button class="chip" onclick="useStarter('Have a wonderful and productive day ahead!')"><i data-i="globe"></i><span>انگلیسی محترمانه</span></button>
+            <button class="chip" onclick="useStarter('You are completely stupid and useless')"><i data-i="alert"></i><span>توهین انگلیسی</span></button>
+            <button class="chip" onclick="useStarter('salam khoobi? man khoobam mersi')"><i data-i="lang"></i><span>فینگیلیش محترمانه</span></button>
+            <button class="chip" onclick="useStarter('to khar hasti')"><i data-i="shield"></i><span>توهین فینگیلیش ۱</span></button>
+            <button class="chip" onclick="useStarter('khafe sho ahmagh')"><i data-i="shield"></i><span>توهین فینگیلیش ۲</span></button>
+          </div>
+
+          <p class="disclaimer">PolyGuard از ۵ مدل زبانی با رأی‌گیری اجماعی استفاده می‌کند و می‌تواند اشتباه کند. نتایج را بررسی کنید.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SETTINGS MODAL ============ -->
+<div id="settings-modal" class="modal hidden" onclick="if(event.target===this)closeSettingsModal()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>تنظیمات و وضعیت Ensemble</h3>
+      <button class="icon-btn" onclick="closeSettingsModal()"><i data-i="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="kv"><span>آستانه رأی هر مدل</span><b class="mono">0.50</b></div>
+      <div class="kv"><span>حداقل رأی برای برچسب سمی</span><b class="mono">2</b></div>
+      <div class="kv"><span>تک‌مدل قاطع</span><b class="mono">0.90</b></div>
+      <div class="kv"><span>تک‌مدل قاطع (فینگیلیش)</span><b class="mono">0.95</b></div>
+      <div class="kv"><span>همزمانی پردازش</span><b id="cfg-concurrency" class="mono">—</b></div>
+      <div class="kv col-kv">
+        <span>مدل‌های بارگذاری‌شده</span>
+        <div id="cfg-models" class="models-list">در حال بررسی…</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-danger" onclick="clearAllHistory()"><i data-i="trash"></i><span>پاک کردن همه گفتگوها</span></button>
+      <button class="btn-primary" onclick="closeSettingsModal()">بستن</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"><i data-i="check"></i><span id="toast-message">انجام شد</span></div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
