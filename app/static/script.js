@@ -562,7 +562,7 @@ function streamText(el, text, opts, token) {
 /* ---------------- thinking indicator ----------------
    Animated mark (petal wave) + a status line that cross-fades between
    phases + an elapsed-time counter that appears after 2 s. */
-const THINK_PHASES = ['درحال فکر کردن 1.', 'درحال بررسی 2.', 'رای اجتماعی 3.', 'پرسش از مدل ها 4.'];
+const THINK_PHASES = ['در حال فکر کردن', 'در حال بررسی', 'رأی اجتماعی', 'پرسش از مدل ها'];
 const thinking = { phaseTimer: 0, clockTimer: 0, t0: 0, phaseIndex: 0, phaseDoneAt: 0 };
 
 function startThinking() {
@@ -1204,6 +1204,7 @@ function setViewMode(mode) {
   state.viewMode = mode;
   saveState();
   updateViewModeCheckmarks();
+  updateModelButtonLabel();
   // toggle open/closed in place instead of re-rendering (keeps scroll + no flash)
   document.querySelectorAll('#chat-stream details.breakdown').forEach(d => { d.open = mode === 'detailed'; });
 }
@@ -1214,6 +1215,11 @@ function updateViewModeCheckmarks() {
   if (!d || !c) return;
   d.classList.toggle('off', state.viewMode !== 'detailed');
   c.classList.toggle('off', state.viewMode === 'detailed');
+}
+
+function updateModelButtonLabel() {
+  const el = $('model-name');
+  if (el) el.textContent = state.viewMode === 'compact' ? 'Light' : 'Flash';
 }
 
 function syncThemeIcon() {

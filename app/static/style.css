@@ -919,3 +919,19 @@ html.theme-anim .thinking-block {
   .result.SAFE    { border-color: var(--safe); }
 }
 /* ==== /UNICOLLECT FIXER ==== */
+
+/* ==== UNICOLLECT FIXER: FLAT RESPONSE ==== */
+/* The assistant reply should read as inline content, not a boxed card. */
+.result{
+  border:0;
+  border-radius:0;
+  padding:4px 0 0;
+  background:transparent;
+}
+.result .res-head{padding:0 2px}
+.result .meter{margin:14px 2px 8px}
+.result .meter-legend{padding:0 2px}
+.result .note{margin-inline:0}
+.result .stats{margin-bottom:8px}
+.result .actions{margin-top:6px}
+/* ==== /UNICOLLECT FIXER: FLAT RESPONSE ==== */
