@@ -1,4 +1,4 @@
-name: PolyGuard Ensemble Web + Cloudflare Tunnel
+name: Unicollect Ensemble Web + Cloudflare Tunnel
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: polyguard-deploy
+  group: unicollect-deploy
   cancel-in-progress: true
 
 env:
@@ -146,7 +146,7 @@ jobs:
           fi
           echo "PUBLIC_URL=$URL" >> "$GITHUB_ENV"
           {
-            echo "### PolyGuard Ensemble is live at: $URL"
+            echo "### Unicollect Ensemble is live at: $URL"
             [ -n "${PAGES_URL:-}" ] && echo "Permanent status page (always shows the current link): ${PAGES_URL}"
           } >> "$GITHUB_STEP_SUMMARY"
           echo "$URL"

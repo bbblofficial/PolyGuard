@@ -1,6 +1,7 @@
-const STORAGE_KEY = 'polyguard_threads_v4';
-const UI_KEY = 'polyguard_ui_v1';
-const THEME_KEY = 'polyguard_theme';
+const STORAGE_KEY = 'unicollect_threads_v4';
+const LEGACY_STORAGE_KEY = 'polyguard_threads_v4';
+const UI_KEY = 'unicollect_ui_v1';
+const THEME_KEY = 'unicollect_theme';
 const REQUEST_TIMEOUT_MS = 180000;
 const HEALTH_TIMEOUT_MS = 8000;
 const MAX_TEXT = 20000;
@@ -24,6 +25,7 @@ const $ = id => document.getElementById(id);
 function faDigits(v) {
   return String(v).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[+d]);
 }
+function fa(v) { return faDigits(v); }
 
 /* ---------------- icons (inline SVG, no external dependency) ---------------- */
 const ICONS = {
@@ -66,7 +68,7 @@ function hydrateIcons(root) {
   });
 }
 
-/* ---------------- PolyGuard brand mark ----------------
+/* ---------------- Unicollect brand mark ----------------
    Six tapered petals around a core. Animations are scale/opacity only:
    - "intro": petals scale in one after another (hero, new chat)
    - "live" : a scale + fade wave travels around the ring (thinking)
@@ -205,8 +207,8 @@ function renderHealthDetails(d) {
   if (c && d.concurrency) c.textContent = `${faDigits(d.concurrency)} (اوج ${faDigits(d.peak || 0)})`;
   const m = $('cfg-models');
   if (m) {
-    const ok = (d.loaded_models || []).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="ok">● Ready</span></div>`).join('');
-    const er = Object.keys(d.errors || {}).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="err">● Error</span></div>`).join('');
+    const ok = (d.loaded_models || []).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="ok">● آماده</span></div>`).join('');
+    const er = Object.keys(d.errors || {}).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="err">● خطا</span></div>`).join('');
     m.innerHTML = (ok + er) || 'مدلی بارگذاری نشده';
   }
 }
@@ -561,7 +563,7 @@ function streamText(el, text, opts, token) {
 /* ---------------- thinking indicator ----------------
    Animated mark (petal wave) + a status line that cross-fades between
    phases + an elapsed-time counter that appears after 2 s. */
-const THINK_PHASES = ['در حال فکر کردن', 'خواندن متن', 'تشخیص زبان و فینگیلیش', 'بررسی با ۵ مدل', 'رأی‌گیری اجماعی', 'جمع‌بندی نتیجه'];
+const THINK_PHASES = ['درحال فکر کردن', 'درحال بررسی', 'تشخیص زبان و فینگیلیش', 'پرسش از مدل‌ها', 'رأی اجتماعی', 'جمع‌بندی نتیجه'];
 const thinking = { phaseTimer: 0, clockTimer: 0, swapTimer: 0, t0: 0 };
 
 function startThinking() {
@@ -1314,7 +1316,7 @@ function exportCurrentThread() {
   const blob = new Blob([JSON.stringify(t, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `polyguard_${t.id}.json`;
+  a.href = url; a.download = `unicollect_${t.id}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1500); // revoking immediately breaks the download in Firefox
   showToast('فایل JSON دانلود شد');

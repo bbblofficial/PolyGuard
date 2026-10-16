@@ -1,5 +1,5 @@
 /* ==================================================================
-   PolyGuard UI: monochrome (ChatGPT-style) theme.
+   Unicollect UI: monochrome (ChatGPT-style) theme.
    Motion rule: ONLY opacity (fade in/out) and scale (scale in/out).
    No translate / slide / rotate / position animations anywhere.
    ================================================================== */
@@ -32,8 +32,8 @@
     --suspect: #d97706;
     --suspect-soft: rgba(217, 119, 6, .13);
     /* --- brand accent --- */
-    --accent: #7c3aed;
-    --accent-soft: rgba(124, 58, 237, .12);
+    --accent: #0f766e;
+    --accent-soft: rgba(15, 118, 110, .13);
 
   color-scheme: light;
 }
@@ -62,8 +62,8 @@ html.dark {
     --safe-soft: rgba(74, 222, 128, .16);
     --suspect: #fbbf24;
     --suspect-soft: rgba(251, 191, 36, .16);
-    --accent: #a78bfa;
-    --accent-soft: rgba(167, 139, 250, .18);
+    --accent: #5eead4;
+    --accent-soft: rgba(94, 234, 212, .18);
 
   color-scheme: dark;
 }
@@ -74,8 +74,8 @@ body {
   font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: var(--main);
   color: var(--text);
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: 16px;
+  line-height: 1.8;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -579,4 +579,53 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   .thinking-label { animation: none; }
+}
+
+/* مقدار عددی سمت چپ kv — فونت فارسی، جهت LTR */
+.kv b.kv-v {
+  font-family: 'Vazirmatn', system-ui, sans-serif;
+  font-weight: 600;
+  color: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+
+
+/* Unicollect Persian polish: calm teal, paper-like surfaces, readable numerals */
+:root { --accent-2:#f59e0b; --focus-ring:rgba(15,118,110,.28); }
+html.dark { --accent-2:#fbbf24; --focus-ring:rgba(94,234,212,.3); }
+body { font-feature-settings:"ss01" 1, "cv01" 1; }
+button:focus-visible, textarea:focus-visible, input:focus-visible { outline:3px solid var(--focus-ring); outline-offset:2px; }
+.topbar { border-bottom:1px solid var(--border); background:color-mix(in srgb, var(--main) 86%, transparent); backdrop-filter:blur(14px); }
+.model-name { color:var(--accent); }
+.hero { font-weight:650; letter-spacing:-.025em; }
+.hero-text { background:linear-gradient(110deg,var(--text),var(--accent)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.composer { border-color:var(--border); box-shadow:0 12px 40px rgba(15,118,110,.08); }
+.composer:focus-within { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft), 0 14px 40px rgba(15,118,110,.11); }
+.send-btn { background:var(--accent); color:#fff; }
+.chip:hover, .pill-btn:hover { border-color:var(--accent); color:var(--accent); }
+.disclaimer { color:var(--text3); }
+.watermark { position:fixed; inset-inline-start:16px; bottom:10px; z-index:3; color:var(--text3); opacity:.7; font-size:12px; pointer-events:none; }
+.watermark strong { color:var(--accent); font-weight:700; }
+.thinking-block { border:1px solid var(--accent-soft); background:linear-gradient(135deg,var(--accent-soft),transparent); border-radius:18px; padding:10px 14px; width:max-content; max-width:100%; }
+@media (max-width: 720px) {
+  .sidebar { width:280px; }
+  .sidebar-inner { width:280px; }
+  .topbar { height:52px; padding:0 8px; }
+  .model-btn { font-size:15px; padding-inline:8px; }
+  .model-sub { display:none; }
+  .col { padding-inline:12px; }
+  .hero { font-size:23px; margin-bottom:20px; }
+  .composer { border-radius:22px; padding:9px 10px 7px; }
+  .chips { gap:7px; overflow-x:auto; flex-wrap:nowrap; justify-content:flex-start; padding-bottom:5px; scrollbar-width:none; }
+  .chips::-webkit-scrollbar { display:none; }
+  .chip { flex:0 0 auto; font-size:13px; }
+  .watermark { font-size:10px; bottom:6px; inset-inline-start:10px; }
+}
+@media (max-width: 420px) {
+  .tb-end .icon-btn:nth-child(2) { display:none; }
+  .composer-row { gap:6px; }
+  .pill-btn { padding-inline:8px; }
+  .disclaimer { font-size:11px; }
 }

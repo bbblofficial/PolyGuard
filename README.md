@@ -1,4 +1,4 @@
-# PolyGuard Ensemble
+# Unicollect Ensemble
 
 تشخیص محتوای سمی/توهین‌آمیز برای فارسی، فینگیلیش و انگلیسی با رأی‌گیری اجماعی ۵ مدل (FastAPI + رابط شبیه ChatGPT).
 
@@ -120,7 +120,7 @@ tests/                         تست‌های واحد
 ## اجرا روی GitHub Actions
 
 ۱. ریپو را روی GitHub آپلود کن (شاخه‌ی `main`).
-۲. تب **Actions** ← `PolyGuard Ensemble Web + Cloudflare Tunnel` ← **Run workflow**.
+۲. تب **Actions** ← `Unicollect Ensemble Web + Cloudflare Tunnel` ← **Run workflow**.
 ۳. لینک رو از صفحه‌ی GitHub Pages ببین (`https://<username>.github.io/<repo>/`) یا از **Summary** اجرا. سرویس حدود ۵ ساعت بالا می‌ماند.
 
 هر اجرا مدل‌ها را تازه دانلود می‌کند (چیزی کش نمی‌شود)، اما چون سرور با
