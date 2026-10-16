@@ -71,15 +71,19 @@
           </button>
           <div id="model-dropdown" class="dropdown" onclick="event.stopPropagation()">
             <button class="dd-item" onclick="setViewMode('detailed')">
-              <div class="dd-text">
-                <div class="dd-title">Flash</div>
-              </div>
+              <span class="dd-pip" aria-hidden="true"></span>
+                <div class="dd-text">
+                  <div class="dd-title">Flash</div>
+                  <div class="dd-desc">نمای کامل با ریز نمرهٔ همهٔ مدل‌ها</div>
+                </div>
               <i id="check-detailed" data-i="check" class="dd-check"></i>
             </button>
             <button class="dd-item" onclick="setViewMode('compact')">
-              <div class="dd-text">
-                <div class="dd-title">Light</div>
-              </div>
+              <span class="dd-pip" aria-hidden="true"></span>
+                <div class="dd-text">
+                  <div class="dd-title">Light</div>
+                  <div class="dd-desc">فقط نتیجهٔ نهایی، سریع و خلاصه</div>
+                </div>
               <i id="check-compact" data-i="check" class="dd-check off"></i>
             </button>
           </div>

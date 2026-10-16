@@ -935,3 +935,102 @@ html.theme-anim .thinking-block {
 .result .stats{margin-bottom:8px}
 .result .actions{margin-top:6px}
 /* ==== /UNICOLLECT FIXER: FLAT RESPONSE ==== */
+
+/* ==== UNICOLLECT FIXER: DROPDOWN ==== */
+/* Polished model selector: two-line rows, active pip, accent checkmark. */
+
+.dropdown{
+  width: 340px;
+  padding: 8px;
+  border-radius: 18px;
+}
+
+.dd-item{
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  text-align: start;
+  transition: background .15s ease, box-shadow .15s ease, transform .12s var(--ease-out);
+}
+.dd-item + .dd-item{ margin-top: 2px; }
+.dd-item:hover{ background: var(--hover); }
+.dd-item:active{ transform: scale(.99); }
+
+/* active row gets an accent-tinted surface and hairline ring */
+.dd-item:has(.dd-check:not(.off)){
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.dd-item:has(.dd-check:not(.off)):hover{
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* small accent pip on the inline-start edge (only for the active row) */
+.dd-pip{
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--accent);
+  opacity: 0;
+  transform: scale(.4);
+  transition: opacity .18s ease, transform .22s var(--ease-spring);
+}
+.dd-item:has(.dd-check:not(.off)) .dd-pip{
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* title + description stack */
+.dd-text{
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dd-title{
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+  letter-spacing: -.01em;
+}
+.dd-desc{
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* checkmark sits on the inline-end edge and lights up in accent when on */
+.dd-check{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--accent);
+  transition: opacity .18s ease, transform .26s var(--ease-spring), color .15s ease;
+}
+.dd-check svg.ic{ width: 18px; height: 18px; stroke-width: 2.4; }
+.dd-check.off{
+  opacity: 0;
+  transform: scale(.4);
+  color: var(--text3);
+}
+
+/* smaller footprint on narrow phones */
+@media (max-width: 480px){
+  .dropdown{ width: min(300px, calc(100vw - 24px)); }
+  .dd-item{ padding: 11px 12px; gap: 10px; }
+  .dd-title{ font-size: 14px; }
+  .dd-desc{ font-size: 11.5px; }
+}
+/* ==== /UNICOLLECT FIXER: DROPDOWN ==== */
