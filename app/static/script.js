@@ -566,59 +566,51 @@ const THINK_PHASES = ['در حال فکر کردن', 'در حال بررسی', '
 const thinking = { phaseTimer: 0, clockTimer: 0, t0: 0, phaseIndex: 0, phaseDoneAt: 0 };
 
 function startThinking() {
-    stopThinking();
-    thinking.t0 = performance.now();
-    thinking.phaseIndex = 0;
-    thinking.phaseDoneAt = 0;
-    const label = () => $('think-text');
+  stopThinking();
+  thinking.t0 = performance.now();
+  thinking.phaseIndex = 0;
+  thinking.phaseDoneAt = 0;
 
-    // advance through the phase list one step at a time. Every phase
-    // (including the last) is shown for a random 700-1700ms before we
-    // move on. When the last phase has finished its dwell, phaseDoneAt
-    // is set and the caller can reveal the answer.
-    const nextPhase = () => {
-      const el = label();
-      if (!el) return stopThinking();
+  const label = () => $('think-text');
 
-      // last phase is on screen right now -> wait its dwell, then mark done
-      if (thinking.phaseIndex >= THINK_PHASES.length - 1) {
-        thinking.phaseTimer = setTimeout(() => {
-          thinking.phaseDoneAt = performance.now();
-          thinking.phaseTimer = 0;
-        }, 700 + Math.random() * 1000);
-        return;
-      }
+  // Advance through the phase list one step at a time. Each phase
+  // (including the last) is shown for a random 700-1700 ms before we move
+  // on. When the last phase finishes its dwell, phaseDoneAt is set and the
+  // caller (analyze) can reveal the answer.
+  const nextPhase = () => {
+    const el = label();
+    if (!el) return stopThinking();
 
-      thinking.phaseIndex += 1;
-      const phase = THINK_PHASES[thinking.phaseIndex];
+    if (thinking.phaseIndex >= THINK_PHASES.length - 1) {
+      // last phase is on screen right now -> wait out its dwell, then done
+      thinking.phaseTimer = setTimeout(() => {
+        thinking.phaseDoneAt = performance.now();
+        thinking.phaseTimer = 0;
+      }, 700 + Math.random() * 1000);
+      return;
+    }
 
-      if (REDUCED_MOTION) {
+    thinking.phaseIndex += 1;
+    const phase = THINK_PHASES[thinking.phaseIndex];
+
+    if (REDUCED_MOTION) {
+      el.textContent = phase;
+    } else {
+      el.classList.add('swap');
+      setTimeout(() => {
+        if (!el.isConnected) return;
         el.textContent = phase;
-      } else {
-        el.classList.add('swap');
-        setTimeout(() => {
-          if (!el.isConnected) return;
-          el.textContent = phase;
-          el.classList.remove('swap');
-        }, 200);
-      }
+        el.classList.remove('swap');
+      }, 200);
+    }
 
-      thinking.phaseTimer = setTimeout(nextPhase, 700 + Math.random() * 1000);
-    };
-
-    // first step: phase[0] is already visible (written by appendPendingTurn),
-    // so wait one dwell interval, then start advancing.
     thinking.phaseTimer = setTimeout(nextPhase, 700 + Math.random() * 1000);
-
-    thinking.clockTimer = setInterval(() => {
-      const t = $('think-time');
-      if (!t) return;
-      const sec = Math.floor((performance.now() - thinking.t0) / 1000);
-      const value = sec >= 2 ? `${fa(sec)} ثانیه` : '';
-      if (t.textContent !== value) t.textContent = value;
-    }, 250);
   };
+
+  // phase[0] is already visible (written by appendPendingTurn), so wait one
+  // dwell interval, then start advancing.
   thinking.phaseTimer = setTimeout(nextPhase, 700 + Math.random() * 1000);
+
   thinking.clockTimer = setInterval(() => {
     const t = $('think-time');
     if (!t) return;
@@ -627,6 +619,7 @@ function startThinking() {
     if (t.textContent !== value) t.textContent = value;
   }, 250);
 }
+
 function stopThinking() {
   clearTimeout(thinking.phaseTimer);
   clearInterval(thinking.clockTimer);
@@ -642,10 +635,10 @@ function replacePendingTurn(html) {
   const pending = $('pending-turn');
   const tpl = document.createElement('template');
   tpl.innerHTML = html;
-      if (pending && pending.parentNode) pending.replaceWith(tpl.content);
-    else $('chat-stream').appendChild(tpl.content);
-    initBreakdowns($('chat-stream'));
-  }
+  if (pending && pending.parentNode) pending.replaceWith(tpl.content);
+  else $('chat-stream').appendChild(tpl.content);
+  initBreakdowns($('chat-stream'));
+}
 
 const DECISIONS = {
   TOXIC:   { icon: 'shieldx',     title: 'محتوای سمی شناسایی شد', text: 'بر اساس رأی‌گیری اجماعی مدل‌ها، این متن حاوی الفاظ توهین‌آمیز یا سمی است.' },
@@ -974,24 +967,22 @@ async function analyze(overrideText) {
       return;
     }
 
-    const realElapsedMs = performance.now() - sentAt;
-    // Never reveal the answer before all four thinking stages have appeared.
-    // Slow model responses can naturally exceed this; fast responses wait here.
-    // Wait for the *last* phase's dwell to finish, not a fixed floor. If the API already answered, we still let the phases play out; if it hasn't, we wait for it in parallel.
-        const THINKING_SAFETY_MS = 12000; // never hang longer than this
-        const phasesDone = (async () => {
-          while (!thinking.phaseDoneAt && (performance.now() - sentAt) < THINKING_SAFETY_MS) {
-            await sleep(60);
-          }
-        })();
-        await Promise.race([
-          phasesDone,
-          sleep(Math.max(0, THINKING_SAFETY_MS - (performance.now() - sentAt)))
-        ]);
-        const thinkingMs = Math.max(
-          performance.now() - sentAt,
-          MIN_THINKING_MS
-        );
+    // Wait for the *last* phase's dwell to finish (not a fixed floor).
+    // If the API already answered, the phases still play out in full;
+    // if it hasn't, we wait for it in parallel. THINKING_SAFETY_MS caps
+    // the total wait so a stuck phase timer can never freeze the UI.
+    const THINKING_SAFETY_MS = 12000;
+    const phasesDone = (async () => {
+      while (!thinking.phaseDoneAt &&
+             (performance.now() - sentAt) < THINKING_SAFETY_MS) {
+        await sleep(60);
+      }
+    })();
+    await Promise.race([
+      phasesDone,
+      sleep(Math.max(0, THINKING_SAFETY_MS - (performance.now() - sentAt)))
+    ]);
+    const thinkingMs = Math.max(performance.now() - sentAt, MIN_THINKING_MS);
 
     const msg = { id: newId('msg'), text, result, ts: Date.now(), thinkingMs: Math.round(thinkingMs) };
     thread.messages.push(msg);
