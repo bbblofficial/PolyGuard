@@ -1,52 +1,55 @@
 :root {
   --main: #ffffff;
-  --sidebar: #f9f9f9;
+  --sidebar: #fafafa;
   --composer: #ffffff;
-  --hover: #ececec;
-  --active: #e3e3e3;
-  --user: #f4f4f4;
+  --hover: #f0f0f0;
+  --active: #e5e5e5;
+  --user: #f0f0f0;
   --popup: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --border-strong: rgba(0, 0, 0, 0.18);
-  --text: #0d0d0d;
-  --text2: #5d5d5d;
-  --text3: #8f8f8f;
-  --btn-bg: #0d0d0d;
+  --border: rgba(0, 0, 0, 0.10);
+  --border-strong: rgba(0, 0, 0, 0.28);
+  --text: #000000;
+  --text2: #4a4a4a;
+  --text3: #888888;
+  --btn-bg: #000000;
   --btn-fg: #ffffff;
-  --ok: #10a37f;
-  --warn: #d98e04;
-  --bad: #e5484d;
-  --info: #2f7de1;
-  --shadow-composer: 0 0 0 1px rgba(0,0,0,.08), 0 6px 24px rgba(0,0,0,.06);
+  /* Greyscale semantics: states are told apart by shape + pattern, never
+     by hue. `bad` is the highest-contrast value, `warn` is mid, `ok` is
+     deliberately quiet. */
+  --ok: #1a1a1a;
+  --warn: #6e6e6e;
+  --bad: #000000;
+  --info: #4a4a4a;
+  --brand: #000000;
+  --shadow-composer: 0 0 0 1px rgba(0,0,0,.10), 0 6px 24px rgba(0,0,0,.06);
   --shadow-pop: 0 10px 40px rgba(0,0,0,.14);
-  --brand: #d97757;
-  --mark: rgba(217,119,87,.22);
+  --mark: rgba(0,0,0,.14);
   --ease-out: cubic-bezier(.22,1,.36,1);
   --ease-spring: cubic-bezier(.34,1.4,.64,1);
 }
 html.dark {
-  --main: #212121;
-  --sidebar: #181818;
-  --composer: #303030;
-  --hover: #2a2a2a;
-  --active: #303030;
-  --user: #303030;
-  --popup: #2f2f2f;
-  --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.2);
-  --text: #ececec;
-  --text2: #b4b4b4;
-  --text3: #8e8e8e;
+  --main: #000000;
+  --sidebar: #000000;
+  --composer: #141414;
+  --hover: #1a1a1a;
+  --active: #242424;
+  --user: #1c1c1c;
+  --popup: #141414;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.32);
+  --text: #ffffff;
+  --text2: #b0b0b0;
+  --text3: #707070;
   --btn-bg: #ffffff;
   --btn-fg: #000000;
-  --ok: #19c37d;
-  --warn: #f5b942;
-  --bad: #ff6369;
-  --info: #5aa2ff;
+  --ok: #d0d0d0;
+  --warn: #909090;
+  --bad: #ffffff;
+  --info: #b0b0b0;
+  --brand: #ffffff;
   --shadow-composer: none;
-  --shadow-pop: 0 10px 40px rgba(0,0,0,.5);
-  --brand: #e08a6d;
-  --mark: rgba(224,138,109,.28);
+  --shadow-pop: 0 10px 40px rgba(0,0,0,.75);
+  --mark: rgba(255,255,255,.20);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -410,42 +413,33 @@ html.dark .bar { background: rgba(255,255,255,.08); }
 }
 #pending-turn.pending-fade .thinking-block { opacity: 0; transform: translateY(-4px); }
 
-/* PolyGuard brand mark (replaces the old Claude-style starburst) */
-svg.ic.spark { stroke: var(--brand); stroke-width: 1.9; fill: none; }
+/* PolyGuard brand mark: scanning reticle. Pure line-art, inherits the
+   current colour, no hue involved. */
+svg.ic.spark { stroke: var(--brand); stroke-width: 1.8; fill: none; }
 .thinking-sparkle { display: inline-flex; width: 22px; height: 22px; align-items: center; justify-content: center; }
 .thinking-sparkle svg.ic { width: 22px; height: 22px; }
 
-/* hexagon slowly rotates; diamond core + center pulse */
-.spark .hex {
-  transform-box: view-box; transform-origin: 12px 12px;
-  animation: spark-hex-spin 12s linear infinite;
-}
-.spark .dia {
-  transform-box: view-box; transform-origin: 12px 12px;
-  fill: color-mix(in srgb, var(--brand) 22%, transparent);
-}
-.spark .core { fill: var(--brand); stroke: none; }
+.spark .frame,
+.spark .ticks,
+.spark .core { transform-box: view-box; transform-origin: 12px 12px; }
+.spark .core  { fill: var(--brand); stroke: none; }
+.spark .ticks { opacity: .45; }
 
-.spark-live .hex {
-  animation: spark-hex-spin 6s linear infinite;
-}
-.spark-live .dia {
-  transform-box: view-box; transform-origin: 12px 12px;
-  animation: spark-dia-pulse 1.6s ease-in-out infinite;
-}
-.spark-live .core {
-  transform-box: view-box; transform-origin: 12px 12px;
-  animation: spark-core-pulse 1.6s ease-in-out infinite;
-}
+.spark-live .frame { animation: spark-focus 1.8s ease-in-out infinite; }
+.spark-live .ticks { animation: spark-ticks 1.8s ease-in-out infinite; }
+.spark-live .core  { animation: spark-core  1.8s ease-in-out infinite; }
 
-@keyframes spark-hex-spin { to { transform: rotate(360deg); } }
-@keyframes spark-dia-pulse {
-  0%, 100% { transform: scale(.85) rotate(0deg);   opacity: .70; }
-  50%      { transform: scale(1.05) rotate(45deg); opacity: 1;   }
+@keyframes spark-focus {
+  0%, 100% { transform: scale(.82); }
+  50%      { transform: scale(1);   }
 }
-@keyframes spark-core-pulse {
-  0%, 100% { transform: scale(1.0); opacity: .55; }
-  50%      { transform: scale(1.6); opacity: 1;   }
+@keyframes spark-ticks {
+  0%, 100% { opacity: .15; }
+  50%      { opacity: .75; }
+}
+@keyframes spark-core {
+  0%, 100% { transform: scale(.7); opacity: .40; }
+  50%      { transform: scale(1.5); opacity: 1;  }
 }
 /* shimmer sweep across the label, like the "Thinking…" */
 .thinking-text {
@@ -512,4 +506,39 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   .thinking-text { animation: none; color: var(--text2); background: none; }
+}
+
+/* ============================================================
+   Black-and-white theme overrides
+   ------------------------------------------------------------
+   The palette is greyscale; meaning is carried by structure instead of
+   colour. TOXIC is a solid, heavy border. SUSPECT is a dashed, mid-weight
+   border. SAFE is quiet. Meter bars use fill patterns for the same reason.
+   ============================================================ */
+.result              { border: 1.5px solid var(--tone); }
+.result.SUSPECT      { border-style: dashed; }
+
+/* Meter-bar patterns replace the red/amber/green ramp. */
+.bar .f-bad  { background: var(--bad); }
+.bar .f-warn {
+  background:
+    repeating-linear-gradient(45deg,
+      var(--warn) 0 3px,
+      transparent 3px 6px);
+}
+.bar .f-ok   { background: color-mix(in srgb, var(--ok) 55%, transparent); }
+
+/* The avatar was hard-coded to a green; drive it from the theme instead. */
+.avatar { background: var(--btn-bg); color: var(--btn-fg); }
+
+/* Tags (RAV / SALEM chips) become neutral outlined chips. */
+.tag.bad {
+  background: color-mix(in srgb, var(--bad) 14%, transparent);
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
+}
+.tag.ok {
+  background: transparent;
+  color: var(--text2);
+  border: 1px solid var(--border);
 }

@@ -54,15 +54,27 @@ function hydrateIcons(root) {
   });
 }
 
-// PolyGuard brand mark: a hexagon ("Poly") around a diamond core with a
-// glowing center dot. Replaces the old Claude-style starburst.
+// PolyGuard brand mark: a scanning reticle. Four corner brackets
+// frame a crosshair and a pulsing core - reads as "detection" rather than
+// as a generic AI sparkle, and stays legible down to 15px.
 const SPARK_SVG = `
-  <polygon class="hex" points="12,2.2 20.5,7.1 20.5,16.9 12,21.8 3.5,16.9 3.5,7.1"/>
-  <polygon class="dia" points="12,7.6 16.6,12 12,16.4 7.4,12"/>
-  <circle class="core" cx="12" cy="12" r="1.6"/>
+  <g class="frame">
+    <path d="M4 9 V4 H9"/>
+    <path d="M15 4 H20 V9"/>
+    <path d="M20 15 V20 H15"/>
+    <path d="M9 20 H4 V15"/>
+  </g>
+  <g class="ticks">
+    <line x1="12" y1="9"  x2="12" y2="11"/>
+    <line x1="12" y1="13" x2="12" y2="15"/>
+    <line x1="9"  y1="12" x2="11" y2="12"/>
+    <line x1="13" y1="12" x2="15" y2="12"/>
+  </g>
+  <circle class="core" cx="12" cy="12" r="1.3"/>
 `;
 function sparkSVG(animated) {
   return `<svg class="ic spark${animated ? ' spark-live' : ''}" viewBox="0 0 24 24" aria-hidden="true">${SPARK_SVG}</svg>`;
+}" viewBox="0 0 24 24" aria-hidden="true">${SPARK_SVG}</svg>`;
 }
 
 /* ---------------- init ---------------- */
