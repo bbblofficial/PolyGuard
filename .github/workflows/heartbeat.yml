@@ -45,14 +45,43 @@ jobs:
 
           # `gh run list --status` is a single-value flag, not a
           # repeatable one — passing it twice keeps only the last value.
-          # Filter both live states in jq instead.
-          active=$(gh run list --repo "$GH_REPO" --workflow "$workflow" \
-            --limit 20 --json status \
-            --jq '[.[] | select(.status == "in_progress" or .status == "queued")] | length')
+          # Filter every non-terminal state in jq instead (not just
+          # in_progress/queued: a run can briefly sit as "requested" or
+          # "waiting" right after dispatch, and missing that window here
+          # would let the schedule's backup tick fire a duplicate run).
+          non_terminal() {
+            gh run list --repo "$GH_REPO" --workflow "$workflow" \
+              --limit 20 --json status \
+              --jq '[.[] | select(.status == "in_progress" or .status == "queued"
+                                  or .status == "requested" or .status == "waiting"
+                                  or .status == "pending")] | length'
+          }
+
+          active=$(non_terminal)
           if [ "$active" != "0" ]; then
             echo "A deploy is already active; leaving it alone."
             exit 0
           fi
 
-          echo "Starting a fresh six-hour deploy run..."
-          gh workflow run deploy.yml --repo "$GH_REPO" --ref main
+          # `gh workflow run` only enqueues a dispatch request - it does not
+          # confirm GitHub actually accepted it, so a silent permission
+          # problem (e.g. Settings -> Actions -> General -> Workflow
+          # permissions set back to read-only) used to look like success
+          # here while nothing restarted. Verify a run actually shows up,
+          # and retry once before failing loudly.
+          for try in 1 2; do
+            echo "Starting a fresh six-hour deploy run (attempt ${try})..."
+            if ! gh workflow run deploy.yml --repo "$GH_REPO" --ref main; then
+              echo "::warning::gh workflow run failed on attempt ${try}"
+              sleep 5
+              continue
+            fi
+            for i in $(seq 1 10); do
+              sleep 3
+              [ "$(non_terminal)" != "0" ] && { echo "Confirmed: a new deploy run is queued."; exit 0; }
+            done
+            echo "::warning::dispatch returned success but no run appeared within 30s"
+          done
+
+          echo "::error::Could not start deploy.yml. Check Settings -> Actions -> General -> Workflow permissions (must be 'Read and write permissions') and that Actions are enabled for this repository."
+          exit 1

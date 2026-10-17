@@ -16,10 +16,14 @@ OUT="$(mktemp -d)"
 trap 'rm -rf "$OUT"' EXIT
 
 cp -R "$ROOT/pages/." "$OUT/"
-# status.json is generated below; pages/assets and the informational routes ship too.
+# pages/assets and the informational routes ship as-is; status.json is
+# regenerated below. It MUST land in assets/, because site.js resolves the
+# fetch URL relative to its own <script src="assets/site.js"> location, i.e.
+# it always requests "assets/status.json" - never the repo-root status.json.
 touch "$OUT/.nojekyll"
+mkdir -p "$OUT/assets"
 
-python3 - "$OUT/status.json" "$STATUS" "$URL" <<'PY'
+python3 - "$OUT/assets/status.json" "$STATUS" "$URL" <<'PY'
 import datetime, json, os, sys
 path, status, url = sys.argv[1:4]
 server = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
