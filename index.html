@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unicollect · هوش مصنوعی برای بررسی متن</title>
+<meta name="description" content="Unicollect یک نگهبان هوشمند برای تشخیص سمیت و توهین در متن‌های فارسی، فینگیلیش و انگلیسی است.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#212121" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main class="page">
+<header class="site-header">
+<a class="brand" href="./" aria-label="صفحه اصلی Unicollect"><span class="mark"><svg class="icon-spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(0 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(60 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(120 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(180 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(240 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(300 12 12)"/><circle cx="12" cy="12" r="2.1"/></svg></span><span class="brand-name">Unicollect</span></a>
+<button class="site-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="باز کردن منو"><svg class="burger" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><line x1="4" y1="7"  x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
+<nav id="site-nav" class="site-nav" aria-label="ناوبری اصلی">
+<div class="drawer-head">
+<span class="drawer-title">منو</span>
+<button class="drawer-close" type="button" aria-label="بستن منو" data-menu-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+</div>
+<a href="./" aria-current="page"><span class="nav-icon-wrap"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1V10.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="nav-label">خانه</span></a><a href="about/"><span class="nav-icon-wrap"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5M12 8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="nav-label">درباره</span></a><a href="how-it-works/"><span class="nav-icon-wrap"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="7" r="1.4" fill="currentColor"/><circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="5" cy="17" r="1.4" fill="currentColor"/><path d="M10 7h10M10 12h10M10 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="nav-label">فرآیند</span></a><a href="privacy/"><span class="nav-icon-wrap"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v6c0 4.5 3 8 7 9 4-1 7-4.5 7-9V6l-7-3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="nav-label">حریم خصوصی</span></a>
+<div class="drawer-foot">ساخته شده توسط موویکسو</div>
+</nav>
+</header>
+<section class="hero" id="top">
+<div class="hero-mark"><svg class="icon-spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(0 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(60 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(120 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(180 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(240 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(300 12 12)"/><circle cx="12" cy="12" r="2.1"/></svg></div>
+<div class="eyebrow"><i></i>هوش مصنوعی برای متن‌های بهتر</div>
+<h1>قبل از اینکه متن را بفرستی، <span>یک‌بار دیگر ببینش.</span></h1>
+<p class="lead">Unicollect متن‌های فارسی، فینگیلیش و انگلیسی را با رأی‌گیری چندمدلی بررسی می‌کند تا توهین، سمیت و ریسک ارتباطی را سریع‌تر ببینی.</p>
+<div class="hero-actions">
+<a class="btn primary" href="#how">چطور کار می‌کند؟</a>
+<a class="btn" href="#about">درباره سازنده</a>
+</div>
+</section>
+
+<section class="grid">
+<article class="feature"><span class="feature-num">۰۱</span><h2>چند مدل، یک رأی</h2><p>به‌جای تکیه بر یک خروجی، چند مدل متن را می‌خوانند و Unicollect نتیجه را با اجماع جمع‌بندی می‌کند.</p></article>
+<article class="feature"><span class="feature-num">۰۲</span><h2>ساخته‌شده برای فارسی</h2><p>فارسی، فینگیلیش و متن‌های ترکیبی را می‌فهمد و برای هرکدام مسیر بررسی مناسب را انتخاب می‌کند.</p></article>
+<article class="feature"><span class="feature-num">۰۳</span><h2>شفاف، نه جعبه‌سیاه</h2><p>نمای سریع، ریز نمرهٔ همهٔ مدل‌ها را نشان می‌دهد؛ نمای دقیق، فقط نتیجه نهایی را خلاصه می‌کند.</p></article>
+</section>
+
+<section id="how">
+<div class="section-head"><h2>از متن تا نتیجه</h2><p>فرآیند ساده است، ولی پشت آن چند لایه بررسی انجام می‌شود.</p></div>
+<div class="how">
+<article class="step"><b>۱</b><h3>تشخیص زبان</h3><p>متن فارسی، انگلیسی، فینگیلیش یا مختلط شناسایی می‌شود.</p></article>
+<article class="step"><b>۲</b><h3>پرسش از مدل‌ها</h3><p>مدل‌های تخصصی و چندزبانه هرکدام نظر خودشان را می‌دهند.</p></article>
+<article class="step"><b>۳</b><h3>رأی اجتماعی</h3><p>امتیازها و آستانه‌ها کنار هم قرار می‌گیرند تا یک مدل تنها تصمیم‌گیر نباشد.</p></article>
+<article class="step"><b>۴</b><h3>نتیجه قابل فهم</h3><p>خروجی به‌صورت سالم، مشکوک یا سمی نمایش داده می‌شود.</p></article>
+</div>
+</section>
+
+<section class="about" id="about">
+<div>
+<h2>چه کسی ساخته؟</h2>
+<p>Unicollect توسط <strong>موویکسو</strong> ساخته شده؛ یک پروژه مستقل برای کمک به ارتباطات سالم‌تر و بررسی سریع‌تر متن.</p>
+</div>
+<span class="about-badge">ساخته شده توسط موویکسو</span>
+</section>
+
+<section class="access" id="access" aria-label="دسترسی سرویس Unicollect">
+<div class="access-top">
+<div class="access-label">دسترسی سرویس Unicollect</div>
+<div class="keyhint">این بخش فقط با میانبر اختصاصی فعال می‌شود.</div>
+</div>
+<a class="access-link" id="service-url">در حال دریافت وضعیت…</a>
+<div class="access-status" id="access-status" role="status" aria-live="polite">در حال بررسی آنلاین بودن سرویس…</div>
+<div class="access-actions">
+<a class="btn primary" id="open-service" aria-disabled="true">باز کردن سرویس</a>
+<button class="btn" id="copy-service" type="button">کپی لینک</button>
+<button class="btn" id="close-access" type="button">بستن</button>
+</div>
+</section>
+<footer class="site-footer">
+<span>© Unicollect · موویکسو</span>
+<span>برای استفاده بهتر، متن را قبل از ارسال یک‌بار مرور کن.</span>
+</footer>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite">لینک کپی شد</div>
+<script src="assets/site.js" defer></script>
+</body>
+</html>
