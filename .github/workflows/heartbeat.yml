@@ -33,8 +33,7 @@ jobs:
           set -euo pipefail
           workflow="deploy.yml"
 
-          # workflow_run is the authoritative restart signal. The schedule is
-          # only a safety net and must not start a second deploy while one runs.
+          # workflow_run is the authoritative restart signal.
           if [ "$EVENT_NAME" = "workflow_run" ]; then
             if [ "$RUN_CONCLUSION" = "skipped" ]; then
               echo "Deploy was skipped; no restart needed."
@@ -43,45 +42,57 @@ jobs:
             echo "Deploy run $RUN_ID ended with: $RUN_CONCLUSION"
           fi
 
-          # `gh run list --status` is a single-value flag, not a
-          # repeatable one — passing it twice keeps only the last value.
-          # Filter every non-terminal state in jq instead (not just
-          # in_progress/queued: a run can briefly sit as "requested" or
-          # "waiting" right after dispatch, and missing that window here
-          # would let the schedule's backup tick fire a duplicate run).
-          non_terminal() {
-            gh run list --repo "$GH_REPO" --workflow "$workflow" \
-              --limit 20 --json status \
-              --jq '[.[] | select(.status == "in_progress" or .status == "queued"
-                                  or .status == "requested" or .status == "waiting"
-                                  or .status == "pending")] | length'
-          }
+          # Get active runs and their creation time
+          active_json=$(gh run list --repo "$GH_REPO" --workflow "$workflow" \
+            --limit 20 --json status,createdAt \
+            --jq '[.[] | select(.status == "in_progress" or .status == "queued"
+                                or .status == "requested" or .status == "waiting"
+                                or .status == "pending")]')
+          
+          active_count=$(echo "$active_json" | jq 'length')
 
-          active=$(non_terminal)
-          if [ "$active" != "0" ]; then
-            echo "A deploy is already active; leaving it alone."
-            exit 0
+          if [ "$active_count" != "0" ]; then
+            echo "A deploy is already active."
+            
+            # Check how long it has been running
+            STARTED_AT=$(echo "$active_json" | jq -r '.[0].createdAt')
+            START_TS=$(date -d "$STARTED_AT" +%s)
+            NOW_TS=$(date +%s)
+            ELAPSED_MIN=$(( (NOW_TS - START_TS) / 60 ))
+
+            # If it's been running for less than 270 minutes (4.5 hours), wait.
+            if [ "$ELAPSED_MIN" -lt 270 ]; then
+              echo "Active deploy is ${ELAPSED_MIN} minutes old. Waiting until 270 minutes to start the parallel one."
+              exit 0
+            else
+              echo "Active deploy is ${ELAPSED_MIN} minutes old. Starting a new one in parallel for zero-downtime."
+              # Continue to start the new workflow
+            fi
           fi
 
-          # `gh workflow run` only enqueues a dispatch request - it does not
-          # confirm GitHub actually accepted it, so a silent permission
-          # problem (e.g. Settings -> Actions -> General -> Workflow
-          # permissions set back to read-only) used to look like success
-          # here while nothing restarted. Verify a run actually shows up,
-          # and retry once before failing loudly.
+          # Start a new run
           for try in 1 2; do
-            echo "Starting a fresh six-hour deploy run (attempt ${try})..."
+            echo "Starting a fresh deploy run (attempt ${try})..."
             if ! gh workflow run deploy.yml --repo "$GH_REPO" --ref main; then
               echo "::warning::gh workflow run failed on attempt ${try}"
               sleep 5
               continue
             fi
+            
             for i in $(seq 1 10); do
               sleep 3
-              [ "$(non_terminal)" != "0" ] && { echo "Confirmed: a new deploy run is queued."; exit 0; }
+              new_active_count=$(gh run list --repo "$GH_REPO" --workflow "$workflow" \
+                --limit 20 --json status \
+                --jq '[.[] | select(.status == "in_progress" or .status == "queued"
+                                    or .status == "requested" or .status == "waiting"
+                                    or .status == "pending")] | length')
+              if [ "$new_active_count" -gt "$active_count" ]; then
+                echo "Confirmed: a new deploy run is queued."
+                exit 0
+              fi
             done
-            echo "::warning::dispatch returned success but no run appeared within 30s"
+            echo "::warning::dispatch returned success but no new run appeared within 30s"
           done
 
-          echo "::error::Could not start deploy.yml. Check Settings -> Actions -> General -> Workflow permissions (must be 'Read and write permissions') and that Actions are enabled for this repository."
+          echo "::error::Could not start deploy.yml. Check Settings -> Actions -> General -> Workflow permissions."
           exit 1

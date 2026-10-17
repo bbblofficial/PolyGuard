@@ -9,10 +9,6 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: unicollect-deploy
-  cancel-in-progress: true
-
 env:
   PERSIAN_MODEL_ID:      HamidRezaei/Persian-Offensive-Language-Detection
   TEXTDETOX_LARGE_ID:    textdetox/twitter-xlmr-toxicity-classifier
