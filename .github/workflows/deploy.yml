@@ -8,6 +8,7 @@ on:
 # contents: write lets the job push the status page to the gh-pages branch
 permissions:
   contents: write
+  actions: write
 
 env:
   PERSIAN_MODEL_ID:      HamidRezaei/Persian-Offensive-Language-Detection
@@ -180,6 +181,15 @@ jobs:
               fi
             }
           done
+
+
+      - name: Call heartbeat to restart
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          echo "Calling heartbeat to restart deployment..."
+          gh workflow run heartbeat.yml --ref main || echo "Failed to trigger heartbeat"
 
       # Not on cancellation: a newer run (concurrency group) is already
       # publishing its own status and must not be overwritten with "offline".

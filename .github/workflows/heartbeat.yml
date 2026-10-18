@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: Check and restart Unicollect
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
           GH_REPO: ${{ github.repository }}
           EVENT_NAME: ${{ github.event_name }}
           RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
@@ -33,6 +33,13 @@ jobs:
           set -euo pipefail
           workflow="deploy.yml"
 
+
+          # workflow_run is the authoritative restart signal.
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "Triggered manually (e.g. from deploy.yml). Starting new deploy immediately!"
+            gh workflow run deploy.yml --repo "$GH_REPO" --ref main || true
+            exit 0
+          fi
           # workflow_run is the authoritative restart signal.
           if [ "$EVENT_NAME" = "workflow_run" ]; then
             if [ "$RUN_CONCLUSION" = "skipped" ]; then
