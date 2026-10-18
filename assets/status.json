@@ -1,9 +1,9 @@
 {
-  "status": "starting",
+  "status": "offline",
   "url_payload": null,
   "chat_status": null,
   "chat_url_payload": null,
-  "updated_at": "2026-10-18T19:04:52+00:00",
+  "updated_at": "2026-10-18T19:06:20+00:00",
   "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39157096971",
   "run_number": 76,
   "commit": "ebd6a17"
