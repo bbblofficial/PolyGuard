@@ -33,12 +33,12 @@ jobs:
           set -euo pipefail
           workflow="deploy.yml"
 
-
-          # workflow_run is the authoritative restart signal.
+          # workflow_dispatch (manual run from the Actions tab) falls through
+          # to the same active-run check below as every other trigger, so a
+          # manual click can't accidentally start a second deploy in parallel
+          # with one that's already healthy.
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "Triggered manually (e.g. from deploy.yml). Starting new deploy immediately!"
-            gh workflow run deploy.yml --repo "$GH_REPO" --ref main || true
-            exit 0
+            echo "Triggered manually. Checking for an active deploy before restarting."
           fi
           # workflow_run is the authoritative restart signal.
           if [ "$EVENT_NAME" = "workflow_run" ]; then

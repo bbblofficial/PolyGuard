@@ -19,6 +19,16 @@ env:
 
   MODELS_ROOT: ${{ github.workspace }}/models
 
+  # --- Unicollect Chat (second service, own TryCloudflare link) ---
+  # Qwen2.5-3B-Instruct, Q4_K_M GGUF: best speed/quality/RAM balance for a
+  # 4-core, 16 GB, no-GPU GitHub runner (see scripts/download_chat_model.py).
+  CHAT_MODEL_REPO: Qwen/Qwen2.5-3B-Instruct-GGUF
+  CHAT_MODEL_FILE: qwen2.5-3b-instruct-q4_k_m.gguf
+  CHAT_MODEL_LABEL: Qwen2.5-3B-Instruct
+  LLAMA_PORT: "8001"
+  CHAT_PROXY_PORT: "8002"
+  LLAMA_SERVER_URL: http://127.0.0.1:8001
+
   OMP_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
   OPENBLAS_NUM_THREADS: "1"
@@ -60,7 +70,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
-          pip install --quiet fastapi "uvicorn[standard]" gunicorn transformers sentencepiece protobuf huggingface_hub anyio
+          pip install --quiet fastapi "uvicorn[standard]" gunicorn transformers sentencepiece protobuf huggingface_hub anyio requests
 
       - name: Download all models to local folders
         run: |
@@ -89,6 +99,69 @@ jobs:
           PY
           echo "--- model sizes ---"
           du -sh "$MODELS_ROOT"/*
+
+      - name: Download chat model (GGUF, for Unicollect Chat)
+        run: |
+          python scripts/download_chat_model.py
+          echo "CHAT_MODEL_PATH=$(cat "$MODELS_ROOT/chat/MODEL_PATH")" >> "$GITHUB_ENV"
+
+      - name: Install llama.cpp server (CPU build)
+        env:
+          # Unauthenticated calls to api.github.com are capped at 60/hour per
+          # runner IP, which is shared across many GitHub-hosted runners and
+          # gets exhausted easily -> "assets" silently comes back empty.
+          # Authenticating with GITHUB_TOKEN raises that to ~1000/hour.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          API_URL="https://api.github.com/repos/ggml-org/llama.cpp/releases/latest"
+          HTTP_CODE=$(curl -sS -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -w "%{http_code}" -o release.json "$API_URL")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "GitHub API returned HTTP $HTTP_CODE while fetching the latest llama.cpp release:"
+            cat release.json || true
+            exit 1
+          fi
+          ASSET_URL=$(python3 - <<'PY'
+          import json, re
+          with open("release.json") as f:
+              data = json.load(f)
+          assets = data.get("assets", [])
+          # Primary pattern: llama-<tag>-bin-ubuntu-x64.(zip|tar.gz)
+          pat = re.compile(r"^llama-.*-bin-ubuntu-x64\.(zip|tar\.gz)$")
+          match = next((a for a in assets if pat.match(a["name"])), None)
+          # Fallback in case the project tweaks its naming convention again.
+          if match is None:
+              fallback = re.compile(r"ubuntu.*x64.*\.(zip|tar\.gz)$", re.IGNORECASE)
+              match = next((a for a in assets if fallback.search(a["name"])), None)
+          if match:
+              print(match["browser_download_url"])
+          else:
+              import sys
+              print("Available assets:", [a["name"] for a in assets], file=sys.stderr)
+          PY
+          )
+          if [ -z "$ASSET_URL" ]; then
+            echo "Could not find an ubuntu-x64 llama.cpp release asset"
+            exit 1
+          fi
+          echo "Fetching $ASSET_URL"
+          mkdir -p llama_bin
+          case "$ASSET_URL" in
+            *.zip) curl -fsSL "$ASSET_URL" -o llama_bin/pkg.zip && unzip -q llama_bin/pkg.zip -d llama_bin ;;
+            *)     curl -fsSL "$ASSET_URL" -o llama_bin/pkg.tar.gz && tar -xzf llama_bin/pkg.tar.gz -C llama_bin ;;
+          esac
+          BIN_PATH=$(find llama_bin -type f -name "llama-server" | head -n1)
+          if [ -z "$BIN_PATH" ]; then
+            echo "llama-server binary not found in the downloaded archive"
+            exit 1
+          fi
+          chmod +x "$BIN_PATH"
+          BIN_DIR="$(dirname "$PWD/$BIN_PATH")"
+          echo "LLAMA_SERVER_BIN=$PWD/$BIN_PATH" >> "$GITHUB_ENV"
+          # llama-server's shared libs (libggml*, libllama*) live next to it
+          echo "LD_LIBRARY_PATH=$BIN_DIR:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+          LD_LIBRARY_PATH="$BIN_DIR" "$PWD/$BIN_PATH" --version
 
       - name: Install cloudflared
         run: |
@@ -124,47 +197,86 @@ jobs:
         continue-on-error: true
         run: python scripts/smoke_test.py http://localhost:8000
 
-      - name: Start Cloudflare Quick Tunnel
+      - name: Start Unicollect Chat (llama.cpp server + proxy)
+        run: |
+          nohup bash scripts/start_chat_server.sh > llama.log 2>&1 &
+          echo "Waiting for llama-server to become healthy (~30-90s)..."
+          for i in $(seq 1 90); do
+            curl -fs "http://127.0.0.1:${LLAMA_PORT}/health" >/dev/null 2>&1 && { echo "llama-server ready after ${i}s"; break; }
+            sleep 1
+          done
+          curl -fs "http://127.0.0.1:${LLAMA_PORT}/health" >/dev/null 2>&1 || { echo "llama-server never became healthy"; tail -n 150 llama.log || true; exit 1; }
+
+          nohup bash scripts/start_chat_proxy.sh > chat_proxy.log 2>&1 &
+          echo "Waiting for chat proxy to become healthy..."
+          for i in $(seq 1 60); do
+            STATUS=$(curl -fs "http://127.0.0.1:${CHAT_PROXY_PORT}/health" 2>/dev/null || true)
+            echo "$STATUS" | grep -q '"status":"ok"' && { echo "chat proxy ready after ${i}s"; break; }
+            sleep 1
+          done
+          curl -fs "http://127.0.0.1:${CHAT_PROXY_PORT}/health" | grep -q '"status":"ok"' || { echo "chat proxy never became healthy"; tail -n 150 chat_proxy.log || true; exit 1; }
+
+      - name: Start Cloudflare Quick Tunnels
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
-          echo "Waiting for trycloudflare URL..."
-          URL=""
+          nohup ./cloudflared tunnel --url "http://localhost:${CHAT_PROXY_PORT}" --no-autoupdate > tunnel_chat.log 2>&1 &
+
+          echo "Waiting for trycloudflare URLs..."
+          URL=""; CHAT_URL=""
           for i in $(seq 1 60); do
-            URL=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel.log | head -n1 || true)
-            [ -n "$URL" ] && break
+            [ -z "$URL" ]      && URL=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel.log | head -n1 || true)
+            [ -z "$CHAT_URL" ] && CHAT_URL=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel_chat.log | head -n1 || true)
+            [ -n "$URL" ] && [ -n "$CHAT_URL" ] && break
             sleep 2
           done
-          if [ -z "$URL" ]; then
-            echo "Could not obtain tunnel URL"
-            cat tunnel.log
+          if [ -z "$URL" ] || [ -z "$CHAT_URL" ]; then
+            echo "Could not obtain one or both tunnel URLs"
+            echo "--- main tunnel log ---"; cat tunnel.log
+            echo "--- chat tunnel log ---"; cat tunnel_chat.log
             exit 1
           fi
           echo "PUBLIC_URL=$URL" >> "$GITHUB_ENV"
+          echo "CHAT_PUBLIC_URL=$CHAT_URL" >> "$GITHUB_ENV"
           {
             echo "### Unicollect Ensemble is live at: $URL"
-            [ -n "${PAGES_URL:-}" ] && echo "Permanent status page (always shows the current link): ${PAGES_URL}"
+            echo "### Unicollect Chat is live at: $CHAT_URL"
+            [ -n "${PAGES_URL:-}" ] && echo "Permanent status page (always shows both current links): ${PAGES_URL}"
           } >> "$GITHUB_STEP_SUMMARY"
           echo "$URL"
-          bash scripts/publish_status.sh online "$URL" || echo "::warning::status page not updated"
+          echo "$CHAT_URL"
+          bash scripts/publish_status.sh online "$URL" online "$CHAT_URL" || echo "::warning::status page not updated"
 
       - name: Keep service alive
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Service running at: $PUBLIC_URL"
+          echo "Ensemble running at: $PUBLIC_URL"
+          echo "Chat running at: $CHAT_PUBLIC_URL"
           echo "Status page: ${PAGES_URL:-n/a}"
           echo "Will self-terminate after ~5 hours."
           URL="$PUBLIC_URL"
+          CHAT_URL="$CHAT_PUBLIC_URL"
           for i in $(seq 1 300); do
             sleep 60
+            CHANGED=0
+
             pgrep -f "gunicorn app.main:app" >/dev/null || {
               echo "Gunicorn died, restarting..."
               nohup bash scripts/start_server.sh >> server.log 2>&1 &
             }
-            pgrep -f "cloudflared tunnel" >/dev/null || {
-              echo "Cloudflared died, restarting..."
+            pgrep -f "$LLAMA_SERVER_BIN" >/dev/null || {
+              echo "llama-server died, restarting..."
+              nohup bash scripts/start_chat_server.sh >> llama.log 2>&1 &
+            }
+            pgrep -f "app.chat_app:app" >/dev/null || {
+              echo "Chat proxy died, restarting..."
+              nohup bash scripts/start_chat_proxy.sh >> chat_proxy.log 2>&1 &
+            }
+
+            pgrep -f "cloudflared tunnel --url http://localhost:8000" >/dev/null || {
+              echo "Main cloudflared died, restarting..."
               # a restarted quick tunnel gets a NEW random URL -> republish it
               nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
               NEW=""
@@ -175,21 +287,40 @@ jobs:
               done
               if [ -n "$NEW" ] && [ "$NEW" != "$URL" ]; then
                 URL="$NEW"
-                echo "New tunnel URL: $URL"
-                echo "Tunnel restarted, new URL: $URL" >> "$GITHUB_STEP_SUMMARY"
-                bash scripts/publish_status.sh online "$URL" || true
+                echo "New main tunnel URL: $URL"
+                echo "Main tunnel restarted, new URL: $URL" >> "$GITHUB_STEP_SUMMARY"
+                CHANGED=1
               fi
             }
+
+            pgrep -f "cloudflared tunnel --url http://localhost:${CHAT_PROXY_PORT}" >/dev/null || {
+              echo "Chat cloudflared died, restarting..."
+              nohup ./cloudflared tunnel --url "http://localhost:${CHAT_PROXY_PORT}" --no-autoupdate > tunnel_chat.log 2>&1 &
+              NEW=""
+              for j in $(seq 1 60); do
+                NEW=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel_chat.log | head -n1 || true)
+                [ -n "$NEW" ] && break
+                sleep 2
+              done
+              if [ -n "$NEW" ] && [ "$NEW" != "$CHAT_URL" ]; then
+                CHAT_URL="$NEW"
+                echo "New chat tunnel URL: $CHAT_URL"
+                echo "Chat tunnel restarted, new URL: $CHAT_URL" >> "$GITHUB_STEP_SUMMARY"
+                CHANGED=1
+              fi
+            }
+
+            if [ "$CHANGED" = "1" ]; then
+              bash scripts/publish_status.sh online "$URL" online "$CHAT_URL" || true
+            fi
           done
 
 
-      - name: Call heartbeat to restart
-        if: always()
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          echo "Calling heartbeat to restart deployment..."
-          gh workflow run heartbeat.yml --ref main || echo "Failed to trigger heartbeat"
+      # heartbeat.yml listens for this workflow's "workflow_run" completion
+      # event natively, so it doesn't need to be dispatched here too. Doing
+      # both caused two heartbeat runs per deploy (one via workflow_dispatch
+      # with no "is one already running?" check, one via workflow_run) that
+      # could race and start two parallel deploys.
 
       # Not on cancellation: a newer run (concurrency group) is already
       # publishing its own status and must not be overwritten with "offline".
