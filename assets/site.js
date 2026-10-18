@@ -72,11 +72,54 @@
 
   var access = document.getElementById("access");
   var currentUrl = "";
+  var currentChatUrl = "";
+
+  function applyLink(urlEl, statusEl, openEl, url, status, offlineMsg) {
+    if (!urlEl || !statusEl || !openEl) return "";
+    if (!url) {
+      urlEl.textContent = offlineMsg;
+      urlEl.removeAttribute("href");
+      urlEl.removeAttribute("target");
+      urlEl.removeAttribute("rel");
+      openEl.removeAttribute("href");
+      openEl.setAttribute("aria-disabled", "true");
+      statusEl.textContent = "لینک فعالی منتشر نشده است.";
+      return "";
+    }
+
+    urlEl.textContent = url;
+    urlEl.setAttribute("href", url);
+    urlEl.setAttribute("target", "_blank");
+    urlEl.setAttribute("rel", "noopener noreferrer");
+
+    openEl.setAttribute("href", url);
+    openEl.setAttribute("target", "_blank");
+    openEl.setAttribute("rel", "noopener noreferrer");
+    openEl.removeAttribute("aria-disabled");
+
+    statusEl.textContent =
+      status === "online" ? "سرویس آماده استفاده است." : "در حال آماده‌سازی سرویس…";
+    return url;
+  }
+
+  function markUnavailable(urlEl, statusEl, openEl, msg) {
+    if (!urlEl || !statusEl || !openEl) return;
+    urlEl.textContent = msg;
+    urlEl.removeAttribute("href");
+    urlEl.removeAttribute("target");
+    urlEl.removeAttribute("rel");
+    openEl.removeAttribute("href");
+    openEl.setAttribute("aria-disabled", "true");
+    statusEl.textContent = "چند لحظه بعد دوباره امتحان کن.";
+  }
 
   function loadStatus() {
     var urlEl = $("service-url");
     var statusEl = $("access-status");
     var openEl = $("open-service");
+    var chatUrlEl = $("chat-service-url");
+    var chatStatusEl = $("chat-access-status");
+    var chatOpenEl = $("open-chat-service");
     if (!urlEl || !statusEl || !openEl) return;
 
     var endpoint = scriptBase() + "status.json?t=" + Date.now();
@@ -88,42 +131,16 @@
       })
       .then(function (data) {
         var url = decodePayload(data && data.url_payload);
+        var chatUrl = decodePayload(data && data.chat_url_payload);
 
-        if (!url) {
-          urlEl.textContent = "سرویس فعلاً آنلاین نیست";
-          urlEl.removeAttribute("href");
-          urlEl.removeAttribute("target");
-          urlEl.removeAttribute("rel");
-          openEl.removeAttribute("href");
-          openEl.setAttribute("aria-disabled", "true");
-          statusEl.textContent = "لینک فعالی منتشر نشده است.";
-          return;
-        }
-
-        currentUrl = url;
-        urlEl.textContent = url;
-        urlEl.setAttribute("href", url);
-        urlEl.setAttribute("target", "_blank");
-        urlEl.setAttribute("rel", "noopener noreferrer");
-
-        openEl.setAttribute("href", url);
-        openEl.setAttribute("target", "_blank");
-        openEl.setAttribute("rel", "noopener noreferrer");
-        openEl.removeAttribute("aria-disabled");
-
-        statusEl.textContent =
-          data && data.status === "online"
-            ? "سرویس آماده استفاده است."
-            : "در حال آماده‌سازی سرویس…";
+        currentUrl = applyLink(urlEl, statusEl, openEl, url, data && data.status,
+          "سرویس فعلاً آنلاین نیست");
+        currentChatUrl = applyLink(chatUrlEl, chatStatusEl, chatOpenEl, chatUrl,
+          data && data.chat_status, "سرویس چت فعلاً آنلاین نیست");
       })
       .catch(function () {
-        urlEl.textContent = "وضعیت فعلاً در دسترس نیست";
-        urlEl.removeAttribute("href");
-        urlEl.removeAttribute("target");
-        urlEl.removeAttribute("rel");
-        openEl.removeAttribute("href");
-        openEl.setAttribute("aria-disabled", "true");
-        statusEl.textContent = "چند لحظه بعد دوباره امتحان کن.";
+        markUnavailable(urlEl, statusEl, openEl, "وضعیت فعلاً در دسترس نیست");
+        markUnavailable(chatUrlEl, chatStatusEl, chatOpenEl, "وضعیت فعلاً در دسترس نیست");
       });
   }
 
@@ -157,31 +174,41 @@
     });
   }
 
+  function copyToClipboard(text) {
+    var toast = $("toast");
+    function done() {
+      if (!toast) return;
+      toast.classList.add("show");
+      window.setTimeout(function () { toast.classList.remove("show"); }, 1400);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, done);
+      return;
+    }
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.top = "-1000px";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand("copy"); } catch (e) { /* ignore */ }
+    area.remove();
+    done();
+  }
+
   var copyButton = $("copy-service");
   if (copyButton) {
     copyButton.addEventListener("click", function () {
-      if (!currentUrl) return;
-      var toast = $("toast");
-      function done() {
-        if (!toast) return;
-        toast.classList.add("show");
-        window.setTimeout(function () { toast.classList.remove("show"); }, 1400);
-      }
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(currentUrl).then(done, done);
-        return;
-      }
-      var area = document.createElement("textarea");
-      area.value = currentUrl;
-      area.setAttribute("readonly", "");
-      area.style.position = "fixed";
-      area.style.top = "-1000px";
-      area.style.opacity = "0";
-      document.body.appendChild(area);
-      area.select();
-      try { document.execCommand("copy"); } catch (e) { /* ignore */ }
-      area.remove();
-      done();
+      if (currentUrl) copyToClipboard(currentUrl);
+    });
+  }
+
+  var copyChatButton = $("copy-chat-service");
+  if (copyChatButton) {
+    copyChatButton.addEventListener("click", function () {
+      if (currentChatUrl) copyToClipboard(currentChatUrl);
     });
   }
 })();

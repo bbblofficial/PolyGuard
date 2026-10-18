@@ -383,6 +383,10 @@ a.access-link[href]{color:var(--accent)}
 }
 .access-actions .btn{min-height:38px;padding:0 16px;font-size:13px}
 .access-actions svg{width:14px;height:14px}
+.access-sep{
+  width:100%;max-width:520px;margin:22px auto 10px;
+  border:none;border-top:1px solid var(--border);
+}
 
 /* ============================================================
    FOOTER
