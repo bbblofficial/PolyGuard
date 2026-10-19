@@ -3,6 +3,8 @@ set -euo pipefail
 
 STATUS="${1:?status required}"
 URL="${2:-}"
+CHAT_STATUS="${3:-}"
+CHAT_URL="${4:-}"
 : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
 : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
 
@@ -39,15 +41,19 @@ cp -R "$ROOT/pages/." .
 touch .nojekyll
 mkdir -p assets
 
-python3 - "assets/status.json" "$STATUS" "$URL" <<'PY'
+python3 - "assets/status.json" "$STATUS" "$URL" "$CHAT_STATUS" "$CHAT_URL" <<'PY'
 import datetime, json, os, sys
-path, status, url = sys.argv[1:4]
+path, status, url, chat_status, chat_url = sys.argv[1:6]
 server = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
 repo = os.environ["GITHUB_REPOSITORY"]
 run_id = os.environ.get("GITHUB_RUN_ID", "")
+b64 = lambda s: __import__("base64").b64encode(s.encode()).decode() if s else None
 data = {
     "status": status,
-    "url_payload": __import__("base64").b64encode((url or "").encode()).decode() if url else None,
+    "url_payload": b64(url),
+    # Second service: Unicollect Chat (llama.cpp chat model behind its own tunnel).
+    "chat_status": chat_status or None,
+    "chat_url_payload": b64(chat_url),
     "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
     "run_url": f"{server}/{repo}/actions/runs/{run_id}" if run_id else None,
     "run_number": int(os.environ.get("GITHUB_RUN_NUMBER", 0)),

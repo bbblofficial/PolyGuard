@@ -7,3 +7,4 @@ sentencepiece
 protobuf
 huggingface_hub
 anyio
+requests

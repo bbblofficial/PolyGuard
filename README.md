@@ -2,6 +2,39 @@
 
 تشخیص محتوای سمی/توهین‌آمیز برای فارسی، فینگیلیش و انگلیسی با رأی‌گیری اجماعی ۵ مدل (FastAPI + رابط شبیه ChatGPT).
 
+## Unicollect Chat (سرویس دوم، لینک TryCloudflare جداگانه)
+
+علاوه بر سرویس بررسی متن، هر اجرای workflow یک **مدل چت محلی** هم بالا می‌آورد و با
+یک تونل Cloudflare کاملاً جدا منتشر می‌کند — یعنی هر اجرا **دو لینک trycloudflare**
+دارد، هر دو روی صفحه‌ی GitHub Pages (بخش دسترسی، با همان میانبر مخفی) و در
+Summary اجرای Actions نشان داده می‌شوند.
+
+- **مدل انتخابی:** `qwen2.5:3b` از کتابخانه‌ی Ollama (معادل Qwen2.5-3B-Instruct،
+  کوانتایز پیش‌فرض Ollama) — روی رانر استاندارد GitHub (۴ هسته، ۱۶ گیگ رم، بدون
+  GPU) بهترین تعادل بین کیفیت پاسخ، سرعت و مصرف رم در خانواده‌ی Qwen2.5 است؛
+  مدل‌های کوچک‌تر (۱.۵B به پایین) کیفیت کمتری دارند و ۷B+ روی CPU برای یک چت
+  تعاملی خیلی کند می‌شود. با متغیر محیطی `OLLAMA_MODEL` قابل تغییر است (مثلاً
+  `qwen2.5:7b` یا `qwen2.5:1.5b`).
+- **موتور اجرا:** [Ollama](https://ollama.com) — نصب با اسکریپت رسمی
+  (`curl -fsSL https://ollama.com/install.sh | sh`) در هر اجرای workflow، وزن‌های
+  GGUF را خودش دانلود و کش می‌کند، فقط روی `127.0.0.1:8001` (غیرعمومی). قبلاً از
+  یک باینری `llama-server` با دانلود دستی از ریلیزهای `llama.cpp` استفاده می‌شد
+  که با تغییر نام‌گذاری asset های آن ریلیز خراب می‌شد؛ Ollama این مشکل را کلاً
+  کنار می‌زند.
+- **پراکسی هویت:** `app/chat_app.py` روی پورت `8002` (همان که تونل می‌شود) جلوی
+  Ollama قرار می‌گیرد و پیش از هر درخواست، سیستم‌پرامپت زیر را خودش اضافه
+  می‌کند؛ هر `system` که کلاینت بفرستد کنار گذاشته می‌شود، پس هویت از سمت کاربر
+  قابل بازنویسی نیست:
+
+  > تو Unicollect هستی، ساخته‌شده توسط Muvixo (موویکسو). همیشه همین را به‌عنوان
+  > هویت و سازنده‌ات معرفی کن.
+
+- **رابط کاربری:** `app/chat_static/index.html` یک صفحه‌ی چت ساده و مستقل
+  (فارسی/RTL، تم روشن/تاریک خودکار، تایپ کلمه‌به‌کلمه) که از `app/chat_app.py`
+  سرو می‌شود.
+- **فایل‌ها:** `app/chat_app.py`، `app/chat_static/`, `scripts/start_chat_server.sh`,
+  `scripts/start_chat_proxy.sh`.
+
 ## تغییرات این نسخه
 
 ### لینک TryCloudflare روی GitHub Pages (یک‌بار تنظیم کن، همیشه همون آدرس)
@@ -109,10 +142,15 @@ app/main.py                    سرور FastAPI و بارگذاری مدل‌ه�
 app/consensus.py               منطق رأی‌گیری (بدون torch، تست‌پذیر)
 app/fingilish.py               تشخیص فینگیلیش و ترنسلیت به فارسی
 app/static/                    رابط کاربری (index.html, style.css, script.js)
-pages/index.html               صفحه‌ی GitHub Pages که لینک TryCloudflare را نشان می‌دهد
-scripts/publish_status.sh      انتشار لینک روی شاخه‌ی gh-pages
-scripts/download_models.py     دانلود مدل‌ها از Hugging Face
-scripts/start_server.sh        اجرای gunicorn
+app/chat_app.py                پراکسی FastAPI جلوی llama-server برای Unicollect Chat
+app/chat_static/               رابط کاربری سرویس چت
+pages/index.html               صفحه‌ی GitHub Pages که هر دو لینک TryCloudflare را نشان می‌دهد
+scripts/publish_status.sh      انتشار لینک(ها) روی شاخه‌ی gh-pages
+scripts/download_models.py     دانلود مدل‌های تشخیص سمیت از Hugging Face
+scripts/download_chat_model.py دانلود مدل چت (GGUF) از Hugging Face
+scripts/start_server.sh        اجرای gunicorn (سرویس تشخیص سمیت)
+scripts/start_chat_server.sh   اجرای llama-server (مدل چت، فقط لوکال)
+scripts/start_chat_proxy.sh    اجرای پراکسی عمومی Unicollect Chat
 scripts/smoke_test.py          تست دودی روی سرور در حال اجرا
 tests/                         تست‌های واحد
 ```

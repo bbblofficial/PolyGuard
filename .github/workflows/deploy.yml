@@ -20,10 +20,12 @@ env:
   MODELS_ROOT: ${{ github.workspace }}/models
 
   # --- Unicollect Chat (second service, own TryCloudflare link) ---
-  # Qwen2.5-3B-Instruct, Q4_K_M GGUF: best speed/quality/RAM balance for a
-  # 4-core, 16 GB, no-GPU GitHub runner (see scripts/download_chat_model.py).
-  CHAT_MODEL_REPO: Qwen/Qwen2.5-3B-Instruct-GGUF
-  CHAT_MODEL_FILE: qwen2.5-3b-instruct-q4_k_m.gguf
+  # Served through Ollama (bundles its own llama.cpp runtime + pulls/caches
+  # GGUF weights itself) instead of a manually downloaded llama.cpp release
+  # binary + GGUF file: best speed/quality/RAM balance for a 4-core, 16 GB,
+  # no-GPU GitHub runner, and it sidesteps ggml-org/llama.cpp's release-asset
+  # naming changing out from under us.
+  OLLAMA_MODEL: qwen2.5:3b
   CHAT_MODEL_LABEL: Qwen2.5-3B-Instruct
   LLAMA_PORT: "8001"
   CHAT_PROXY_PORT: "8002"
@@ -100,68 +102,13 @@ jobs:
           echo "--- model sizes ---"
           du -sh "$MODELS_ROOT"/*
 
-      - name: Download chat model (GGUF, for Unicollect Chat)
+      - name: Install Ollama (runs Unicollect Chat)
         run: |
-          python scripts/download_chat_model.py
-          echo "CHAT_MODEL_PATH=$(cat "$MODELS_ROOT/chat/MODEL_PATH")" >> "$GITHUB_ENV"
-
-      - name: Install llama.cpp server (CPU build)
-        env:
-          # Unauthenticated calls to api.github.com are capped at 60/hour per
-          # runner IP, which is shared across many GitHub-hosted runners and
-          # gets exhausted easily -> "assets" silently comes back empty.
-          # Authenticating with GITHUB_TOKEN raises that to ~1000/hour.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          API_URL="https://api.github.com/repos/ggml-org/llama.cpp/releases/latest"
-          HTTP_CODE=$(curl -sS -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -w "%{http_code}" -o release.json "$API_URL")
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "GitHub API returned HTTP $HTTP_CODE while fetching the latest llama.cpp release:"
-            cat release.json || true
-            exit 1
-          fi
-          ASSET_URL=$(python3 - <<'PY'
-          import json, re
-          with open("release.json") as f:
-              data = json.load(f)
-          assets = data.get("assets", [])
-          # Primary pattern: llama-<tag>-bin-ubuntu-x64.(zip|tar.gz)
-          pat = re.compile(r"^llama-.*-bin-ubuntu-x64\.(zip|tar\.gz)$")
-          match = next((a for a in assets if pat.match(a["name"])), None)
-          # Fallback in case the project tweaks its naming convention again.
-          if match is None:
-              fallback = re.compile(r"ubuntu.*x64.*\.(zip|tar\.gz)$", re.IGNORECASE)
-              match = next((a for a in assets if fallback.search(a["name"])), None)
-          if match:
-              print(match["browser_download_url"])
-          else:
-              import sys
-              print("Available assets:", [a["name"] for a in assets], file=sys.stderr)
-          PY
-          )
-          if [ -z "$ASSET_URL" ]; then
-            echo "Could not find an ubuntu-x64 llama.cpp release asset"
-            exit 1
-          fi
-          echo "Fetching $ASSET_URL"
-          mkdir -p llama_bin
-          case "$ASSET_URL" in
-            *.zip) curl -fsSL "$ASSET_URL" -o llama_bin/pkg.zip && unzip -q llama_bin/pkg.zip -d llama_bin ;;
-            *)     curl -fsSL "$ASSET_URL" -o llama_bin/pkg.tar.gz && tar -xzf llama_bin/pkg.tar.gz -C llama_bin ;;
-          esac
-          BIN_PATH=$(find llama_bin -type f -name "llama-server" | head -n1)
-          if [ -z "$BIN_PATH" ]; then
-            echo "llama-server binary not found in the downloaded archive"
-            exit 1
-          fi
-          chmod +x "$BIN_PATH"
-          BIN_DIR="$(dirname "$PWD/$BIN_PATH")"
-          echo "LLAMA_SERVER_BIN=$PWD/$BIN_PATH" >> "$GITHUB_ENV"
-          # llama-server's shared libs (libggml*, libllama*) live next to it
-          echo "LD_LIBRARY_PATH=$BIN_DIR:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
-          LD_LIBRARY_PATH="$BIN_DIR" "$PWD/$BIN_PATH" --version
+          # Official install script: sets up the `ollama` CLI. No GitHub
+          # release-asset parsing involved, so this doesn't break when a
+          # third-party project changes how it publishes binaries.
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama --version
 
       - name: Install cloudflared
         run: |
@@ -197,15 +144,18 @@ jobs:
         continue-on-error: true
         run: python scripts/smoke_test.py http://localhost:8000
 
-      - name: Start Unicollect Chat (llama.cpp server + proxy)
+      - name: Start Unicollect Chat (Ollama server + proxy)
         run: |
           nohup bash scripts/start_chat_server.sh > llama.log 2>&1 &
-          echo "Waiting for llama-server to become healthy (~30-90s)..."
-          for i in $(seq 1 90); do
-            curl -fs "http://127.0.0.1:${LLAMA_PORT}/health" >/dev/null 2>&1 && { echo "llama-server ready after ${i}s"; break; }
+          echo "Waiting for Ollama to become healthy (~10-30s)..."
+          for i in $(seq 1 60); do
+            curl -fs "http://127.0.0.1:${LLAMA_PORT}/api/version" >/dev/null 2>&1 && { echo "Ollama ready after ${i}s"; break; }
             sleep 1
           done
-          curl -fs "http://127.0.0.1:${LLAMA_PORT}/health" >/dev/null 2>&1 || { echo "llama-server never became healthy"; tail -n 150 llama.log || true; exit 1; }
+          curl -fs "http://127.0.0.1:${LLAMA_PORT}/api/version" >/dev/null 2>&1 || { echo "Ollama never became healthy"; tail -n 150 llama.log || true; exit 1; }
+
+          echo "Pulling ${OLLAMA_MODEL}..."
+          OLLAMA_HOST="127.0.0.1:${LLAMA_PORT}" ollama pull "$OLLAMA_MODEL"
 
           nohup bash scripts/start_chat_proxy.sh > chat_proxy.log 2>&1 &
           echo "Waiting for chat proxy to become healthy..."
@@ -266,9 +216,11 @@ jobs:
               echo "Gunicorn died, restarting..."
               nohup bash scripts/start_server.sh >> server.log 2>&1 &
             }
-            pgrep -f "$LLAMA_SERVER_BIN" >/dev/null || {
-              echo "llama-server died, restarting..."
+            pgrep -f "ollama serve" >/dev/null || {
+              echo "Ollama died, restarting..."
               nohup bash scripts/start_chat_server.sh >> llama.log 2>&1 &
+              # Model weights are cached on disk from the first pull, so no
+              # need to "ollama pull" again on restart.
             }
             pgrep -f "app.chat_app:app" >/dev/null || {
               echo "Chat proxy died, restarting..."
