@@ -227,8 +227,17 @@ jobs:
               nohup bash scripts/start_chat_proxy.sh >> chat_proxy.log 2>&1 &
             }
 
-            pgrep -f "cloudflared tunnel --url http://localhost:8000" >/dev/null || {
-              echo "Main cloudflared died, restarting..."
+            # Quick Tunnels can drop silently on Cloudflare's side while the
+            # local cloudflared process keeps running untouched, so a process
+            # check alone misses a dead tunnel. Treat it as down if either
+            # the process is gone OR the public URL itself stops answering.
+            MAIN_OK=0
+            if pgrep -f "cloudflared tunnel --url http://localhost:8000" >/dev/null; then
+              curl -fs --max-time 10 "$URL/health" >/dev/null 2>&1 && MAIN_OK=1
+            fi
+            if [ "$MAIN_OK" = "0" ]; then
+              echo "Main tunnel unreachable (dead process or silently dropped), restarting..."
+              pkill -f "cloudflared tunnel --url http://localhost:8000" 2>/dev/null || true
               # a restarted quick tunnel gets a NEW random URL -> republish it
               nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
               NEW=""
@@ -237,16 +246,21 @@ jobs:
                 [ -n "$NEW" ] && break
                 sleep 2
               done
-              if [ -n "$NEW" ] && [ "$NEW" != "$URL" ]; then
+              if [ -n "$NEW" ]; then
                 URL="$NEW"
                 echo "New main tunnel URL: $URL"
                 echo "Main tunnel restarted, new URL: $URL" >> "$GITHUB_STEP_SUMMARY"
                 CHANGED=1
               fi
-            }
+            fi
 
-            pgrep -f "cloudflared tunnel --url http://localhost:${CHAT_PROXY_PORT}" >/dev/null || {
-              echo "Chat cloudflared died, restarting..."
+            CHAT_OK=0
+            if pgrep -f "cloudflared tunnel --url http://localhost:${CHAT_PROXY_PORT}" >/dev/null; then
+              curl -fs --max-time 10 "$CHAT_URL/health" >/dev/null 2>&1 && CHAT_OK=1
+            fi
+            if [ "$CHAT_OK" = "0" ]; then
+              echo "Chat tunnel unreachable (dead process or silently dropped), restarting..."
+              pkill -f "cloudflared tunnel --url http://localhost:${CHAT_PROXY_PORT}" 2>/dev/null || true
               nohup ./cloudflared tunnel --url "http://localhost:${CHAT_PROXY_PORT}" --no-autoupdate > tunnel_chat.log 2>&1 &
               NEW=""
               for j in $(seq 1 60); do
@@ -254,13 +268,13 @@ jobs:
                 [ -n "$NEW" ] && break
                 sleep 2
               done
-              if [ -n "$NEW" ] && [ "$NEW" != "$CHAT_URL" ]; then
+              if [ -n "$NEW" ]; then
                 CHAT_URL="$NEW"
                 echo "New chat tunnel URL: $CHAT_URL"
                 echo "Chat tunnel restarted, new URL: $CHAT_URL" >> "$GITHUB_STEP_SUMMARY"
                 CHANGED=1
               fi
-            }
+            fi
 
             if [ "$CHANGED" = "1" ]; then
               bash scripts/publish_status.sh online "$URL" online "$CHAT_URL" || true
