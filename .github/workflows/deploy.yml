@@ -208,6 +208,11 @@ jobs:
           echo "Will self-terminate after ~5 hours."
           URL="$PUBLIC_URL"
           CHAT_URL="$CHAT_PUBLIC_URL"
+          # Quick Tunnels have occasional transient blips; require 2
+          # consecutive failed checks (~2 minutes) before restarting one, so
+          # a single bad check doesn't trigger a needless restart-churn loop.
+          MAIN_FAILS=0
+          CHAT_FAILS=0
           for i in $(seq 1 300); do
             sleep 60
             CHANGED=0
@@ -233,10 +238,17 @@ jobs:
             # the process is gone OR the public URL itself stops answering.
             MAIN_OK=0
             if pgrep -f "cloudflared tunnel --url http://localhost:8000" >/dev/null; then
-              curl -fs --max-time 10 "$URL/health" >/dev/null 2>&1 && MAIN_OK=1
+              curl -fs --max-time 15 "$URL/health" >/dev/null 2>&1 && MAIN_OK=1
             fi
-            if [ "$MAIN_OK" = "0" ]; then
-              echo "Main tunnel unreachable (dead process or silently dropped), restarting..."
+            if [ "$MAIN_OK" = "1" ]; then
+              MAIN_FAILS=0
+            else
+              MAIN_FAILS=$((MAIN_FAILS + 1))
+              echo "Main tunnel health check failed (${MAIN_FAILS}/2)..."
+            fi
+            if [ "$MAIN_FAILS" -ge 2 ]; then
+              echo "Main tunnel unreachable twice in a row (dead process or silently dropped), restarting..."
+              MAIN_FAILS=0
               pkill -f "cloudflared tunnel --url http://localhost:8000" 2>/dev/null || true
               # a restarted quick tunnel gets a NEW random URL -> republish it
               nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
@@ -256,10 +268,17 @@ jobs:
 
             CHAT_OK=0
             if pgrep -f "cloudflared tunnel --url http://localhost:${CHAT_PROXY_PORT}" >/dev/null; then
-              curl -fs --max-time 10 "$CHAT_URL/health" >/dev/null 2>&1 && CHAT_OK=1
+              curl -fs --max-time 15 "$CHAT_URL/health" >/dev/null 2>&1 && CHAT_OK=1
             fi
-            if [ "$CHAT_OK" = "0" ]; then
-              echo "Chat tunnel unreachable (dead process or silently dropped), restarting..."
+            if [ "$CHAT_OK" = "1" ]; then
+              CHAT_FAILS=0
+            else
+              CHAT_FAILS=$((CHAT_FAILS + 1))
+              echo "Chat tunnel health check failed (${CHAT_FAILS}/2)..."
+            fi
+            if [ "$CHAT_FAILS" -ge 2 ]; then
+              echo "Chat tunnel unreachable twice in a row (dead process or silently dropped), restarting..."
+              CHAT_FAILS=0
               pkill -f "cloudflared tunnel --url http://localhost:${CHAT_PROXY_PORT}" 2>/dev/null || true
               nohup ./cloudflared tunnel --url "http://localhost:${CHAT_PROXY_PORT}" --no-autoupdate > tunnel_chat.log 2>&1 &
               NEW=""
