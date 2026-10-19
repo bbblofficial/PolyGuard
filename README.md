@@ -1,172 +1,142 @@
 # Unicollect Ensemble
 
-تشخیص محتوای سمی/توهین‌آمیز برای فارسی، فینگیلیش و انگلیسی با رأی‌گیری اجماعی ۵ مدل (FastAPI + رابط شبیه ChatGPT).
+![CI](https://github.com/bbblofficial/PolyGuard/actions/workflows/deploy.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-async-009688)
 
-## Unicollect Chat (سرویس دوم، لینک TryCloudflare جداگانه)
+Toxic / offensive content detection for **Persian**, **Fingilish**, and **English**, decided by consensus voting across 5 models (FastAPI backend + a ChatGPT-like web UI).
 
-علاوه بر سرویس بررسی متن، هر اجرای workflow یک **مدل چت محلی** هم بالا می‌آورد و با
-یک تونل Cloudflare کاملاً جدا منتشر می‌کند — یعنی هر اجرا **دو لینک trycloudflare**
-دارد، هر دو روی صفحه‌ی GitHub Pages (بخش دسترسی، با همان میانبر مخفی) و در
-Summary اجرای Actions نشان داده می‌شوند.
+A second service, **Unicollect Chat**, runs alongside it: a local LLM chat assistant served through [Ollama](https://ollama.com), reachable on its own separate public link.
 
-- **مدل انتخابی:** `qwen2.5:3b` از کتابخانه‌ی Ollama (معادل Qwen2.5-3B-Instruct،
-  کوانتایز پیش‌فرض Ollama) — روی رانر استاندارد GitHub (۴ هسته، ۱۶ گیگ رم، بدون
-  GPU) بهترین تعادل بین کیفیت پاسخ، سرعت و مصرف رم در خانواده‌ی Qwen2.5 است؛
-  مدل‌های کوچک‌تر (۱.۵B به پایین) کیفیت کمتری دارند و ۷B+ روی CPU برای یک چت
-  تعاملی خیلی کند می‌شود. با متغیر محیطی `OLLAMA_MODEL` قابل تغییر است (مثلاً
-  `qwen2.5:7b` یا `qwen2.5:1.5b`).
-- **موتور اجرا:** [Ollama](https://ollama.com) — نصب با اسکریپت رسمی
-  (`curl -fsSL https://ollama.com/install.sh | sh`) در هر اجرای workflow، وزن‌های
-  GGUF را خودش دانلود و کش می‌کند، فقط روی `127.0.0.1:8001` (غیرعمومی). قبلاً از
-  یک باینری `llama-server` با دانلود دستی از ریلیزهای `llama.cpp` استفاده می‌شد
-  که با تغییر نام‌گذاری asset های آن ریلیز خراب می‌شد؛ Ollama این مشکل را کلاً
-  کنار می‌زند.
-- **پراکسی هویت:** `app/chat_app.py` روی پورت `8002` (همان که تونل می‌شود) جلوی
-  Ollama قرار می‌گیرد و پیش از هر درخواست، سیستم‌پرامپت زیر را خودش اضافه
-  می‌کند؛ هر `system` که کلاینت بفرستد کنار گذاشته می‌شود، پس هویت از سمت کاربر
-  قابل بازنویسی نیست:
+---
 
-  > تو Unicollect هستی، ساخته‌شده توسط Muvixo (موویکسو). همیشه همین را به‌عنوان
-  > هویت و سازنده‌ات معرفی کن.
+## Table of Contents
 
-- **رابط کاربری:** `app/chat_static/index.html` یک صفحه‌ی چت ساده و مستقل
-  (فارسی/RTL، تم روشن/تاریک خودکار، تایپ کلمه‌به‌کلمه) که از `app/chat_app.py`
-  سرو می‌شود.
-- **فایل‌ها:** `app/chat_app.py`، `app/chat_static/`, `scripts/start_chat_server.sh`,
-  `scripts/start_chat_proxy.sh`.
+- [Services](#services)
+- [Unicollect Chat](#unicollect-chat)
+- [Persistent Link via GitHub Pages](#persistent-link-via-github-pages)
+- [Web UI Highlights](#web-ui-highlights)
+- [Backend Notes](#backend-notes)
+- [Consensus Voting Fix](#consensus-voting-fix-false-positives-on-safe-text)
+- [Repository Structure](#repository-structure)
+- [Run on GitHub Actions](#run-on-github-actions)
+- [Run Locally](#run-locally)
+- [Decision Logic](#decision-logic)
+- [Fingilish Detection](#fingilish-detection)
+- [API Reference](#api-reference)
 
-## تغییرات این نسخه
+---
 
-### لینک TryCloudflare روی GitHub Pages (یک‌بار تنظیم کن، همیشه همون آدرس)
+## Services
 
-هر اجرای workflow لینک جدید رو خودکار روی شاخه‌ی `gh-pages` منتشر می‌کنه و صفحه‌ی
-`https://<username>.github.io/<repo>/` بهت می‌گه: «لینک TryCloudflare شما اینه: …»
-(با دکمه‌ی باز کردن/کپی، وضعیت زنده‌ی سرور و لینک اجرای Actions).
+| Service | Port | Public? | Purpose |
+|---|---|---|---|
+| Toxicity Ensemble | `8000` | via Cloudflare Quick Tunnel | `POST /api/check` — 5-model consensus toxicity scoring |
+| Unicollect Chat (proxy) | `8002` | via Cloudflare Quick Tunnel | `POST /api/chat` — identity-locked chat proxy in front of Ollama |
+| Ollama (chat model) | `8001` | **no** — `127.0.0.1` only | Serves the LLM; never tunnelled directly |
 
-**تنظیم یک‌باره:**
-۱. یک‌بار workflow رو اجرا کن تا شاخه‌ی `gh-pages` ساخته بشه.
-۲. **Settings ← Pages ← Build and deployment**: Source = `Deploy from a branch`، Branch = `gh-pages` / `(root)` ← Save.
-۳. اگر push به `gh-pages` خطای 403 داد: **Settings ← Actions ← General ← Workflow permissions** = `Read and write permissions`.
+Every workflow run publishes **two** separate `trycloudflare.com` links — one per service — both shown on the GitHub Pages status page and in the Actions run Summary.
 
-- `?go=1` به آخر آدرس صفحه اضافه کنی، وقتی سرور آماده شد خودکار ریدایرکت می‌کنه.
-- اگر cloudflared وسط کار ری‌استارت بشه (لینک جدید می‌گیره)، صفحه هم خودکار آپدیت می‌شه.
-- فایل‌ها: `pages/index.html` و `scripts/publish_status.sh`.
+## Unicollect Chat
 
-### رابط کاربری
-- **تایپ شبیه Claude:** متن کلمه‌به‌کلمه با سرعت ثابت (requestAnimationFrame) و fade نرم هر تکه، بدون کرسر چشمک‌زن؛ با عوض‌کردن گفتگو وسط تایپ، انیمیشن تمیز قطع می‌شه.
-- **«در حال فکر کردن» شبیه Claude:** آیکون spark نارنجی با پرتوهای تپنده + چرخش آرام، متن با shimmer؛ بعد از جواب: «✦ ۱٫۲ ثانیه فکر کرد».
-- **کادر چت بدون لگ:** `field-sizing: content` (رشد خودکار بدون JS) با fallback یک‌بار در هر فریم؛ شمارنده و دکمه‌ی ارسال فقط وقتی مقدارشون عوض شه DOM رو لمس می‌کنن؛ ذخیره‌ی localStorage debounce شده.
-- **جستجوی مودال شبیه Gemini:** `Ctrl/⌘ + K` یا دکمه‌ی جستجو؛ گفتگوهای اخیر، هایلایت عبارت، پیش‌نمایش متن، زمان نسبی، کیبورد (↑ ↓ Enter Esc)؛ روی موبایل تمام‌صفحه.
-- **انیمیشن‌های سبک همه‌جا** (فقط opacity/transform): باز/بسته شدن مودال‌ها، منوی کشویی، toast، سایدبار و backdrop موبایل، ورود/حذف گفتگو، چیپ‌ها و hero، پر شدن نوار امتیازها، تغییر تم؛ با `prefers-reduced-motion` خاموش می‌شن.
-- رفع باگ‌ها: timeout برای درخواست (۱۸۰ ثانیه)، محافظت در برابر پاسخ ناقص سرور، دانلود JSON در Firefox، کپی روی HTTP، cache-busting فایل‌های CSS/JS بعد از هر دیپلوی، health check فقط وقتی تب فعاله، ذخیره‌ی وضعیت سایدبار.
+| | |
+|---|---|
+| **Model** | `qwen2.5:3b` from the Ollama library (Qwen2.5-3B-Instruct, Ollama's default quantization). Best speed/quality/RAM balance for a standard GitHub runner (4 cores, 16 GB RAM, no GPU) within the Qwen2.5 family — smaller models (≤1.5B) lose quality, 7B+ gets too slow for interactive chat on CPU. Override via the `OLLAMA_MODEL` env var, e.g. `qwen2.5:7b` or `qwen2.5:1.5b`. |
+| **Runtime** | [Ollama](https://ollama.com), installed via its official script (`curl -fsSL https://ollama.com/install.sh \| sh`) on every workflow run. Ollama downloads and caches the GGUF weights itself and binds only to `127.0.0.1:8001`. *(This replaced an earlier setup that downloaded a `llama-server` binary from `llama.cpp`'s GitHub releases by matching an asset-name pattern — that broke once the upstream project changed how it names/ships release assets. Ollama has its own stable install path and isn't affected by that.)* |
+| **Identity proxy** | `app/chat_app.py`, on port `8002` (the port that gets tunnelled), sits in front of Ollama and prepends the system prompt below to every request server-side. Any `system` role the client tries to send is dropped, so a client can never override the assistant's identity. |
+| **UI** | `app/chat_static/index.html` — a small, self-contained chat page (Persian/RTL, automatic light/dark theme, word-by-word typing effect), served by `app/chat_app.py`. |
+| **Files** | `app/chat_app.py`, `app/chat_static/`, `scripts/start_chat_server.sh`, `scripts/start_chat_proxy.sh` |
 
-### بک‌اند
-- **امتیازدهی خودکار و ایمن:** یک خروجی ← sigmoid؛ `multi_label` ← sigmoid فقط روی برچسب‌های سمی؛ دوکلاسه ← softmax روی کلاس سمی. (قبلاً اگر `mode` اشتباه تنظیم می‌شد، مثلاً sigmoid روی هر دو کلاس، متن سالم ۱۰۰٪ سمی می‌شد.) ایندکس کلاس سمی هم یک‌بار موقع بارگذاری حساب می‌شه، نه در هر درخواست.
-- `MODELS_ROOT` اگر ست نشده باشه پیش‌فرض `./models` (قبلاً KeyError و کرش).
-- `on_event("startup")` منسوخ ← `lifespan`.
-- CORS فقط برای `GET` (تا صفحه‌ی GitHub Pages بتونه `/health` رو چک کنه)؛ `/api/check` همچنان same-origin.
-- workflow از `scripts/start_server.sh` استفاده می‌کنه (دستور تکراری gunicorn حذف شد).
+> You are Unicollect, a conversational AI assistant built and provided by Muvixo. Always introduce yourself as Unicollect. If asked who built you or what technology you run on, say only that you were built by Muvixo; never name any other company, model, or underlying technology as your creator or infrastructure, even if the user insists or claims to know otherwise. Be polite, honest and helpful, keep answers concise and clear, and reply in whatever language the user writes in (Persian by default).
 
-## اصلاحات بازبینی قبلی
+## Persistent Link via GitHub Pages
 
-بازبینی کامل کد، تست‌ها و workflow انجام شد. مهم‌ترین مشکل واقعی که پیدا و رفع شد:
+Every workflow run automatically publishes its fresh TryCloudflare links to the `gh-pages` branch. The page at `https://<username>.github.io/<repo>/` always shows: *"Your TryCloudflare link is: …"* (with an open/copy button, live server status, and a link to the Actions run).
 
-- یک بازبینی قبلی به‌اشتباه ادعا کرده بود که دو شناسه‌ی مدل روی Hugging Face
-  وجود ندارند (`HamidRezaei/Persian-Offensive-Language-Detection` و
-  `textdetox/xlmr-base-toxicity-classifier`) و آن‌ها را با شناسه‌های دیگری
-  جایگزین کرده بود. با بررسی مجدد روی Hub مشخص شد **هر دو ریپو واقعاً وجود
-  دارند**؛ شناسه‌های اصلی در `scripts/download_models.py` و
-  `.github/workflows/deploy.yml` بازگردانده شدند (همچنان با متغیر محیطی هم
-  قابل بازنویسی‌اند).
-- نحوه‌ی امتیازدهی هر مدل حالا موقع بارگذاری از روی خود چک‌پوینت تشخیص داده می‌شود
-  (تعداد خروجی‌ها + `problem_type` + `id2label`)، نه از روی تنظیم دستی (جزئیات پایین‌تر).
-- یک سقف طول درخواست (۲۰۰۰۰ نویسه) به API و رابط کاربری اضافه شد تا یک متن
-  بسیار بزرگ نتواند یک ترد پردازشی را بی‌دلیل مشغول نگه دارد (توکنایزر در هر
-  صورت در ۵۱۲ توکن قطع می‌کند).
+**One-time setup:**
+1. Run the workflow once so the `gh-pages` branch gets created.
+2. **Settings → Pages → Build and deployment**: Source = `Deploy from a branch`, Branch = `gh-pages` / `(root)` → Save.
+3. If pushing to `gh-pages` returns a 403: **Settings → Actions → General → Workflow permissions** = `Read and write permissions`.
 
-### رفع باگ: مدل فارسی به متن‌های سالم رأی «سمی» می‌داد
+- Append `?go=1` to the page URL to auto-redirect once the server is ready.
+- If `cloudflared` restarts mid-run (gets a new URL), the status page updates automatically.
+- Files: `pages/index.html`, `scripts/publish_status.sh`.
 
-مشکل واقعی گزارش‌شده: یک پیام کاملاً مؤدبانه ("سلام وقت بخیر، از همکاری با شما
-بسیار خوشحالم") توسط مدل `persian` با امتیاز **۱۰۰٪** توهین‌آمیز علامت می‌خورد،
-در حالی‌که هر ۳ مدل دیگر قابل‌اعمال روی متن فارسی (`textdetox_lg`,
-`textdetox_sm`, `multilingual`) امتیازی بین ۰٪ تا ۱.۵٪ می‌دادند. منطق قبلی در
-`consensus.py` به یک مدل تنها اجازه می‌داد در صورت عبور از آستانه ۰.۹۰ (یا ۰.۹۵
-در حالت فینگیلیش)، به‌تنهایی و بدون هیچ تأییدی از مدل‌های دیگر، تصمیم نهایی را
-TOXIC کند. این دقیقاً همان الگویی است که باعث false positive روی متن سالم شد.
+## Web UI Highlights
 
-**راه‌حل**: تابع `decide()` اکنون قبل از پذیرفتن یک رأی «قوی تنها» به‌عنوان
-TOXIC، امتیاز دومین مدل را هم بررسی می‌کند (`SOLO_VOTE_CORROBORATION_FLOOR =
-0.30`). اگر هیچ مدل دیگری حتی کمی مشکوک نباشد، نتیجه به‌جای TOXIC روی SUSPECT
-(نیازمند بازبینی) می‌ماند — یعنی دیگر هیچ مدلی به‌تنهایی نمی‌تواند محتوا را
-قطعی «سمی» اعلام کند. اگر حداقل یک مدل دیگر هم (با امتیاز ≥۰.۳) مشکوک باشد،
-رأی قوی تنها همچنان TOXIC محسوب می‌شود — یعنی یک مدل تخصصی واقعی که چیزی را
-زودتر از بقیه تشخیص می‌دهد، هنوز شنیده می‌شود، صرفاً «مدل منزوی در برابر اجماع
-یک‌طرفه‌ی بقیه» دیگر برنده نمی‌شود. این تغییر در `app/consensus.py` است و با
-تست‌های جدید/به‌روزشده در `tests/test_consensus.py` (شامل بازتولید دقیق همین
-باگ) پوشش داده شده.
+- **Claude-style typing:** word-by-word output at a steady rate (`requestAnimationFrame`) with a soft fade per chunk, no blinking cursor; switching conversations mid-type cleanly cancels the animation.
+- **Claude-style "thinking" indicator:** an orange spark icon with pulsing rays and a slow rotation, shimmering text; once done: "✦ thought for 1.2s".
+- **Lag-free chat box:** `field-sizing: content` for auto-grow with no JS (one-time fallback per frame); the counter and send button only touch the DOM when their values actually change; `localStorage` writes are debounced.
+- **Gemini-style search modal:** `Ctrl/⌘ + K` or the search button; recent conversations, match highlighting, text preview, relative timestamps, full keyboard nav (↑ ↓ Enter Esc); full-screen on mobile.
+- **Lightweight animations everywhere** (`opacity`/`transform` only): modal open/close, dropdown menu, toasts, sidebar + mobile backdrop, conversation add/remove, chips and hero, score-bar fill, theme switch — all disabled under `prefers-reduced-motion`.
+- **Bug fixes:** request timeout (180s), guards against incomplete server responses, JSON download on Firefox, copy-to-clipboard over HTTP, CSS/JS cache-busting after every deploy, health checks only while the tab is active, persisted sidebar state.
 
-- تمام تست‌های واحد (`pytest`) اجرا و تأیید شدند که سبز هستند؛ `fingilish.py`
-  بدون تغییر درست بود و نیازی به اصلاح نداشت.
+## Backend Notes
 
-### درباره‌ی جایگزینی خود مدل فارسی
+- **Safe, automatic scoring:** single-logit output → sigmoid; `multi_label` → sigmoid over toxic labels only; two-class → softmax over the toxic class. (Previously, a misconfigured `mode` — e.g. sigmoid applied to both classes — could make clean text score 100% toxic.) The toxic-class index is now computed once at load time instead of on every request.
+- `MODELS_ROOT` now defaults to `./models` when unset (previously raised a `KeyError` and crashed).
+- Deprecated `on_event("startup")` replaced with `lifespan`.
+- CORS allows `GET` only (so the GitHub Pages status page can poll `/health`); `/api/check` stays same-origin.
+- The workflow now uses `scripts/start_server.sh` (removed a duplicate `gunicorn` invocation).
 
-علاوه بر رفع باگ منطق رأی‌گیری (که ریشه‌ی واقعی مشکل بود)، اگر بخواهید خودِ
-چک‌پوینت `persian` را هم عوض کنید، شناسه مدل در `scripts/download_models.py`
-از قبل با متغیر محیطی قابل بازنویسی است، بدون نیاز به تغییر کد:
+## Consensus Voting Fix (false positives on safe text)
+
+A full review of the code, tests, and workflow turned up one real, reproducible bug.
+
+**Reported symptom:** a perfectly polite message ("Hello, good day, I'm very happy to work with you") was flagged **100% toxic** by the `persian` model alone, while the other three Persian-applicable models (`textdetox_lg`, `textdetox_sm`, `multilingual`) all scored between 0% and 1.5%. The old logic in `consensus.py` let a single model decide `TOXIC` on its own — with no corroboration from any other model — as long as it cleared a 0.90 threshold (0.95 in Fingilish mode). That's exactly the pattern that produced this false positive.
+
+**Fix:** `decide()` now checks a second model's score before accepting a lone "strong" vote as `TOXIC` (`SOLO_VOTE_CORROBORATION_FLOOR = 0.30`). If no other model is even mildly suspicious, the result stays `SUSPECT` (needs review) instead of `TOXIC` — so no single model can unilaterally declare content toxic anymore. If at least one other model also scores ≥ 0.30, the lone strong vote still counts as `TOXIC` — so a genuinely specialized model that catches something earlier than the others is still heard; it just can't win as "one isolated model against unanimous disagreement from the rest." This change lives in `app/consensus.py`, covered by new/updated tests in `tests/test_consensus.py` (including an exact reproduction of this bug).
+
+All unit tests (`pytest`) pass; `fingilish.py` was already correct and needed no changes.
+
+<details>
+<summary><strong>On replacing the Persian model itself</strong></summary>
+
+Beyond the voting-logic fix (the actual root cause), if you also want to swap the `persian` checkpoint, its id is already overridable via an environment variable in `scripts/download_models.py`, no code change needed:
 
 ```bash
-PERSIAN_MODEL_ID="<repo-id-جایگزین>" python scripts/download_models.py
+PERSIAN_MODEL_ID="<replacement-repo-id>" python scripts/download_models.py
 ```
 
-چند گزینه‌ی دیگر که روی Hugging Face برای تشخیص توهین/نفرت‌پراکنی فارسی پیدا
-شدند و با همین کد (`AutoModelForSequenceClassification` دوکلاسه) سازگارند:
+A couple of other Persian offensive/hate-speech models found on Hugging Face that are compatible with this code path (two-class `AutoModelForSequenceClassification`):
 
 - `Asa-AI-Lab/Augmented-ParsOFF-Persian-Offensive-Language-Detection`
 - `hafez97/Aug-Persian-Offensive-Language-Detection`
 
-⚠️ با این حال **هیچ‌کدام را کورکورانه جایگزین نکردم**: model cardهای هر دو
-خودکار و تقریباً خالی هستند (نه دیتاست مشخص، نه متریک eval، نه توضیح کالیبراسیون)
-و دانلود ماهانه‌شان بسیار پایین است. جایگزینیِ یک مدل تست‌نشده با یک مدل
-تست‌نشده‌ی دیگر ریسک دارد که همین باگ (overconfidence روی متن سالم) را فقط
-جابه‌جا کند، نه حل. قبل از جایگزینی در production، حتماً مدل کاندید را روی یک
-مجموعه‌ی کوچک از جملات سالمِ شناخته‌شده (مثل همین پیام «سلام وقت بخیر...») و
-چند جمله واقعاً توهین‌آمیز تست کنید. فیکسِ `SOLO_VOTE_CORROBORATION_FLOOR`
-بالا مستقل از اینکه کدام چک‌پوینت فارسی استفاده می‌شود کار می‌کند، پس حتی اگر
-مدل را عوض نکنید، دیگر یک مدل تنها نمی‌تواند کاربران را به‌اشتباه مسدود کند.
+⚠️ Neither was swapped in blindly: both model cards are auto-generated and nearly empty (no stated dataset, no eval metrics, no calibration notes) and have very low monthly downloads. Replacing one untested model with another untested model risks just relocating the same overconfidence-on-safe-text bug, not fixing it. Before swapping in production, test any candidate model against a small set of known-safe sentences (like the greeting above) and a few genuinely offensive ones. The `SOLO_VOTE_CORROBORATION_FLOOR` fix above works regardless of which Persian checkpoint is in use, so even without a model swap, no single model can wrongly block users anymore.
 
-## ساختار
+</details>
+
+## Repository Structure
 
 ```
-.github/workflows/deploy.yml   اجرا روی GitHub Actions + Cloudflare Quick Tunnel
-app/main.py                    سرور FastAPI و بارگذاری مدل‌ها
-app/consensus.py               منطق رأی‌گیری (بدون torch، تست‌پذیر)
-app/fingilish.py               تشخیص فینگیلیش و ترنسلیت به فارسی
-app/static/                    رابط کاربری (index.html, style.css, script.js)
-app/chat_app.py                پراکسی FastAPI جلوی llama-server برای Unicollect Chat
-app/chat_static/               رابط کاربری سرویس چت
-pages/index.html               صفحه‌ی GitHub Pages که هر دو لینک TryCloudflare را نشان می‌دهد
-scripts/publish_status.sh      انتشار لینک(ها) روی شاخه‌ی gh-pages
-scripts/download_models.py     دانلود مدل‌های تشخیص سمیت از Hugging Face
-scripts/download_chat_model.py دانلود مدل چت (GGUF) از Hugging Face
-scripts/start_server.sh        اجرای gunicorn (سرویس تشخیص سمیت)
-scripts/start_chat_server.sh   اجرای llama-server (مدل چت، فقط لوکال)
-scripts/start_chat_proxy.sh    اجرای پراکسی عمومی Unicollect Chat
-scripts/smoke_test.py          تست دودی روی سرور در حال اجرا
-tests/                         تست‌های واحد
+.github/workflows/deploy.yml   Runs on GitHub Actions + Cloudflare Quick Tunnel
+.github/workflows/heartbeat.yml Restarts deploy.yml if it stops (schedule/workflow_run)
+app/main.py                    FastAPI server + model loading
+app/consensus.py               Voting logic (no torch dependency, unit-testable)
+app/fingilish.py               Fingilish detection + translation to Persian
+app/static/                    Web UI (index.html, style.css, script.js)
+app/chat_app.py                FastAPI proxy in front of Ollama for Unicollect Chat
+app/chat_static/                Chat service UI
+pages/index.html               GitHub Pages page showing both TryCloudflare links
+scripts/publish_status.sh      Publishes the link(s) to the gh-pages branch
+scripts/download_models.py     Downloads the toxicity-detection models from Hugging Face
+scripts/start_server.sh        Runs gunicorn (toxicity service)
+scripts/start_chat_server.sh   Runs `ollama serve` (chat model, localhost only)
+scripts/start_chat_proxy.sh    Runs the public Unicollect Chat proxy
+scripts/smoke_test.py          Smoke test against a running server
+tests/                         Unit tests
 ```
 
-## اجرا روی GitHub Actions
+## Run on GitHub Actions
 
-۱. ریپو را روی GitHub آپلود کن (شاخه‌ی `main`).
-۲. تب **Actions** ← `Unicollect Ensemble Web + Cloudflare Tunnel` ← **Run workflow**.
-۳. لینک رو از صفحه‌ی GitHub Pages ببین (`https://<username>.github.io/<repo>/`) یا از **Summary** اجرا. سرویس حدود ۵ ساعت بالا می‌ماند.
+1. Push the repo to GitHub (`main` branch).
+2. **Actions** tab → `Unicollect Ensemble Web + Cloudflare Tunnel` → **Run workflow**.
+3. Get the links from the GitHub Pages status page (`https://<username>.github.io/<repo>/`) or the run's **Summary**. The service stays up for roughly 5 hours.
 
-هر اجرا مدل‌ها را تازه دانلود می‌کند (چیزی کش نمی‌شود)، اما چون سرور با
-`gunicorn --preload` بالا می‌آید، همه‌ی ۵ مدل فقط یک‌بار در پردازه‌ی master
-بارگذاری می‌شوند و بعد به ۲ worker به‌اشتراک گذاشته می‌شوند — کل چرخه‌ی
-دانلود+بارگذاری معمولاً حدود ۲ دقیقه طول می‌کشد.
+Every run downloads the toxicity models fresh (nothing is cached), but since the server starts with `gunicorn --preload`, all 5 models are loaded exactly once in the master process and then shared across 2 workers — the full download+load cycle typically takes about 2 minutes.
 
-## اجرای محلی
+## Run Locally
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
@@ -174,34 +144,58 @@ pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 python scripts/download_models.py
 ./scripts/start_server.sh          # http://localhost:8000
-python scripts/smoke_test.py       # تست
+python scripts/smoke_test.py       # smoke test
 ```
 
-تست‌های واحد (بدون مدل): `pip install -r requirements-dev.txt && pytest`
+Unit tests only (no models needed): `pip install -r requirements-dev.txt && pytest`
 
-## منطق تصمیم‌گیری
+## Decision Logic
 
-- هر مدل با نمره ≥ 0.50 «رأی سمی» می‌دهد.
-- ۲ رأی یا بیشتر ← `TOXIC`؛ یک رأی تنها با نمره ≥ 0.90 فقط وقتی `TOXIC` است که مدل دوم هم ≥ 0.30 باشد (بین 0.10 تا 0.30 ← `SUSPECT`، کمتر ← `SAFE`)؛ بیشترین نمره ≥ 0.60 ← `SUSPECT`؛ در غیر این صورت `SAFE`.
-- مدل فقط‌فارسی روی متن انگلیسی و مدل فقط‌انگلیسی روی متن فارسی اجرا نمی‌شود.
+| Condition | Result |
+|---|---|
+| 2 or more models vote toxic (score ≥ 0.50) | `TOXIC` |
+| Exactly one vote, score ≥ 0.90, **and** a second model scores ≥ 0.30 | `TOXIC` |
+| Exactly one vote, score ≥ 0.90, but no other model reaches ≥ 0.30 | `SUSPECT` |
+| Highest score ≥ 0.60 (no `TOXIC` reached) | `SUSPECT` |
+| Otherwise | `SAFE` |
 
-## فینگیلیش
+Persian-only models never run on English text, and English-only models never run on Persian text.
 
-فقط `kir` نیست؛ جمله‌های کامل هم پشتیبانی می‌شوند (`to khar hasti`، `khafe sho ahmagh`، `madar jende`، …).
+## Fingilish Detection
 
-۱. **پاکسازی:** `k1r`، `k!r`، `k.i.r`، `k i r` و `kiiiir` همه به `kir` برمی‌گردند.
-۲. **واژه‌نامه:** فهرست توهین‌ها و واژه‌های رایج (`PROFANE` و `FUNCTION` در `app/fingilish.py`) با املای درست فارسی؛ پسوندهای چسبیده (`kiram` ← کیرم) و حروف تکراری (`kharr` ← خر) هم پشتیبانی می‌شوند.
-۳. **حرف‌به‌حرف:** برای واژه‌های ناشناخته (دی‌گراف‌ها اول، مصوت‌های کوتاه وسط کلمه حذف).
-۴. **کلمات انگلیسی** در نسخه‌ی فارسی حذف می‌شوند: `you are such a kir` ← «کیر».
+Not just `kir` — full sentences are supported too (`to khar hasti`, `khafe sho ahmagh`, `madar jende`, …).
 
-متن لاتین فقط وقتی فینگیلیش حساب می‌شود که یک توهین فینگیلیش شناخته‌شده داشته باشد یا اکثر کلماتش انگلیسی نباشند.
-انگلیسی معمولی **هیچ‌وقت** ترنسلیت نمی‌شود. برای فینگیلیش هم متن اصلی و هم نسخه‌ی فارسی بررسی می‌شود و نتیجه‌ی بدتر برمی‌گردد؛
-در نسخه‌ی فارسی‌شده یک مدل تنها برای `TOXIC` بودن حداقل 0.95 لازم دارد.
+1. **Normalization:** `k1r`, `k!r`, `k.i.r`, `k i r`, and `kiiiir` all collapse to `kir`.
+2. **Dictionary:** a list of slurs and common words (`PROFANE` and `FUNCTION` in `app/fingilish.py`) mapped to correct Persian spelling; attached suffixes (`kiram` → کیرم) and repeated letters (`kharr` → خر) are also handled.
+3. **Letter-by-letter fallback:** for unknown words (digraphs first, short mid-word vowels dropped).
+4. **English words** are stripped from the Persian rendering: `you are such a kir` → «کیر».
 
-برای افزودن واژه: `_p('املای فارسی', 'variant1', 'variant2')` برای توهین‌ها و `_f(...)` برای کلمات معمولی.
-اگر کلمه‌ی انگلیسی‌ای اشتباه فینگیلیش تشخیص داده شد، آن را به `ENGLISH_WORDS` اضافه کن.
+Latin text only counts as Fingilish if it contains a known Fingilish slur, or if most of its words aren't English. Plain English is **never** translated. For Fingilish text, both the original and the Persian-rendered version are checked, and the worse result wins; in the Persian-rendered version, a lone model needs at least 0.95 to call `TOXIC`.
 
-## API
+To add a word: `_p('persian-spelling', 'variant1', 'variant2')` for slurs, `_f(...)` for regular words. If an English word gets misdetected as Fingilish, add it to `ENGLISH_WORDS`.
 
-`POST /api/check` با بدنه‌ی `{"text": "..."}` ← `decision`, `confidence`, `votes_count`, `raw_scores`, `fingilish_detected`, `fingilish_text`, `analysis`, `latency_ms`, …
-`GET /health` ← وضعیت مدل‌ها (برای هر worker جداگانه است).
+## API Reference
+
+### `POST /api/check`
+
+Request body:
+```json
+{ "text": "..." }
+```
+
+Response fields:
+
+| Field | Description |
+|---|---|
+| `decision` | `TOXIC`, `SUSPECT`, or `SAFE` |
+| `confidence` | Overall confidence score |
+| `votes_count` | Number of models that voted toxic |
+| `raw_scores` | Per-model raw scores |
+| `fingilish_detected` | Whether the input was detected as Fingilish |
+| `fingilish_text` | The Persian-rendered version, if Fingilish was detected |
+| `analysis` | Per-model breakdown |
+| `latency_ms` | Processing time in milliseconds |
+
+### `GET /health`
+
+Returns model loading status (reported per worker process).
