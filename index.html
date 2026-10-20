@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Unicollect · هوش مصنوعی برای بررسی متن</title>
-<meta name="description" content="Unicollect یک نگهبان هوشمند برای تشخیص سمیت و توهین در متن‌های فارسی، فینگیلیش و انگلیسی است.">
+<meta name="description" content="Unicollect متن فارسی، فینگیلیش و انگلیسی را پیش از ارسال با رأی‌گیری چندمدلی بررسی می‌کند تا توهین و سمیت را زودتر ببینی.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#212121" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f4fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15111f" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,6 +16,7 @@
 </head>
 <body>
 <main class="page">
+
 <header class="site-header">
 <a class="brand" href="./" aria-label="صفحه اصلی Unicollect"><span class="mark"><svg class="icon-spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(0 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(60 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(120 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(180 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(240 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(300 12 12)"/><circle cx="12" cy="12" r="2.1"/></svg></span><span class="brand-name">Unicollect</span></a>
 <button class="site-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="باز کردن منو"><svg class="burger" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><line x1="4" y1="7"  x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
@@ -28,39 +29,80 @@
 <div class="drawer-foot">ساخته شده توسط موویکسو</div>
 </nav>
 </header>
+
 <section class="hero" id="top">
-<div class="hero-mark"><svg class="icon-spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(0 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(60 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(120 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(180 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(240 12 12)"/><path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(300 12 12)"/><circle cx="12" cy="12" r="2.1"/></svg></div>
-<div class="eyebrow"><i></i>هوش مصنوعی برای متن‌های بهتر</div>
-<h1>قبل از اینکه متن را بفرستی، <span>یک‌بار دیگر ببینش.</span></h1>
-<p class="lead">Unicollect متن‌های فارسی، فینگیلیش و انگلیسی را با رأی‌گیری چندمدلی بررسی می‌کند تا توهین، سمیت و ریسک ارتباطی را سریع‌تر ببینی.</p>
+<div class="hero-copy">
+<h1>قبل از ارسال، یک‌بار با چشم دوم بخوانش.</h1>
+<p class="lead">Unicollect متن فارسی، فینگیلیش و انگلیسی را می‌خواند، نظر چند مدل را کنار هم می‌گذارد و قبل از اینکه دستت به سمت دکمه ارسال برود، می‌گوید این پیام چقدر امن است.</p>
 <div class="hero-actions">
-<a class="btn primary" href="#how">چطور کار می‌کند؟</a>
+<a class="btn primary" href="#how">ببین چطور کار می‌کند</a>
 <a class="btn" href="#about">درباره سازنده</a>
+</div>
+</div>
+
+<div class="preview" aria-hidden="true">
+<div class="preview-head"><span>نمونه خروجی Unicollect</span><span class="preview-dot"></span></div>
+
+<div class="pv-row">
+<span class="pv-text">میشه لطفاً فردا ساعت ۵ وقت بذاریم صحبت کنیم؟</span>
+<span class="pv-stamp safe"><i></i>ایمن</span>
+</div>
+
+<div class="pv-row">
+<span class="pv-text suspect-row">اصلا <mark>حواست به کارت هست</mark> یا نه؟</span>
+<span class="pv-stamp suspect"><i></i>مشکوک</span>
+</div>
+
+<div class="pv-row">
+<span class="pv-text redacted">[ متنی با توهین مستقیم ]</span>
+<span class="pv-stamp toxic"><i></i>سمی</span>
+</div>
+
+<div class="preview-foot">رأی نهایی از جمع‌بندی چند مدل به‌دست می‌آید، نه فقط یکی.</div>
 </div>
 </section>
 
-<section class="grid">
-<article class="feature"><span class="feature-num">۰۱</span><h2>چند مدل، یک رأی</h2><p>به‌جای تکیه بر یک خروجی، چند مدل متن را می‌خوانند و Unicollect نتیجه را با اجماع جمع‌بندی می‌کند.</p></article>
-<article class="feature"><span class="feature-num">۰۲</span><h2>ساخته‌شده برای فارسی</h2><p>فارسی، فینگیلیش و متن‌های ترکیبی را می‌فهمد و برای هرکدام مسیر بررسی مناسب را انتخاب می‌کند.</p></article>
-<article class="feature"><span class="feature-num">۰۳</span><h2>شفاف، نه جعبه‌سیاه</h2><p>نمای سریع، ریز نمرهٔ همهٔ مدل‌ها را نشان می‌دهد؛ نمای دقیق، فقط نتیجه نهایی را خلاصه می‌کند.</p></article>
+<section aria-labelledby="principles-head">
+<div class="section-head"><span class="kicker" id="principles-head">چرا Unicollect</span><h2>سه انتخاب طراحی</h2></div>
+<div class="principles">
+
+<article class="principle">
+<span class="principle-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="6" r="2.4"/><circle cx="5" cy="17" r="2.4"/><circle cx="19" cy="17" r="2.4"/><path d="M12 8.4V12M12 12 6.6 15.2M12 12l5.4 3.2"/></svg></span>
+<h3>چند مدل، یک رأی</h3>
+<p>به‌جای تکیه بر یک خروجی، چند مدل متن را می‌خوانند و Unicollect نتیجه را با اجماع جمع‌بندی می‌کند؛ یک قضاوت اشتباه به‌تنهایی نتیجه را عوض نمی‌کند.</p>
+</article>
+
+<article class="principle">
+<span class="principle-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V8a2 2 0 0 1 2-2h8l6 6v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 6v5h5"/><path d="M8 15h5M8 12h3"/></svg></span>
+<h3>ساخته‌شده برای فارسی</h3>
+<p>فارسی، فینگیلیش و متن‌های ترکیبی را می‌فهمد و برای هرکدام مسیر بررسی مناسب خودش را انتخاب می‌کند، نه یک ترجمه‌ی دست‌وپاشکسته از ابزارهای انگلیسی.</p>
+</article>
+
+<article class="principle">
+<span class="principle-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7Z"/><circle cx="12" cy="12" r="2.6"/></svg></span>
+<h3>شفاف، نه جعبه‌سیاه</h3>
+<p>نمای سریع، ریزنمره‌ی همه‌ی مدل‌ها را نشان می‌دهد؛ نمای دقیق فقط نتیجه نهایی را خلاصه می‌کند. تصمیم همیشه قابل مرور است.</p>
+</article>
+
+</div>
 </section>
 
-<section id="how">
-<div class="section-head"><h2>از متن تا نتیجه</h2><p>فرآیند ساده است، ولی پشت آن چند لایه بررسی انجام می‌شود.</p></div>
-<div class="how">
+<section id="how" aria-labelledby="how-head">
+<div class="section-head"><span class="kicker" id="how-head">فرآیند</span><h2>از متن تا نتیجه</h2></div>
+<div class="rail">
 <article class="step"><b>۱</b><h3>تشخیص زبان</h3><p>متن فارسی، انگلیسی، فینگیلیش یا مختلط شناسایی می‌شود.</p></article>
 <article class="step"><b>۲</b><h3>پرسش از مدل‌ها</h3><p>مدل‌های تخصصی و چندزبانه هرکدام نظر خودشان را می‌دهند.</p></article>
 <article class="step"><b>۳</b><h3>رأی اجتماعی</h3><p>امتیازها و آستانه‌ها کنار هم قرار می‌گیرند تا یک مدل تنها تصمیم‌گیر نباشد.</p></article>
-<article class="step"><b>۴</b><h3>نتیجه قابل فهم</h3><p>خروجی به‌صورت سالم، مشکوک یا سمی نمایش داده می‌شود.</p></article>
+<article class="step"><b>۴</b><h3>نتیجه قابل‌فهم</h3><p>خروجی به‌صورت ایمن، مشکوک یا سمی نمایش داده می‌شود.</p></article>
 </div>
 </section>
 
-<section class="about" id="about">
-<div>
-<h2>چه کسی ساخته؟</h2>
-<p>Unicollect توسط <strong>موویکسو</strong> ساخته شده؛ یک پروژه مستقل برای کمک به ارتباطات سالم‌تر و بررسی سریع‌تر متن.</p>
+<section id="about" aria-labelledby="about-head">
+<div class="about">
+<span class="quote-mark" aria-hidden="true">”</span>
+<p id="about-head">تصمیم درباره‌ی یک متن نباید فقط دست یک مدل یا یک نمره باشد.</p>
+<div class="about-attrib">ساخته و نگهداری می‌شود توسط <b>موویکسو</b>، یک پروژه مستقل برای ارتباطات سالم‌تر.</div>
 </div>
-<span class="about-badge">ساخته شده توسط موویکسو</span>
 </section>
 
 <section class="access" id="access" aria-label="دسترسی سرویس‌های Unicollect">
@@ -86,9 +128,10 @@
 <button class="btn" id="close-access" type="button">بستن</button>
 </div>
 </section>
+
 <footer class="site-footer">
-<span>© Unicollect · موویکسو</span>
-<span>برای استفاده بهتر، متن را قبل از ارسال یک‌بار مرور کن.</span>
+<span>© Unicollect</span>
+<span>ساخته و نگهداری می‌شود توسط موویکسو</span>
 </footer>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite">لینک کپی شد</div>
