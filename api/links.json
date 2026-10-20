@@ -1,131 +1,131 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://neck-dentists-vast-implied.trycloudflare.com",
+  "status": "starting",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://neck-dentists-vast-implied.trycloudflare.com",
-    "api": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1",
-    "health": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/health",
-    "swagger": "https://neck-dentists-vast-implied.trycloudflare.com/docs",
-    "redoc": "https://neck-dentists-vast-implied.trycloudflare.com/redoc",
-    "openapi": "https://neck-dentists-vast-implied.trycloudflare.com/openapi.json",
-    "guide": "https://neck-dentists-vast-implied.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://neck-dentists-vast-implied.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-20T18:47:15+00:00",
-  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39477499346",
-  "run_number": 97,
-  "commit": "92b3d08"
+  "updated_at": "2026-10-20T18:54:32+00:00",
+  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39478830404",
+  "run_number": 98,
+  "commit": "fd01c58"
 }
