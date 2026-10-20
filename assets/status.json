@@ -1,9 +1,9 @@
 {
-  "status": "online",
-  "url_payload": "aHR0cHM6Ly9zY2VuaWMtbHlubi1ob3N0ZWxzLWJvb2ttYXJrcy50cnljbG91ZGZsYXJlLmNvbQ==",
-  "chat_status": "online",
-  "chat_url_payload": "aHR0cHM6Ly9jb3VudHJ5LXBhcHVhLW5pY29sZS10ZW5kZXIudHJ5Y2xvdWRmbGFyZS5jb20=",
-  "updated_at": "2026-10-19T21:38:11+00:00",
+  "status": "offline",
+  "url_payload": null,
+  "chat_status": null,
+  "chat_url_payload": null,
+  "updated_at": "2026-10-20T02:42:44+00:00",
   "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39328624843",
   "run_number": 86,
   "commit": "4cc8318"
