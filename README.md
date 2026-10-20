@@ -7,6 +7,8 @@
 
 Toxic / offensive content detection for **Persian**, **Fingilish** and **English**, decided by consensus voting across 5 models. One service: a FastAPI backend, a web panel, a full JSON API (`/api/v1`), and a public GitHub Pages site with API docs and the live link.
 
+> v2.1: Fonts are self-hosted (Vazirmatn + JetBrains Mono as subset variable WOFF2 in `pages/assets/fonts` and `app/static/fonts`, preloaded, `font-display: swap`), so Persian renders correctly even when Google Fonts is slow or blocked. GitHub Pages restyled to match the chat panel, 404 page with working assets, live check on the home page, endpoint search + copy-as-curl in the docs, SVG icons instead of emoji, Python examples use plain `requests` (no client package).
+>
 > v2.0: the chat model (Unicollect Chat / Ollama) has been removed completely: code, scripts, workflow steps, status page and docs. The repo is now Guard only.
 
 ---
@@ -35,6 +37,8 @@ Toxic / offensive content detection for **Persian**, **Fingilish** and **English
 | `/docs`, `/redoc`, `/openapi.json` | Interactive OpenAPI docs |
 | `/api-docs` | Persian API guide (same page as Pages `/api/`, served from `pages/`) |
 | `/api/check`, `/health` | Legacy endpoints (kept for the panel and old integrations) |
+| `/site/*` | The public site, served by the service too |
+| any unknown path | Browsers get the styled 404 page, API clients get JSON |
 
 The service listens on port `8000` and is published through a Cloudflare Quick Tunnel. Every run gets a fresh `trycloudflare.com` link that is published to GitHub Pages automatically.
 
@@ -120,14 +124,22 @@ The legacy `POST /api/check` keeps its old behaviour (HTTP 200 with `{"error": "
 
 ### Clients
 
-`clients/` has ready-to-use clients:
+No Python package to install: plain `requests` is enough.
 
 ```python
-from unicollect_guard import Guard           # clients/python, stdlib only
-g = Guard.from_status_page("https://<user>.github.io/<repo>/")
-g.check("to khar hasti")["decision"]          # "TOXIC"
-g.is_safe("Have a nice day")                  # True
-g.censor("you are a k1r")                     # "you are a ***"
+import requests
+
+BASE = requests.get("https://<user>.github.io/<repo>/api/links.json", timeout=10).json()["base_url"]
+HEADERS = {}   # {"X-API-Key": "..."} if the server sets GUARD_API_KEYS
+
+def guard(path, **body):
+    r = requests.post(f"{BASE}/api/v1/{path}", json=body, headers=HEADERS, timeout=60)
+    r.raise_for_status()
+    return r.json()
+
+guard("check", text="to khar hasti")["decision"]      # "TOXIC"
+guard("verdict", text="Have a nice day")["flagged"]   # False
+guard("censor", text="you are a k1r")["text"]         # "you are a ***"
 ```
 
 ```js
@@ -148,8 +160,14 @@ Every run publishes to the `gh-pages` branch:
 | `api/links.json` | **Machine-readable live links**: `base_url`, panel, API, Swagger, ReDoc, OpenAPI, health, and every endpoint URL |
 | `api/links.txt` | Just the base URL (or `offline`) for shell scripts |
 | `assets/status.json` | Status for the site (also used by the secret `muvixo` dialog) |
+| `404.html` | Styled not-found page with its asset base pinned to the site root |
 
-The **API page** (`/api/`) shows the live links openly with copy/open buttons, full docs for all endpoints with curl / JavaScript / Python examples, and a console that sends real requests to the live service. Typing `muvixo` on any page still opens the quick-access dialog.
+The site uses the same colour theme as the chat panel (monochrome, plum accent, dark by default unless the OS asks for light; the choice is shared with the panel). All icons are inline SVG, no emoji.
+
+- **Home**: the stamp desk plays examples, and the input under it runs a **real check** on the live service (5 model bars + verdict stamp).
+- **API page** (`/api/`): live links with copy/open buttons, docs for every endpoint with curl / JavaScript / Python (`requests`) examples, **endpoint search** (press `/`), and a console that sends real requests, shows `X-Request-ID` / rate-limit headers and can **copy the request as curl**.
+- **404 page** (`404.html`): GitHub Pages serves it for any missing path, so its `<base>` is pinned to the site root (written by `publish_status.sh`, override with `PAGES_BASE`) and CSS/JS no longer 404 on nested URLs. It suggests the page you probably meant, and points `/api/v1/...` paths at the live service.
+- Typing `muvixo` on any page still opens the quick-access dialog.
 
 **One-time setup:**
 1. Run the workflow once so the `gh-pages` branch exists.
@@ -239,9 +257,8 @@ app/main.py                      FastAPI app: middleware, errors, legacy endpoin
 app/consensus.py                 Voting logic (no torch, unit-tested)
 app/fingilish.py                 Fingilish detection, transliteration, insult finder/masker
 app/static/                      Guard web panel
-pages/                           Public site + API docs (GitHub Pages and /site on the service)
+pages/                           Public site + API docs + 404 (GitHub Pages and /site on the service)
 pages/api/links.json             Placeholder, overwritten with the live link on gh-pages
-clients/python/                  Python client (stdlib only)
 clients/js/                      JS client (browser + Node)
 clients/curl-examples.sh         Every endpoint with curl
 scripts/publish_status.sh        Publishes site + links.json + links.txt to gh-pages

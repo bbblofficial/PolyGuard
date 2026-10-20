@@ -6,18 +6,18 @@
 <title>Unicollect Guard · نگهبان متن</title>
 <meta name="description" content="Unicollect Guard متن فارسی، فینگیلیش و انگلیسی را با رأی‌گیری پنج مدل بررسی می‌کند. API کامل و رایگان.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f7f3f8">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#212121" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="Unicollect Guard · نگهبان متن">
 <meta property="og:description" content="Unicollect Guard متن فارسی، فینگیلیش و انگلیسی را با رأی‌گیری پنج مدل بررسی می‌کند. API کامل و رایگان.">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&family=Khand:wght@600&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=4">
+<link rel="preload" href="assets/fonts/Vazirmatn.woff2?v=1" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css?v=6">
 <script>
+  // same rule as the chat panel: explicit choice wins, otherwise dark unless the OS asks for light
   (function () {
     var t = null; try { t = localStorage.getItem('unicollect_theme'); } catch (e) {}
-    var dark = t ? t === 'dark' : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var dark = t ? t === 'dark' : !(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
     if (dark) document.documentElement.classList.add('dark');
   })();
 </script>
@@ -76,6 +76,12 @@
         <button class="chip" type="button" data-demo="3"><span class="cd safe"></span>فینگیلیش</button>
         <button class="chip" type="button" data-demo="4"><span class="cd toxic"></span>فینگیلیش تند</button>
       </div>
+      <form class="try" data-try-form data-needs-live autocomplete="off">
+        <label class="sr-only" for="try-text">متن خودت را بنویس</label>
+        <input id="try-text" class="try-in" data-try-text type="text" maxlength="2000" placeholder="متن خودت را بنویس…" spellcheck="false">
+        <button class="btn btn-ink btn-sm" type="submit" data-try-send><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>بررسی واقعی</span></button>
+      </form>
+      <p class="try-note" data-try-note aria-live="polite">در حال بررسی وضعیت سرویس…</p>
     </div>
   </div>
 </section>
@@ -110,7 +116,7 @@
   -H <span class="tok-s">"Content-Type: application/json"</span> \
   -d <span class="tok-s">'{"text": "to khar hasti"}'</span>
 
-<span class="tok-c"># →</span>
+<span class="tok-c"># response</span>
 {
   <span class="tok-p">"decision"</span>: <span class="tok-s">"TOXIC"</span>,
   <span class="tok-p">"confidence"</span>: <span class="tok-n">0.91</span>,
@@ -143,6 +149,6 @@
   </section>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span data-toast-text>کپی شد</span></div>
-<script src="assets/site.js?v=4" defer></script>
+<script src="assets/site.js?v=6" defer></script>
 </body>
 </html>

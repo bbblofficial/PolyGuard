@@ -27,6 +27,8 @@ function faDigits(v) {
 
 /* ---------------- icons (inline SVG, no external dependency) ---------------- */
 const ICONS = {
+  arrowL:      '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  dot:         '<circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>',
   shield:      '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
   shieldalert: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
   shieldx:     '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m14.5 9.5-5 5"/><path d="m9.5 9.5 5 5"/>',
@@ -205,8 +207,8 @@ function renderHealthDetails(d) {
   if (c && d.concurrency) c.textContent = `${faDigits(d.concurrency)} (اوج ${faDigits(d.peak || 0)})`;
   const m = $('cfg-models');
   if (m) {
-    const ok = (d.loaded_models || []).map(x => `<div class="ml"><span class="model-id">${escapeHtml(x)}</span><span class="ok">● آماده</span></div>`).join('');
-    const er = Object.keys(d.errors || {}).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="err">● خطا</span></div>`).join('');
+    const ok = (d.loaded_models || []).map(x => `<div class="ml"><span class="model-id">${escapeHtml(x)}</span><span class="ok">${svg('dot')}آماده</span></div>`).join('');
+    const er = Object.keys(d.errors || {}).map(x => `<div class="ml"><span>${escapeHtml(x)}</span><span class="err">${svg('dot')}خطا</span></div>`).join('');
     m.innerHTML = (ok + er) || 'مدلی بارگذاری نشده';
   }
 }
@@ -773,7 +775,7 @@ function buildTurnHTML(msg, opts) {
           <div class="note-title">فینگیلیش تشخیص داده شد</div>
           <div class="note-flow">
             <span class="np mono" dir="ltr">${escapeHtml(msg.text.length > 60 ? msg.text.slice(0, 60) + '…' : msg.text)}</span>
-            <span class="arrow">←</span>
+            <span class="arrow">${svg('arrowL')}</span>
             <span class="np fa" dir="rtl">${escapeHtml(r.fingilish_text.length > 60 ? r.fingilish_text.slice(0, 60) + '…' : r.fingilish_text)}</span>
           </div>
           <div class="note-res">متن اصلی ${chip(a.original?.decision)} <span class="sep">·</span> نسخه‌ی فارسی ${chip(a.fingilish?.decision)}</div>

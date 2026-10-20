@@ -8,8 +8,10 @@ Unicollect Guard: FastAPI app.
   /docs  /redoc     Interactive OpenAPI docs
   /api-docs         Persian API guide (the same page as GitHub Pages /api/)
   /site/*           The public site in pages/, served from the service too
+  404               Browsers get pages/404.html, API clients get JSON
 """
 import hashlib
+import mimetypes
 import os
 import time
 import traceback
@@ -29,6 +31,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app import engine
 from app.api_v1 import ApiError, api_error_response, error_body, router as api_v1_router
 
+# some slim images ship without a woff2 mime type -> fonts served as text/plain
+mimetypes.add_type("font/woff2", ".woff2")
+
 BASE_DIR = Path(__file__).resolve().parent
 PAGES_DIR = BASE_DIR.parent / "pages"
 
@@ -46,6 +51,15 @@ async def _lifespan(_app):
           f"parallel_inferences={engine.MAX_CONCURRENT_INFERENCES}", flush=True)
     yield
 
+
+def _load_not_found() -> str:
+    try:
+        return (PAGES_DIR / "404.html").read_text(encoding="utf-8").replace("__PAGES_BASE__", "/site/")
+    except OSError:
+        return ""
+
+
+_NOT_FOUND_HTML = _load_not_found()
 
 app = FastAPI(
     title="Unicollect Guard API",
@@ -132,6 +146,10 @@ async def _edge(request: Request, call_next):
     response.headers["X-Process-Time"] = f"{(time.perf_counter() - t0) * 1000:.0f}ms"
     for k, v in headers.items():
         response.headers[k] = v
+    if request.url.path.endswith(".woff2"):
+        # versioned with ?v=, safe to cache for a year
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        response.headers["Access-Control-Allow-Origin"] = "*"
     return response
 
 
@@ -160,6 +178,10 @@ async def _http_error(request: Request, exc: StarletteHTTPException):
     if request.url.path.startswith("/api/"):
         code = {404: "not_found", 405: "method_not_allowed"}.get(exc.status_code, "http_error")
         return JSONResponse(error_body(exc.status_code, code, str(exc.detail)), status_code=exc.status_code)
+    # Browsers get the site's styled 404 page (assets pinned to /site/);
+    # scripts and API clients keep the JSON body.
+    if exc.status_code == 404 and _NOT_FOUND_HTML and "text/html" in request.headers.get("accept", ""):
+        return HTMLResponse(_NOT_FOUND_HTML, status_code=404)
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
 
@@ -242,6 +264,17 @@ def api_docs():
     if PAGES_DIR.is_dir():
         return RedirectResponse("/site/api/")
     return RedirectResponse("/docs")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    # browsers ask for /favicon.ico regardless of <link rel=icon>; avoid a 404 per page view
+    return RedirectResponse("/static/favicon.svg", status_code=301)
+
+
+@app.get("/site", include_in_schema=False)
+def site_root():
+    return RedirectResponse("/site/")
 
 
 @app.get("/api", include_in_schema=False)

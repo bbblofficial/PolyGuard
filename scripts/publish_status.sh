@@ -42,6 +42,15 @@ fi
 
 cp -R "$ROOT/pages/." .
 touch .nojekyll
+
+# 404.html is served for every missing path, so pin its <base> to the site
+# root (otherwise its CSS/JS 404 too on nested paths). PAGES_BASE overrides
+# it, e.g. "/" for a custom domain.
+OWNER="${GITHUB_REPOSITORY%%/*}"; REPO_NAME="${GITHUB_REPOSITORY#*/}"
+if [ -z "${PAGES_BASE:-}" ]; then
+  if [ -f CNAME ] || [ "${REPO_NAME,,}" = "${OWNER,,}.github.io" ]; then PAGES_BASE="/"; else PAGES_BASE="/${REPO_NAME}/"; fi
+fi
+[ -f 404.html ] && sed -i "s#__PAGES_BASE__#${PAGES_BASE}#" 404.html
 mkdir -p assets
 
 mkdir -p api
