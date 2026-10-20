@@ -1,99 +1,83 @@
-<!doctype html>
-<html lang="fa" dir="rtl" class="no-js">
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Unicollect · درباره</title>
-<meta name="description" content="درباره Unicollect، سرویس سنجش ایمنی متن ساخته‌شده توسط موویکسو.">
-<meta name="theme-color" content="#f6f4fb">
+<title>درباره · Unicollect Guard</title>
+<meta name="description" content="Unicollect Guard، پروژه‌ای مستقل از موویکسو.">
 <meta name="color-scheme" content="light dark">
-<meta property="og:title" content="Unicollect · درباره">
-<meta property="og:description" content="درباره Unicollect، سرویس سنجش ایمنی متن ساخته‌شده توسط موویکسو.">
+<meta name="theme-color" content="#f7f3f8">
+<meta property="og:title" content="درباره · Unicollect Guard">
+<meta property="og:description" content="Unicollect Guard، پروژه‌ای مستقل از موویکسو.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
-<script>(function(){var t;try{t=localStorage.getItem('unicollect_theme')}catch(e){}if(t!=='light'&&t!=='dark'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap"></noscript>
-<link rel="stylesheet" href="../assets/tokens.css">
-<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&family=Khand:wght@600&display=swap">
+<link rel="stylesheet" href="../assets/site.css?v=4">
+<script>
+  (function () {
+    var t = null; try { t = localStorage.getItem('unicollect_theme'); } catch (e) {}
+    var dark = t ? t === 'dark' : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.classList.add('dark');
+  })();
+</script>
 </head>
-<body>
-<header class="site-header">
-  <div class="wrap header-row">
-    <a class="brand" href="../" aria-label="Unicollect، صفحه اصلی"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle class="m-ring" cx="16" cy="16" r="14"/><path class="m-u" d="M10.5 9v7.5a5.5 5.5 0 0 0 11 0V9"/></svg><span class="brand-name">Unicollect</span></a>
-    <nav class="nav" id="site-nav" aria-label="منوی اصلی"><a href="../">خانه</a><a href="../api-docs/">مستندات API</a><a href="../how-it-works/">نحوه کار</a><a href="../about/" aria-current="page">درباره</a><a href="../privacy/">حریم خصوصی</a></nav>
-    <div class="header-actions">
-      <a class="btn btn-sm btn-primary header-cta" href="../api-docs/#quickstart">شروع با API</a>
-      <button class="icon-btn theme-toggle" type="button" aria-label="تغییر پوسته"><svg class="ic i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><svg class="ic i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
-      <button class="icon-btn burger" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="باز کردن منو"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<body data-root="../">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="ink"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></svg>
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="../" aria-label="Unicollect Guard، صفحه اصلی"><span class="logo"><svg class="pg-mark breathe" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span><small>Guard</small></a>
+    <nav class="nav" aria-label="ناوبری اصلی"><a href="../">خانه</a><a href="../api/">API</a><a href="../how-it-works/">فرآیند</a><a href="../about/" aria-current="page">درباره</a><a href="../privacy/">حریم خصوصی</a></nav>
+    <div class="top-end">
+      <a class="pill" href="../api/#links" data-status-pill><span class="dot warn" data-status-dot></span><span data-status-text>در حال بررسی…</span></a>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="تغییر حالت روز/شب"><span class="ti-sun"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span><span class="ti-moon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span></button>
+      <button class="icon-btn menu-btn" type="button" data-menu-open aria-label="باز کردن منو" aria-expanded="false" aria-controls="drawer"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
     </div>
   </div>
 </header>
-<main id="main">
-
-<section class="wrap page-hero">
-  <p class="kicker">درباره</p>
-  <h1>ساخته شده تا بازبینی<br><span class="accent">سریع‌تر و منصفانه‌تر</span> شود.</h1>
-  <p class="lede">Unicollect یک سرویس مستقل ایمنی متن است که موویکسو آن را ساخته و نگهداری می‌کند.</p>
-</section>
-<section class="section" style="padding-top:16px">
-  <div class="wrap split" style="align-items:start">
-    <div class="prose reveal">
-      <p>تصمیم‌های محتوایی نباید فقط به یک مدل یا یک عدد وابسته باشند. Unicollect چند دیدگاه را کنار هم می‌گذارد، رأی‌ها را مقایسه می‌کند و نتیجه را قابل فهم نگه می‌دارد.</p>
-      <p>هدف جایگزینی قضاوت انسانی نیست. Unicollect لایه‌ای کمکی است تا پیش از انتشار، ارسال یا ذخیره‌ی متن، یک‌بار دیگر و سریع به آن نگاه کنی؛ و در موارد مرزی، تصمیم را به انسان بسپاری.</p>
-      <p>تمرکز اصلی روی فارسی است، از جمله فینگلیش که بیشتر ابزارها آن را نمی‌فهمند؛ انگلیسی هم کامل پشتیبانی می‌شود.</p>
-    </div>
-    <div class="grid-2 reveal">
-      <div class="card"><div class="card-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>منصفانه</h3><p>هیچ مدلی به‌تنهایی کاربر را مسدود نمی‌کند.</p></div>
-      <div class="card"><div class="card-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div><h3>شفاف</h3><p>همه‌ی امتیازها و رأی‌ها در خروجی هست.</p></div>
-      <div class="card"><div class="card-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 6 8"/><path d="M11 5c-.5 4-3 7-7 9"/><path d="m13 21 4-9 4 9M14.5 18h5"/></svg></div><h3>فارسی‌محور</h3><p>فارسی، فینگلیش و انگلیسی.</p></div>
-      <div class="card"><div class="card-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><h3>ساده</h3><p>یک درخواست JSON، بدون SDK.</p></div>
-    </div>
-  </div>
-</section>
-
-</main>
-<footer class="site-footer">
-  <div class="wrap footer-grid">
-    <div class="footer-about">
-      <a class="brand" href="../"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle class="m-ring" cx="16" cy="16" r="14"/><path class="m-u" d="M10.5 9v7.5a5.5 5.5 0 0 0 11 0V9"/></svg><span class="brand-name">Unicollect</span></a>
-      <p>سنجش ایمنی متن فارسی، فینگلیش و انگلیسی با رأی‌گیری پنج مدل تخصصی.</p>
-    </div>
-    <div class="footer-col"><h4>محصول</h4><ul>
-      <li><a href="../">خانه</a></li>
-      <li><a href="../how-it-works/">نحوه کار</a></li>
-      <li><a href="#" data-open-panel>پنل بررسی متن</a></li>
-      <li><a href="../#links">لینک‌های سرویس</a></li>
-    </ul></div>
-    <div class="footer-col"><h4>توسعه‌دهندگان</h4><ul>
-      <li><a href="../api-docs/">مستندات API</a></li>
-      <li><a href="../api-docs/#check">بررسی متن</a></li>
-      <li><a href="../api-docs/#playground">محیط آزمایش</a></li>
-      <li><a href="../api-docs/#errors">کدهای خطا</a></li>
-    </ul></div>
-    <div class="footer-col"><h4>Unicollect</h4><ul>
-      <li><a href="../about/">درباره</a></li>
-      <li><a href="../privacy/">حریم خصوصی</a></li>
-      <li><a href="#" data-open-dialog>دسترسی سریع</a></li>
-    </ul></div>
-  </div>
-  <div class="wrap footer-bottom">
-    <span>© ۱۴۰۵ Unicollect · ساخته‌شده توسط موویکسو</span>
-    <span>تصمیم ماشین یک سیگنال است، نه حکم نهایی.</span>
-  </div>
-</footer>
-<div class="dialog" id="access-dialog" role="dialog" aria-modal="true" aria-labelledby="access-title" aria-hidden="true">
-  <div class="dialog-card">
-    <div class="dialog-head">
-      <div><h3 id="access-title">لینک‌های سرویس</h3><span class="access-meta" data-status-meta></span></div>
-      <div style="display:flex;gap:8px;align-items:center"><span class="status-pill" data-status-pill></span><button class="icon-btn dialog-close" type="button" aria-label="بستن"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-    </div>
-    <ul class="links" data-links></ul>
+<div class="drawer" id="drawer" aria-hidden="true">
+  <div class="shade" data-menu-close></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="منو">
+    <div class="sheet-head"><a class="brand" href="../"><span class="logo"><svg class="pg-mark " viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span></a><button class="icon-btn" type="button" data-menu-close aria-label="بستن منو"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <nav><a href="../">خانه</a><a href="../api/">API</a><a href="../how-it-works/">فرآیند</a><a href="../about/" aria-current="page">درباره</a><a href="../privacy/">حریم خصوصی</a></nav>
+    <a class="pill" href="../api/#links"><span class="dot warn" data-status-dot></span><span data-status-text>در حال بررسی…</span></a>
   </div>
 </div>
-<script src="../assets/site.js" defer></script>
+<main id="main">
+
+<section class="page-hero"><div class="wrap">
+  <span class="eyebrow"><span class="bar"></span>درباره</span>
+  <h1>یک نگهبان کوچک برای گفت‌وگوی سالم‌تر.</h1>
+  <p>پروژه‌ای مستقل از موویکسو.</p>
+</div></section>
+<section class="section" style="padding-top:12px"><div class="wrap">
+  <div class="qa reveal"><h3>چرا ساخته شد؟</h3><div><p>تصمیم درباره‌ی یک متن نباید دست یک مدل یا یک نمره باشد. Unicollect چند دیدگاه را کنار هم می‌گذارد و نتیجه را قابل فهم نگه می‌دارد.</p><p>جای قضاوت انسان را نمی‌گیرد؛ یک نگاه دوم است.</p></div></div>
+  <div class="qa reveal"><h3>برای چه کسی؟</h3><div><p>برای هرکسی که قبل از فرستادن پیام می‌خواهد بداند لحنش چطور خوانده می‌شود، و برای تیم‌هایی که یک لایه‌ی بررسی شفاف در محصولشان می‌خواهند.</p></div></div>
+  <div class="qa reveal"><h3>چطور وصلش کنم؟</h3><div><p>با API نسخه‌ی ۱. یک درخواست <span class="inline-code">POST</span> کافی است.</p><a class="btn btn-ink btn-sm" href="../api/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>مستندات API</span></a></div></div>
+  <div class="qa reveal"><h3>چه کسی پشتش است؟</h3><div><p>موویکسو، که Unicollect را می‌سازد و نگه می‌دارد.</p></div></div>
+</div></section>
+
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <span>© Unicollect Guard · ساخته‌ی موویکسو</span>
+    <nav aria-label="پیوندهای پایانی"><a href="../">خانه</a><a href="../api/">API</a><a href="../how-it-works/">فرآیند</a><a href="../about/">درباره</a><a href="../privacy/">حریم خصوصی</a><a href="../api/links.json" class="ltr">links.json</a></nav>
+    <span>Unicollect می‌تواند اشتباه کند؛ نتیجه‌های مهم را خودت هم مرور کن.</span>
+  </div>
+</footer>
+<div class="modal" id="access" aria-hidden="true">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="access-title">
+    <div class="modal-head"><h3 id="access-title">دسترسی به نگهبان متن</h3><button class="icon-btn" type="button" data-access-close aria-label="بستن"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="base-box"><code data-live-text>در حال دریافت…</code></div>
+    <div class="actions">
+      <a class="btn btn-ink btn-sm" data-live="panel" aria-disabled="true"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><span>باز کردن پنل</span></a>
+      <a class="btn btn-line btn-sm" href="../api/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg><span>مستندات API</span></a>
+      <button class="btn btn-line btn-sm" type="button" data-copy-live><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی لینک</span></button>
+    </div>
+    <div class="modal-foot" data-access-status>این پنجره با میانبر اختصاصی باز می‌شود.</div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span data-toast-text>کپی شد</span></div>
+<script src="../assets/site.js?v=4" defer></script>
 </body>
 </html>

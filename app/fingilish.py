@@ -356,3 +356,85 @@ def looks_like_fingilish(text: str) -> bool:
     if english + unknown == 0:
         return True                                   # only neutral tokens, e.g. "to man"
     return english / (english + unknown) < 0.6
+
+
+# ------------------------------------------------------------------
+# Helpers used by the public API (/api/v1/fingilish/*, /api/v1/censor)
+# ------------------------------------------------------------------
+# Words that are insults only in context ("pedar" = father, "khar" = donkey).
+# They still count for detection, but are never masked on their own.
+CONTEXTUAL = {'پدر', 'مادر', 'سگ', 'خر', 'ننه', 'کون'}
+
+# Persian spellings of every listed insult, for matching Persian-script text.
+PERSIAN_PROFANE = set(PROFANE.values())
+_FA_TOKEN = re.compile(r'[\u0600-\u06FF\u200c]+')
+_LATIN_TOKEN = re.compile(r'[A-Za-z0-9@$!.]+')
+
+
+def normalize_text(text: str) -> str:
+    """De-obfuscated, lower-cased Latin form (k1r -> kir, k.i.r -> kir)."""
+    return ' '.join(_squeeze(w) for w in _normalize(text).split())
+
+
+def _persian_hit(tok: str):
+    """Return the base insult if a Persian token is (insult + clitic)."""
+    t = tok.replace(Z, '')
+    if t in PERSIAN_PROFANE:
+        return t
+    for _suffix, fa in CLITICS:
+        if t.endswith(fa) and len(t) - len(fa) >= 2 and t[:-len(fa)] in PERSIAN_PROFANE:
+            return t[:-len(fa)]
+    return None
+
+
+def find_profane(text: str):
+    """List the known insults in `text` (Latin Fingilish and Persian script).
+
+    Each hit: {"token", "start", "end", "persian", "script", "contextual"}.
+    """
+    hits = []
+    for m in _LATIN_TOKEN.finditer(text):
+        raw = m.group(0)
+        start, end = m.start(), m.end()
+        lead = len(raw) - len(raw.lstrip('.!'))
+        raw = raw.strip('.!')
+        if not raw:
+            continue
+        start += lead
+        end = start + len(raw)
+        norm = _squeeze(_normalize(raw).replace(' ', ''))
+        norm = re.sub(r'[^a-z]', '', norm)
+        if not norm or norm in ENGLISH_WORDS:
+            continue
+        fa = _lookup(norm, profane_only=True)
+        if fa:
+            base = fa
+            hits.append({"token": raw, "start": start, "end": end,
+                         "persian": fa, "script": "latin",
+                         "contextual": base in CONTEXTUAL})
+    for m in _FA_TOKEN.finditer(text):
+        base = _persian_hit(m.group(0))
+        if base:
+            hits.append({"token": m.group(0), "start": m.start(), "end": m.end(),
+                         "persian": base, "script": "persian",
+                         "contextual": base in CONTEXTUAL})
+    hits.sort(key=lambda h: h["start"])
+    return hits
+
+
+def mask_profane(text: str, char: str = '*', include_contextual: bool = False,
+                 keep_first: bool = False):
+    """Replace known insults with `char`. Returns (masked_text, hits_masked)."""
+    hits = [h for h in find_profane(text)
+            if include_contextual or not h["contextual"]]
+    out, last = [], 0
+    for h in hits:
+        if h["start"] < last:
+            continue
+        tok = h["token"]
+        masked = (tok[0] + char * (len(tok) - 1)) if keep_first and len(tok) > 1 else char * len(tok)
+        out.append(text[last:h["start"]])
+        out.append(masked)
+        last = h["end"]
+    out.append(text[last:])
+    return ''.join(out), hits

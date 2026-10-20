@@ -1,4 +1,4 @@
-name: Unicollect API Web + Cloudflare Tunnel
+name: Unicollect Ensemble Web + Cloudflare Tunnel
 
 on:
   workflow_dispatch:
@@ -18,6 +18,12 @@ env:
   TWITTER_OFFENSIVE_ID:  cardiffnlp/twitter-roberta-base-offensive
 
   MODELS_ROOT: ${{ github.workspace }}/models
+
+  # Guard API settings (see README -> API). Leave GUARD_API_KEYS empty for an
+  # open API, or set the repo secret GUARD_API_KEYS="key1,key2" to require keys.
+  GUARD_RATE_LIMIT: "120"
+  GUARD_API_KEYS: ${{ secrets.GUARD_API_KEYS }}
+  GUARD_ADMIN_KEY: ${{ secrets.GUARD_ADMIN_KEY }}
 
   OMP_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
@@ -53,8 +59,8 @@ jobs:
 
       - name: Unit tests (no models needed)
         run: |
-          pip install --quiet pytest
-          python -m pytest -q
+          pip install --quiet -r requirements-dev.txt
+          GUARD_DEMO_MODE=1 python -m pytest -q
 
       - name: Install Python dependencies
         run: |
@@ -129,51 +135,89 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
-          echo "Waiting for trycloudflare URL..."
+
+          echo "Waiting for the trycloudflare URL..."
           URL=""
           for i in $(seq 1 60); do
-            [ -n "$URL" ] && break
             URL=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel.log | head -n1 || true)
+            [ -n "$URL" ] && break
             sleep 2
           done
-          [ -n "$URL" ] || { cat tunnel.log; exit 1; }
+          if [ -z "$URL" ]; then
+            echo "Could not obtain the tunnel URL"
+            cat tunnel.log
+            exit 1
+          fi
           echo "PUBLIC_URL=$URL" >> "$GITHUB_ENV"
-          echo "### Unicollect API is live at: $URL" >> "$GITHUB_STEP_SUMMARY"
-          [ -n "${PAGES_URL:-}" ] && echo "Permanent status page: ${PAGES_URL}" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### Unicollect Guard is live at: $URL"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Web panel | $URL |"
+            echo "| API index | $URL/api/v1 |"
+            echo "| Swagger | $URL/docs |"
+            echo "| ReDoc | $URL/redoc |"
+            echo "| API guide | $URL/api-docs |"
+            [ -n "${PAGES_URL:-}" ] && echo "| Status page | ${PAGES_URL} |"
+            [ -n "${PAGES_URL:-}" ] && echo "| Links JSON | ${PAGES_URL}api/links.json |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL"
           bash scripts/publish_status.sh online "$URL" || echo "::warning::status page not updated"
 
       - name: Keep service alive
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Unicollect API running at: $PUBLIC_URL"
+          echo "Guard running at: $PUBLIC_URL"
           echo "Status page: ${PAGES_URL:-n/a}"
+          echo "Will self-terminate after ~5 hours."
           URL="$PUBLIC_URL"
+          # Quick Tunnels have occasional transient blips; require 2
+          # consecutive failed checks (~2 minutes) before restarting, so a
+          # single bad check doesn't trigger a needless restart loop.
           FAILS=0
           for i in $(seq 1 300); do
             sleep 60
-            if ! pgrep -f "gunicorn app.main:app" >/dev/null; then
+
+            pgrep -f "gunicorn app.main:app" >/dev/null || {
               echo "Gunicorn died, restarting..."
               nohup bash scripts/start_server.sh >> server.log 2>&1 &
-            fi
+            }
+
+            # A Quick Tunnel can drop on Cloudflare's side while cloudflared
+            # keeps running, so check the public URL itself, not just the PID.
             OK=0
             if pgrep -f "cloudflared tunnel --url http://localhost:8000" >/dev/null; then
               curl -fs --max-time 15 "$URL/health" >/dev/null 2>&1 && OK=1
             fi
-            if [ "$OK" = "1" ]; then FAILS=0; else FAILS=$((FAILS + 1)); fi
-            if [ "$FAILS" -ge 2 ]; then
+            if [ "$OK" = "1" ]; then
               FAILS=0
-              pkill -f "cloudflared tunnel --url http://localhost:8000" 2>/dev/null || true
-              nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
-              NEW=""
-              for j in $(seq 1 60); do
-                NEW=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel.log | head -n1 || true)
-                [ -n "$NEW" ] && break
-                sleep 2
-              done
-              if [ -n "$NEW" ]; then URL="$NEW"; bash scripts/publish_status.sh online "$URL" || true; fi
+              continue
+            fi
+            FAILS=$((FAILS + 1))
+            echo "Tunnel health check failed (${FAILS}/2)..."
+            [ "$FAILS" -lt 2 ] && continue
+
+            echo "Tunnel unreachable twice in a row, restarting..."
+            FAILS=0
+            pkill -f "cloudflared tunnel --url http://localhost:8000" 2>/dev/null || true
+            # a restarted quick tunnel gets a NEW random URL -> republish it
+            nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
+            NEW=""
+            for j in $(seq 1 60); do
+              NEW=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel.log | head -n1 || true)
+              [ -n "$NEW" ] && break
+              sleep 2
+            done
+            if [ -n "$NEW" ]; then
+              URL="$NEW"
+              echo "New tunnel URL: $URL"
+              echo "Tunnel restarted, new URL: $URL" >> "$GITHUB_STEP_SUMMARY"
+              bash scripts/publish_status.sh online "$URL" || true
             fi
           done
+
 
       # heartbeat.yml listens for this workflow's "workflow_run" completion
       # event natively, so it doesn't need to be dispatched here too. Doing

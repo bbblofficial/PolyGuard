@@ -1,118 +1,200 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Unicollect · پنل بررسی متن</title>
-<meta name="description" content="پنل بررسی ایمنی متن فارسی، فینگلیش و انگلیسی">
-<meta name="theme-color" content="#f6f4fb">
-<meta name="color-scheme" content="light dark">
-<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<script>(function(){var t;try{t=localStorage.getItem('unicollect_theme')}catch(e){}if(t!=='light'&&t!=='dark'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)})();</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap"></noscript>
-<link rel="stylesheet" href="/static/tokens.css?v=__V__">
-<link rel="stylesheet" href="/static/style.css?v=__V__">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Unicollect | نگهبان متن</title>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#212121" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cstyle%3Eg%7Bfill:%230d0d0d%7D%40media%28prefers-color-scheme:dark%29%7Bg%7Bfill:%23fff%7D%7D%3C/style%3E%3Cg%3E%3Cpath transform='rotate%280 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%2860 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28120 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28180 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28240 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28300 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Ccircle cx='12' cy='12' r='2.1'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/style.css?v=__V__">
+  <script>
+    // explicit choice wins; otherwise follow the OS (like ChatGPT "System")
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('unicollect_theme'); } catch (e) {}
+      var dark = t ? t === 'dark' : !(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+      if (dark) document.documentElement.classList.add('dark');
+    })();
+  </script>
 </head>
 <body>
-<header class="bar">
-  <div class="bar-in">
-    <a class="brand" href="/" aria-label="Unicollect">
-      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14"/><path d="M10.5 9v7.5a5.5 5.5 0 0 0 11 0V9"/></svg>
-      <span>Unicollect</span><small>پنل بررسی متن</small>
-    </a>
-    <div class="bar-end">
-      <span class="health" id="health" data-state="loading"><i></i><span>در حال اتصال…</span></span>
-      <a class="lnk" href="/docs" target="_blank" rel="noopener">مستندات API</a>
-      <a class="lnk hide-sm" href="/redoc" target="_blank" rel="noopener">ReDoc</a>
-      <button class="ibtn" id="theme" type="button" aria-label="تغییر پوسته">
-        <svg class="ic i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
-        <svg class="ic i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-      </button>
-    </div>
-  </div>
-</header>
+<div class="app" id="app">
 
-<main class="layout">
-  <section class="col">
-    <div class="card composer">
-      <label class="lbl" for="text">متن برای بررسی</label>
-      <textarea id="text" dir="auto" maxlength="20000" placeholder="متن فارسی، فینگلیش یا انگلیسی را اینجا بنویس یا بچسبان…" spellcheck="false"></textarea>
-      <div class="samples" aria-label="نمونه‌ها">
-        <button type="button" class="chip" data-sample="سلام، وقت بخیر. از همکاری با شما واقعاً خوشحالم.">نمونه‌ی فارسی</button>
-        <button type="button" class="chip" data-sample="salam khoobi? merci ke komak kardi">نمونه‌ی فینگلیش</button>
-        <button type="button" class="chip" data-sample="Have a wonderful and productive day ahead!">نمونه‌ی انگلیسی</button>
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-top">
+        <button class="icon-btn logo-btn" onclick="createNewThread()" title="Unicollect"><i data-mark=""></i></button>
+        <button class="icon-btn" onclick="toggleSidebar()" title="بستن نوار کناری"><i data-i="sidebar"></i></button>
       </div>
-      <div class="composer-foot">
-        <span class="count" id="count">۰ / ۲۰٬۰۰۰</span>
-        <div class="acts">
-          <button type="button" class="btn" id="clear">پاک کردن</button>
-          <button type="button" class="btn primary" id="check" disabled>بررسی متن <kbd>Ctrl ↵</kbd></button>
-        </div>
+
+      <nav class="sb-nav">
+        <button class="sb-item" onclick="createNewThread()"><i data-i="edit"></i><span>گفتگوی جدید</span></button>
+        <button class="sb-item" onclick="openSearch()"><i data-i="search"></i><span>جستجوی گفتگوها</span><kbd class="kbd sb-kbd">Ctrl K</kbd></button>
+        <button class="sb-item" onclick="openSettingsModal()"><i data-i="layers"></i><span>مدل‌ها و وضعیت</span></button>
+        <a class="sb-item" href="/api-docs" target="_blank" rel="noopener"><i data-i="code"></i><span>مستندات API</span></a>
+        <a class="sb-item" href="/docs" target="_blank" rel="noopener"><i data-i="info"></i><span>Swagger / OpenAPI</span></a>
+      </nav>
+
+      <div class="sb-label">گفتگوها</div>
+      <div id="threads-list" class="sb-threads"></div>
+
+      <div class="sb-footer">
+        <button class="profile" onclick="openSettingsModal()">
+          <span class="avatar"><i data-mark=""></i></span>
+          <span class="profile-text">
+            <span class="profile-name">هستهٔ Unicollect</span>
+            <span class="profile-status"><span id="status-dot" class="sdot warn"></span><span id="status-text">در حال اتصال…</span></span>
+          </span>
+        </button>
+        <div class="creator-watermark" aria-label="ساخته شده توسط موویکسو">ساخته شده توسط موویکسو</div>
       </div>
     </div>
+  </aside>
+  <div id="backdrop" class="backdrop" onclick="toggleSidebar()"></div>
 
-    <div class="card history">
-      <div class="card-head"><h2>بررسی‌های اخیر</h2><button type="button" class="tbtn" id="clear-history">پاک کردن تاریخچه</button></div>
-      <ul id="history-list" class="hist"></ul>
-      <p class="empty-note" id="history-empty">هنوز متنی بررسی نشده. تاریخچه فقط در همین مرورگر می‌ماند.</p>
-    </div>
-  </section>
+  <!-- ============ MAIN ============ -->
+  <main id="main" class="main welcome">
+    <header class="topbar">
+      <div class="tb-start">
+        <button id="open-sidebar-btn" class="icon-btn" onclick="toggleSidebar()" title="باز کردن نوار کناری"><i data-i="sidebar"></i></button>
+        <button id="new-chat-top-btn" class="icon-btn" onclick="createNewThread()" title="گفتگوی جدید"><i data-i="edit"></i></button>
 
-  <section class="col">
-    <div class="card result" id="result" data-state="empty" aria-live="polite">
-      <div class="state state-empty">
-        <div class="ghost-stamp">؟</div>
-        <h2>نتیجه اینجا نمایش داده می‌شود</h2>
-        <p>پنج مدل متن را می‌خوانند و با رأی‌گیری یکی از سه نتیجه را می‌دهند: ایمن، مشکوک یا سمی.</p>
-      </div>
-      <div class="state state-loading">
-        <div class="ghost-stamp spin"></div>
-        <h2>در حال رأی‌گیری…</h2>
-        <p>مدل‌ها در حال بررسی متن‌اند.</p>
-      </div>
-      <div class="state state-error">
-        <div class="ghost-stamp err">!</div>
-        <h2 id="err-title">خطا</h2>
-        <p id="err-msg"></p>
-        <button type="button" class="btn" id="retry">تلاش دوباره</button>
-      </div>
-      <div class="state state-done">
-        <div class="verdict-row">
-          <div class="stamp" id="stamp" data-v="SAFE"><div><b id="stamp-fa">ایمن</b><span id="stamp-en">SAFE</span></div></div>
-          <div class="verdict-text">
-            <h2 id="v-title">متن ایمن است</h2>
-            <p id="v-desc"></p>
+        <div class="dd-wrap">
+          <button class="model-btn" onclick="toggleModelDropdown(event)">
+            <span class="model-name" id="model-name">سریع</span>
+            <i data-i="chevron" class="chev"></i>
+          </button>
+          <div id="model-dropdown" class="dropdown" onclick="event.stopPropagation()">
+            <button class="dd-item" onclick="setViewMode('detailed')">
+              <span class="dd-pip" aria-hidden="true"></span>
+                <div class="dd-text">
+                  <div class="dd-title">سریع</div>
+                  <div class="dd-desc">نمای کامل با ریز نمرهٔ همهٔ مدل‌ها</div>
+                </div>
+              <i id="check-detailed" data-i="check" class="dd-check"></i>
+            </button>
+            <button class="dd-item" onclick="setViewMode('compact')">
+              <span class="dd-pip" aria-hidden="true"></span>
+                <div class="dd-text">
+                  <div class="dd-title">دقیق</div>
+                  <div class="dd-desc">فقط نتیجهٔ نهایی، بدون ریز نمرات</div>
+                </div>
+              <i id="check-compact" data-i="check" class="dd-check off"></i>
+            </button>
           </div>
         </div>
-        <dl class="stats">
-          <div><dt>اطمینان</dt><dd id="s-conf">-</dd></div>
-          <div><dt>رأی‌ها</dt><dd id="s-votes">-</dd></div>
-          <div><dt>زبان</dt><dd id="s-script">-</dd></div>
-          <div><dt>زمان</dt><dd id="s-time">-</dd></div>
-        </dl>
-        <div class="fing" id="fing" hidden>
-          <span>فینگلیش تشخیص داده شد و به فارسی تبدیل شد:</span>
-          <p id="fing-text"></p>
-        </div>
-        <h3 class="sub">امتیاز هر مدل</h3>
-        <ul class="models" id="models"></ul>
-        <p class="skipped" id="skipped" hidden></p>
-        <div class="result-foot">
-          <button type="button" class="tbtn" id="copy-json">کپی JSON</button>
-          <button type="button" class="tbtn" id="dl-json">دانلود JSON</button>
+      </div>
+
+      <div class="tb-end">
+        <a class="icon-btn" href="/api-docs" target="_blank" rel="noopener" title="مستندات API" aria-label="مستندات API"><i data-i="code"></i></a>
+        <button class="icon-btn" onclick="openSearch()" title="جستجو (Ctrl+K)"><i data-i="search"></i></button>
+        <button class="icon-btn" onclick="exportCurrentThread()" title="خروجی JSON گفتگو"><i data-i="share"></i></button>
+        <button class="icon-btn" onclick="toggleTheme()" title="تغییر حالت روز/شب"><i id="theme-icon" data-i="sun"></i></button>
+      </div>
+    </header>
+
+    <div class="body">
+      <h1 id="hero" class="hero"><span class="hero-mark"><i data-mark="intro"></i></span><span class="hero-text hero-greeting" id="hero-greeting">وقت بخیر</span><span class="hero-text hero-prompt" id="hero-prompt">چه متنی را برایتان بررسی کنم؟</span></h1>
+
+      <section id="messages-container" class="scroll">
+        <div id="chat-stream" class="col"></div>
+      </section>
+
+      <div class="composer-area">
+        <div class="col">
+          <div class="composer">
+            <div class="ta-wrap" id="ta-wrap">
+              <div class="ta-mirror" id="ta-mirror" aria-hidden="true"><div class="ta-mirror-inner" id="ta-mirror-inner"></div></div>
+              <div class="ta-ph" id="ta-ph" dir="rtl" aria-hidden="true">هر متنی را برای بررسی بنویسید…</div>
+              <textarea id="prompt-input" rows="1" dir="rtl" maxlength="20000" placeholder="هر متنی را برای بررسی بنویسید…"
+                        aria-label="متن برای بررسی" spellcheck="false" autocomplete="off" enterkeyhint="send"></textarea>
+            </div>
+            <div class="composer-row">
+              <div class="cr-start">
+                <button class="round-btn" onclick="pasteClipboard()" title="جای‌گذاری از کلیپ‌بورد"><i data-i="plus"></i></button>
+                <button class="pill-btn" onclick="openSettingsModal()"><i data-i="sliders"></i><span id="models-pill">۵ مدل</span></button>
+              </div>
+              <div class="cr-end">
+                <span id="char-counter" class="counter off" aria-live="off"></span>
+                <button id="send-btn" class="send-btn" onclick="onSendClick()" disabled title="ارسال" aria-label="ارسال">
+                  <span class="sb-ico sb-send"><i data-i="arrowup"></i></span>
+                  <span class="sb-ico sb-stop"><i></i></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="chips" class="chips">
+            <button class="chip" style="--i:0" onclick="useStarter('سلام وقت بخیر، از همکاری با شما بسیار خوشحالم.')"><i data-i="smile"></i><span>فارسی محترمانه</span></button>
+            <button class="chip" style="--i:1" onclick="useStarter('Have a wonderful and productive day ahead!')"><i data-i="globe"></i><span>انگلیسی محترمانه</span></button>
+            <button class="chip" style="--i:2" onclick="useStarter('You are completely stupid and useless')"><i data-i="alert"></i><span>توهین انگلیسی</span></button>
+            <button class="chip" style="--i:3" onclick="useStarter('salam khoobi? man khoobam mersi')"><i data-i="lang"></i><span>فینگیلیش محترمانه</span></button>
+            <button class="chip" style="--i:4" onclick="useStarter('to khar hasti')"><i data-i="shield"></i><span>توهین فینگیلیش ۱</span></button>
+            <button class="chip" style="--i:5" onclick="useStarter('khafe sho ahmagh')"><i data-i="shield"></i><span>توهین فینگیلیش ۲</span></button>
+          </div>
+
+          <p class="disclaimer">Unicollect از ۵ مدل زبانی با رأی‌گیری اجماعی استفاده می‌کند و می‌تواند اشتباه کند. نتایج را بررسی کنید.</p>
         </div>
       </div>
     </div>
-  </section>
-</main>
+  </main>
+</div>
 
-<footer class="foot">© ۱۴۰۵ Unicollect · ساخته‌شده توسط موویکسو · تصمیم ماشین یک سیگنال است، نه حکم نهایی.</footer>
-<div class="toast" id="toast" role="status"></div>
-<script src="/static/script.js?v=__V__" defer></script>
+<!-- ============ SETTINGS MODAL ============ -->
+<div id="settings-modal" class="modal" onclick="if(event.target===this)closeSettingsModal()">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="تنظیمات">
+    <div class="modal-head">
+      <h3>تنظیمات و وضعیت Ensemble</h3>
+      <button class="icon-btn" onclick="closeSettingsModal()"><i data-i="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="kv"><span>آستانه رأی هر مدل</span><b class="kv-v">۰٫۵۰</b></div>
+      <div class="kv"><span>حداقل رأی برای برچسب سمی</span><b class="kv-v">۲</b></div>
+      <div class="kv"><span>تک‌مدل قاطع</span><b class="kv-v">۰٫۹۰</b></div>
+      <div class="kv"><span>تک‌مدل قاطع (فینگیلیش)</span><b class="kv-v">۰٫۹۵</b></div>
+      <div class="kv"><span>همزمانی پردازش</span><b id="cfg-concurrency" class="mono">—</b></div>
+      <div class="kv"><span>API</span><b class="mono"><a href="/api-docs" target="_blank" rel="noopener">/api/v1</a> · <a href="/docs" target="_blank" rel="noopener">/docs</a></b></div>
+      <div class="kv col-kv">
+        <span>مدل‌های بارگذاری‌شده</span>
+        <div id="cfg-models" class="models-list">در حال بررسی…</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-danger" onclick="clearAllHistory()"><i data-i="trash"></i><span>پاک کردن همه گفتگوها</span></button>
+      <button class="btn-primary" onclick="closeSettingsModal()">بستن</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SEARCH MODAL (Gemini-style) ============ -->
+<div id="search-modal" class="modal search-modal" onclick="if(event.target===this)closeSearch()">
+  <div class="search-card" role="dialog" aria-modal="true" aria-label="جستجوی گفتگوها">
+    <div class="search-head">
+      <i data-i="search" class="search-ico"></i>
+      <input id="search-input" type="text" dir="auto" placeholder="جستجو در گفتگوها…" autocomplete="off" spellcheck="false">
+      <button id="search-clear" class="icon-btn sm hidden-soft" onclick="clearSearch()" title="پاک کردن"><i data-i="x"></i></button>
+    </div>
+    <div class="search-body">
+      <div id="search-label" class="search-label">اخیر</div>
+      <div id="search-results" class="search-results" role="listbox"></div>
+    </div>
+    <div class="search-foot">
+      <span><span class="kbd-ico" title="کلید بالا"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg></span><span class="kbd-ico" title="کلید پایین"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></span> جابه‌جایی</span>
+      <span><span class="kbd-ico wide" title="کلید Enter"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 4v7a4 4 0 0 1-4 4H4"/><path d="m9 10-5 5 5 5"/></svg></span> باز کردن</span>
+      <span><kbd class="kbd">Esc</kbd> بستن</span>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"><i data-i="check"></i><span id="toast-message">انجام شد</span></div>
+
+<script src="/static/script.js?v=__V__"></script>
 </body>
 </html>

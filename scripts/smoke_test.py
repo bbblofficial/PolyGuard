@@ -1,21 +1,29 @@
-"""Smoke test against a running server:  python scripts/smoke_test.py [base_url]"""
+"""Smoke test against a running server:  python scripts/smoke_test.py [base_url] [api_key]"""
 import json
 import sys
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
+BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000").rstrip("/")
+KEY = sys.argv[2] if len(sys.argv) > 2 else ""
+
+
+def call(path, body=None):
+    headers = {"Content-Type": "application/json"}
+    if KEY:
+        headers["X-API-Key"] = KEY
+    req = urllib.request.Request(BASE + path, headers=headers,
+                                 data=json.dumps(body).encode() if body is not None else None)
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            return r.status, json.load(r)
+    except urllib.error.HTTPError as e:
+        return e.code, json.load(e)
 
 
 def check(text):
-    req = urllib.request.Request(
-        BASE + "/api/check",
-        data=json.dumps({"text": text}).encode(),
-        headers={"Content-Type": "application/json"},
-    )
-    with urllib.request.urlopen(req, timeout=120) as r:
-        return json.load(r)
+    return call("/api/check", {"text": text})[1]
 
 
 CASES = [
@@ -31,46 +39,54 @@ CASES = [
 ]
 
 failed = 0
+
+
+def report(ok, label, extra=""):
+    global failed
+    failed += not ok
+    print(("PASS" if ok else "FAIL"), label, extra)
+
+
 for text, decisions, fing in CASES:
     r = check(text)
     ok = r.get("decision") in decisions and bool(r.get("fingilish_detected")) == fing
-    failed += not ok
-    print(("PASS" if ok else "FAIL"), repr(text),
-          {k: r.get(k) for k in ("decision", "fingilish_detected", "fingilish_text", "max_raw", "error")})
+    report(ok, repr(text), {k: r.get(k) for k in ("decision", "fingilish_detected", "fingilish_text", "max_raw", "error")})
 
 with ThreadPoolExecutor(8) as ex:
     results = list(ex.map(check, ["You are crazy"] * 8))
 bad = [r for r in results if "decision" not in r]
-print("PASS" if not bad else "FAIL", f"8 parallel requests, {len(bad)} errors")
-failed += bool(bad)
+report(not bad, f"8 parallel requests, {len(bad)} errors")
 
-# v1 API surface
-def call(method, path, body=None):
-    req = urllib.request.Request(BASE + path, method=method,
-                                 data=json.dumps(body).encode() if body is not None else None,
-                                 headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req, timeout=120) as r:
-            return r.status, json.load(r)
-    except urllib.error.HTTPError as e:
-        return e.code, json.load(e)
-
+# ---- API v1 -------------------------------------------------------
 V1 = [
-    ("GET",  "/api/v1/health",      None,                                   200, "status"),
-    ("GET",  "/api/v1/info",        None,                                   200, "endpoints"),
-    ("GET",  "/api/v1/models",      None,                                   200, "models"),
-    ("GET",  "/api/v1/thresholds",  None,                                   200, "per_model_vote_threshold"),
-    ("GET",  "/api/v1/stats",       None,                                   200, "uptime_s"),
-    ("POST", "/api/v1/check",       {"text": "Have a nice day"},            200, "decision"),
-    ("POST", "/api/v1/check",       {"text": "  "},                         400, "error"),
-    ("POST", "/api/v1/check/batch", {"texts": ["salam", "You are stupid"]}, 200, "summary"),
-    ("POST", "/api/v1/detect",      {"text": "salam khoobi?"},              200, "script"),
-    ("POST", "/api/v1/fingilish",   {"text": "merci ke komak kardi"},       200, "output"),
+    ("GET",  "/api/v1",                         None,                                   lambda r: len(r["endpoints"]) > 10),
+    ("GET",  "/api/v1/health",                  None,                                   lambda r: r["status"] == "ok"),
+    ("GET",  "/api/v1/ready",                   None,                                   lambda r: r["ready"] is True),
+    ("GET",  "/api/v1/info",                    None,                                   lambda r: "limits" in r),
+    ("GET",  "/api/v1/models",                  None,                                   lambda r: r["total"] == 5),
+    ("GET",  "/api/v1/config",                  None,                                   lambda r: r["min_votes_for_toxic"] == 2),
+    ("POST", "/api/v1/check",                   {"text": "kir"},                        lambda r: r["decision"] == "TOXIC"),
+    ("POST", "/api/v1/check/batch",             {"texts": ["hello", "kir"]},            lambda r: r["count"] == 2),
+    ("POST", "/api/v1/verdict",                 {"text": "Have a nice day"},            lambda r: r["decision"] == "SAFE"),
+    ("POST", "/api/v1/score",                   {"text": "you idiot"},                  lambda r: len(r["scores"]) >= 1),
+    ("POST", "/api/v1/sentences",               {"text": "Hello. Have a nice day!"},    lambda r: r["count"] == 2),
+    ("POST", "/api/v1/censor",                  {"text": "you are a k1r"},              lambda r: "k1r" not in r["text"]),
+    ("POST", "/api/v1/moderations",             {"input": "hello"},                     lambda r: len(r["results"]) == 1),
+    ("POST", "/api/v1/profanity",               {"text": "jakesh"},                     lambda r: r["found"]),
+    ("POST", "/api/v1/language",                {"text": "سلام"},                       lambda r: r["script"] == "fa"),
+    ("POST", "/api/v1/fingilish/detect",        {"text": "salam khoobi"},               lambda r: r["fingilish"]),
+    ("POST", "/api/v1/fingilish/transliterate", {"text": "salam"},                      lambda r: r["persian"]),
+    ("POST", "/api/v1/normalize",               {"text": "k.1.r"},                      lambda r: r["normalized"] == "kir"),
 ]
-for method, path, body, want, key in V1:
-    code, data = call(method, path, body)
-    ok = code == want and key in data
-    failed += not ok
-    print(("PASS" if ok else "FAIL"), method, path, code)
+for method, path, body, test in V1:
+    status, r = call(path, body if method == "POST" else None)
+    try:
+        ok = status == 200 and bool(test(r))
+    except Exception:
+        ok = False
+    report(ok, f"{method} {path}", "" if ok else (status, str(r)[:200]))
+
+status, r = call("/api/v1/check", {"text": ""})
+report(status == 400 and r["error"]["code"] == "empty_text", "empty text -> 400")
 
 sys.exit(1 if failed else 0)

@@ -3,7 +3,7 @@ name: Unicollect Heartbeat
 on:
   # Restart the six-hour service immediately after the deploy run ends.
   workflow_run:
-    workflows: ["Unicollect API Web + Cloudflare Tunnel"]
+    workflows: ["Unicollect Ensemble Web + Cloudflare Tunnel"]
     types: [completed]
   # Backup check in case GitHub misses/delays the workflow_run event.
   schedule:

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مستندات API · Unicollect Guard</title>
+<meta name="description" content="API کامل Unicollect Guard: بررسی متن، دسته‌ای، سانسور، فینگیلیش، و لینک‌های زنده‌ی سرویس.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f3f8">
+<meta property="og:title" content="مستندات API · Unicollect Guard">
+<meta property="og:description" content="API کامل Unicollect Guard: بررسی متن، دسته‌ای، سانسور، فینگیلیش، و لینک‌های زنده‌ی سرویس.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&family=Khand:wght@600&display=swap">
+<link rel="stylesheet" href="../assets/site.css?v=4">
+<script>
+  (function () {
+    var t = null; try { t = localStorage.getItem('unicollect_theme'); } catch (e) {}
+    var dark = t ? t === 'dark' : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.classList.add('dark');
+  })();
+</script>
+</head>
+<body data-root="../">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="ink"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></svg>
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="../" aria-label="Unicollect Guard، صفحه اصلی"><span class="logo"><svg class="pg-mark breathe" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span><small>Guard</small></a>
+    <nav class="nav" aria-label="ناوبری اصلی"><a href="../">خانه</a><a href="../api/" aria-current="page">API</a><a href="../how-it-works/">فرآیند</a><a href="../about/">درباره</a><a href="../privacy/">حریم خصوصی</a></nav>
+    <div class="top-end">
+      <a class="pill" href="../api/#links" data-status-pill><span class="dot warn" data-status-dot></span><span data-status-text>در حال بررسی…</span></a>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="تغییر حالت روز/شب"><span class="ti-sun"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span><span class="ti-moon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span></button>
+      <button class="icon-btn menu-btn" type="button" data-menu-open aria-label="باز کردن منو" aria-expanded="false" aria-controls="drawer"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="drawer" id="drawer" aria-hidden="true">
+  <div class="shade" data-menu-close></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="منو">
+    <div class="sheet-head"><a class="brand" href="../"><span class="logo"><svg class="pg-mark " viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span></a><button class="icon-btn" type="button" data-menu-close aria-label="بستن منو"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <nav><a href="../">خانه</a><a href="../api/" aria-current="page">API</a><a href="../how-it-works/">فرآیند</a><a href="../about/">درباره</a><a href="../privacy/">حریم خصوصی</a></nav>
+    <a class="pill" href="../api/#links"><span class="dot warn" data-status-dot></span><span data-status-text>در حال بررسی…</span></a>
+  </div>
+</div>
+<main id="main">
+
+<div class="wrap docs">
+  <aside class="toc" aria-label="فهرست مسیرها" data-toc>
+    <h4>شروع</h4>
+    <a href="#links"><span class="m">●</span><span>لینک‌های زنده</span></a>
+    <a href="#quick"><span class="m">→</span><span>شروع سریع</span></a>
+    <a href="#auth"><span class="m">🔑</span><span>کلید و محدودیت</span></a>
+    <a href="#errors"><span class="m">!</span><span>خطاها</span></a>
+    <a href="#console"><span class="m">▶</span><span>کنسول</span></a>
+    <a href="#clients"><span class="m">{}</span><span>کتابخانه‌ها</span></a>
+    <h4>بررسی متن</h4><a href="#ep-check"><span class="m">POST</span><span class="p">/check</span></a><a href="#ep-check-get"><span class="m">GET</span><span class="p">/check?text=…</span></a><a href="#ep-batch"><span class="m">POST</span><span class="p">/check/batch</span></a><a href="#ep-verdict"><span class="m">POST</span><span class="p">/verdict</span></a><a href="#ep-score"><span class="m">POST</span><span class="p">/score</span></a><a href="#ep-sentences"><span class="m">POST</span><span class="p">/sentences</span></a><a href="#ep-censor"><span class="m">POST</span><span class="p">/censor</span></a><a href="#ep-moderations"><span class="m">POST</span><span class="p">/moderations</span></a><h4>ابزارهای متن (بدون مدل، فوری)</h4><a href="#ep-profanity"><span class="m">POST</span><span class="p">/profanity</span></a><a href="#ep-language"><span class="m">POST</span><span class="p">/language</span></a><a href="#ep-fing-detect"><span class="m">POST</span><span class="p">/fingilish/detect</span></a><a href="#ep-fing-tr"><span class="m">POST</span><span class="p">/fingilish/transliterate</span></a><a href="#ep-normalize"><span class="m">POST</span><span class="p">/normalize</span></a><h4>وضعیت و اطلاعات</h4><a href="#ep-index"><span class="m">GET</span><span class="p">/</span></a><a href="#ep-health"><span class="m">GET</span><span class="p">/health</span></a><a href="#ep-ready"><span class="m">GET</span><span class="p">/ready</span></a><a href="#ep-info"><span class="m">GET</span><span class="p">/info</span></a><a href="#ep-models"><span class="m">GET</span><span class="p">/models</span></a><a href="#ep-config"><span class="m">GET</span><span class="p">/config</span></a><a href="#ep-stats"><span class="m">GET</span><span class="p">/stats</span></a><h4>مدیریت</h4><a href="#ep-cache"><span class="m">POST</span><span class="p">/cache/clear</span></a>
+  </aside>
+
+  <div class="docs-main">
+    <header class="docs-hero">
+      <span class="eyebrow"><span class="bar"></span>Unicollect Guard API · v1</span>
+      <h1>مستندات API</h1>
+      <p>هر پاسخ JSON است. همه‌ی مسیرها از هر دامنه‌ای (CORS) قابل فراخوانی‌اند.</p>
+    </header>
+
+    <section class="links-card" id="links" aria-labelledby="links-title">
+      <div class="links-top">
+        <h2 id="links-title"><span class="dot warn" data-status-dot></span>لینک‌های زنده</h2>
+        <span class="when" data-status-when>در حال دریافت وضعیت…</span>
+      </div>
+      <div class="base-box">
+        <code data-live-text>https://YOUR-LINK.trycloudflare.com</code>
+        <button class="btn btn-line btn-sm" type="button" data-copy-live><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button>
+        <a class="btn btn-ink btn-sm" data-live="panel" aria-disabled="true" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><span>باز کردن</span></a>
+      </div>
+      <div class="link-grid"><a class="link-item" data-live="panel" aria-disabled="true" target="_blank" rel="noopener"><span class="li-ico"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="18" height="18" x="3" y="3" rx="3"/><path d="M3 9h18M9 21V9"/></svg></span><span><span class="li-t">پنل نگهبان متن</span><span class="li-u" data-live-url="panel">YOUR-LINK.trycloudflare.com</span></span></a><a class="link-item" data-live="api" aria-disabled="true" target="_blank" rel="noopener"><span class="li-ico"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg></span><span><span class="li-t">فهرست API</span><span class="li-u" data-live-url="api">YOUR-LINK.trycloudflare.com/api/v1</span></span></a><a class="link-item" data-live="swagger" aria-disabled="true" target="_blank" rel="noopener"><span class="li-ico"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg></span><span><span class="li-t">Swagger (تعاملی)</span><span class="li-u" data-live-url="swagger">YOUR-LINK.trycloudflare.com/docs</span></span></a><a class="link-item" data-live="redoc" aria-disabled="true" target="_blank" rel="noopener"><span class="li-ico"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></span><span><span class="li-t">ReDoc</span><span class="li-u" data-live-url="redoc">YOUR-LINK.trycloudflare.com/redoc</span></span></a><a class="link-item" data-live="openapi" aria-disabled="true" target="_blank" rel="noopener"><span class="li-ico"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg></span><span><span class="li-t">OpenAPI JSON</span><span class="li-u" data-live-url="openapi">YOUR-LINK.trycloudflare.com/openapi.json</span></span></a><a class="link-item" data-live="health" aria-disabled="true" target="_blank" rel="noopener"><span class="li-ico"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span><span><span class="li-t">سلامت سرویس</span><span class="li-u" data-live-url="health">YOUR-LINK.trycloudflare.com/api/v1/health</span></span></a></div>
+      <p class="links-note">لینک با هر اجرای سرویس عوض می‌شود. برنامه‌ات آن را از <a class="inline-code" href="links.json">api/links.json</a> یا <a class="inline-code" href="links.txt">api/links.txt</a> بخواند.</p>
+    </section>
+
+    <section class="doc-sec" id="quick">
+      <h2>شروع سریع</h2>
+      <p>لینک زنده را بگیر، متن را بفرست، <span class="inline-code">decision</span> را بخوان.</p>
+      <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="quick-0">bash</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="quick-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="quick-2">Python</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="quick-0"><pre><code><span class="tok-c"># 1) live link</span>
+BASE=$(curl -s <span class="tok-s" data-pages-url>https://USER.github.io/REPO/</span>api/links.txt)
+
+<span class="tok-c"># 2) check</span>
+curl -X POST "$BASE/api/v1/check" \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{"text":"salam khoobi"}'</span></code></pre></div><div class="panel" id="quick-1" hidden><pre><code>const links = await (await fetch(<span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/api/links.json"</span>)).json();
+const r = await fetch(links.base_url + <span class="tok-s">"/api/v1/check"</span>, {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({ text: <span class="tok-s">"salam khoobi"</span> }),
+});
+const { decision, confidence } = await r.json();</code></pre></div><div class="panel" id="quick-2" hidden><pre><code>import requests
+
+links = requests.get(<span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/api/links.json"</span>).json()
+r = requests.post(links[<span class="tok-s">"base_url"</span>] + <span class="tok-s">"/api/v1/check"</span>, json={<span class="tok-s">"text"</span>: <span class="tok-s">"salam khoobi"</span>})
+print(r.json()[<span class="tok-s">"decision"</span>])  <span class="tok-c"># SAFE / SUSPECT / TOXIC</span></code></pre></div></div>
+    </section>
+
+    <section class="doc-sec" id="auth">
+      <h2>کلید و محدودیت</h2>
+      <p>به‌طور پیش‌فرض باز است. اگر سرور <span class="inline-code">GUARD_API_KEYS</span> داشته باشد، کلید را در هدر بفرست. مسیرهای وضعیت همیشه بازند.</p>
+      <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="auth-0">headers</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="auth-0"><pre><code>X-API-Key: <span class="tok-s">your-key</span>
+<span class="tok-c"># or</span>
+Authorization: Bearer <span class="tok-s">your-key</span></code></pre></div></div>
+      <div class="table-wrap" style="margin-top:14px"><table class="dtable">
+        <thead><tr><th>محدودیت</th><th>مقدار</th></tr></thead>
+        <tbody>
+          <tr><td>درخواست POST در دقیقه برای هر IP</td><td><span class="inline-code">120</span> (هدرهای <span class="inline-code">X-RateLimit-*</span>)</td></tr>
+          <tr><td>طول متن</td><td><span class="inline-code">20,000</span> نویسه</td></tr>
+          <tr><td>متن در هر batch</td><td><span class="inline-code">32</span></td></tr>
+          <tr><td>جمله در sentences</td><td><span class="inline-code">40</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="doc-sec" id="errors">
+      <h2>خطاها</h2>
+      <p>همیشه یک شکل، با کد HTTP واقعی.</p>
+      <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="err-0">JSON</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="err-0"><pre><code>{
+  <span class="tok-p">&quot;error&quot;</span>: {
+    <span class="tok-p">&quot;code&quot;</span>: <span class="tok-s">&quot;text_too_long&quot;</span>,
+    <span class="tok-p">&quot;message&quot;</span>: <span class="tok-s">&quot;&#x27;text&#x27; has 25000 characters; max is 20000.&quot;</span>,
+    <span class="tok-p">&quot;status&quot;</span>: <span class="tok-n">413</span>
+  }
+}</code></pre></div></div>
+      <div class="table-wrap" style="margin-top:14px"><table class="dtable">
+        <thead><tr><th>HTTP</th><th>code</th><th>یعنی</th></tr></thead>
+        <tbody>
+          <tr><td><span class="inline-code">400</span></td><td><span class="inline-code">empty_text</span> · <span class="inline-code">unknown_model</span> · <span class="inline-code">bad_mode</span></td><td>ورودی نادرست</td></tr>
+          <tr><td><span class="inline-code">401</span></td><td><span class="inline-code">unauthorized</span></td><td>کلید نیست یا اشتباه است</td></tr>
+          <tr><td><span class="inline-code">404</span></td><td><span class="inline-code">not_found</span></td><td>مسیر وجود ندارد</td></tr>
+          <tr><td><span class="inline-code">413</span></td><td><span class="inline-code">text_too_long</span> · <span class="inline-code">batch_too_large</span></td><td>بیش از حد مجاز</td></tr>
+          <tr><td><span class="inline-code">422</span></td><td><span class="inline-code">invalid_body</span></td><td>JSON ناقص</td></tr>
+          <tr><td><span class="inline-code">429</span></td><td><span class="inline-code">rate_limited</span></td><td>صبر کن؛ <span class="inline-code">Retry-After</span></td></tr>
+          <tr><td><span class="inline-code">503</span></td><td><span class="inline-code">not_ready</span></td><td>مدل‌ها هنوز بارگذاری می‌شوند</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="doc-sec" id="console">
+      <h2>کنسول</h2>
+      <p>مستقیم روی سرویس زنده اجرا می‌شود.</p>
+      <div class="console">
+        <div class="console-row">
+          <select class="field" data-con-ep aria-label="مسیر"><option value="0">POST  /api/v1/check</option><option value="1">GET  /api/v1/check?text=…</option><option value="2">POST  /api/v1/check/batch</option><option value="3">POST  /api/v1/verdict</option><option value="4">POST  /api/v1/score</option><option value="5">POST  /api/v1/sentences</option><option value="6">POST  /api/v1/censor</option><option value="7">POST  /api/v1/moderations</option><option value="8">POST  /api/v1/profanity</option><option value="9">POST  /api/v1/language</option><option value="10">POST  /api/v1/fingilish/detect</option><option value="11">POST  /api/v1/fingilish/transliterate</option><option value="12">POST  /api/v1/normalize</option><option value="13">GET  /api/v1</option><option value="14">GET  /api/v1/health</option><option value="15">GET  /api/v1/ready</option><option value="16">GET  /api/v1/info</option><option value="17">GET  /api/v1/models</option><option value="18">GET  /api/v1/config</option><option value="19">GET  /api/v1/stats</option><option value="20">POST  /api/v1/cache/clear</option></select>
+          <input class="field key" data-con-key type="text" placeholder="X-API-Key (optional)" aria-label="کلید API" autocomplete="off" spellcheck="false">
+          <button class="btn btn-ink" type="button" data-con-send><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>ارسال</span></button>
+        </div>
+        <textarea class="field" data-con-body rows="5" spellcheck="false" aria-label="بدنه‌ی درخواست"></textarea>
+        <div class="resp" data-con-resp hidden>
+          <div class="resp-head"><span class="status-code" data-con-status></span><span data-con-time></span><span class="mono ltr" data-con-url></span></div>
+          <div class="code" style="margin-top:10px"><div class="code-bar"><span class="tab" aria-selected="true">response</span><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><pre><code data-con-out></code></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-sec" id="clients">
+      <h2>کتابخانه‌ها</h2>
+      <p>در مخزن، پوشه‌ی <span class="inline-code">clients/</span>: پایتون بدون وابستگی، جاوااسکریپت برای مرورگر و Node، و اسکریپت curl.</p>
+      <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="clients-0">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="clients-1">JavaScript</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="clients-0"><pre><code>from unicollect_guard import Guard
+
+g = Guard.from_status_page(<span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/"</span>)
+g.check(<span class="tok-s">"to khar hasti"</span>)[<span class="tok-s">"decision"</span>]   <span class="tok-c"># "TOXIC"</span>
+g.is_safe(<span class="tok-s">"Have a nice day"</span>)                <span class="tok-c"># True</span>
+g.censor(<span class="tok-s">"you are a k1r"</span>)                  <span class="tok-c"># "you are a ***"</span></code></pre></div><div class="panel" id="clients-1" hidden><pre><code>import { Guard } from <span class="tok-s">"./unicollect-guard.js"</span>;
+
+const g = await Guard.fromStatusPage(<span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/"</span>);
+const { decision } = await g.check(<span class="tok-s">"to khar hasti"</span>);
+if (!(await g.isSafe(comment))) warnUser();</code></pre></div></div>
+    </section>
+
+    <section class="doc-sec" id="g-guard"><h2>بررسی متن</h2><details class="ep reveal" id="ep-check" open>
+  <summary><span class="method post">POST</span><span class="path">/api/v1/check</span><span class="desc">حکم کامل برای یک متن</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>اصلی‌ترین مسیر. زبان را تشخیص می‌دهد، اگر فینگیلیش باشد نسخه‌ی فارسی را هم بررسی می‌کند و حکم بدتر را برمی‌گرداند.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن (حداکثر ۲۰٬۰۰۰ نویسه)، الزامی</td></tr><tr><td>detailed</td><td>bool = true</td><td>false: فقط حکم، بدون ریزنمره‌ها</td></tr><tr><td>use_cache</td><td>bool = true</td><td>استفاده از نتیجه‌ی متن تکراری</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-check-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-check-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-check-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-check-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-check-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;to khar hasti&quot;}'</span></code></pre></div><div class="panel" id="x-check-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;to khar hasti&quot;}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-check-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check", json={&#x27;text&#x27;: &#x27;to khar hasti&#x27;})
+print(r.json())</code></pre></div><div class="panel" id="x-check-3" hidden><pre><code>{
+  <span class="tok-p">&quot;id&quot;</span>: <span class="tok-s">&quot;chk_8f2c1a9b0d3e4f51&quot;</span>,
+  <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;TOXIC&quot;</span>,
+  <span class="tok-p">&quot;is_toxic&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;flagged&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;severity&quot;</span>: <span class="tok-n">2</span>,
+  <span class="tok-p">&quot;confidence&quot;</span>: <span class="tok-n">0.9105</span>,
+  <span class="tok-p">&quot;max_raw&quot;</span>: <span class="tok-n">0.962</span>,
+  <span class="tok-p">&quot;votes_count&quot;</span>: <span class="tok-n">3</span>,
+  <span class="tok-p">&quot;total_models&quot;</span>: <span class="tok-n">4</span>,
+  <span class="tok-p">&quot;script&quot;</span>: <span class="tok-s">&quot;fa&quot;</span>,
+  <span class="tok-p">&quot;reason&quot;</span>: <span class="tok-s">&quot;3 of 4 models voted toxic (threshold 0.50).&quot;</span>,
+  <span class="tok-p">&quot;top_model&quot;</span>: <span class="tok-s">&quot;persian&quot;</span>,
+  <span class="tok-p">&quot;raw_scores&quot;</span>: {
+    <span class="tok-p">&quot;persian&quot;</span>: <span class="tok-n">0.962</span>,
+    <span class="tok-p">&quot;textdetox_lg&quot;</span>: <span class="tok-n">0.859</span>,
+    <span class="tok-p">&quot;textdetox_sm&quot;</span>: <span class="tok-n">0.711</span>,
+    <span class="tok-p">&quot;multilingual&quot;</span>: <span class="tok-n">0.204</span>
+  },
+  <span class="tok-p">&quot;fingilish_detected&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;fingilish_text&quot;</span>: <span class="tok-s">&quot;تو خر هستی&quot;</span>,
+  <span class="tok-p">&quot;decided_by&quot;</span>: <span class="tok-s">&quot;fingilish&quot;</span>,
+  <span class="tok-p">&quot;profane_terms&quot;</span>: [
+    <span class="tok-s">&quot;خر&quot;</span>
+  ],
+  <span class="tok-p">&quot;cached&quot;</span>: <span class="tok-k">false</span>,
+  <span class="tok-p">&quot;latency_ms&quot;</span>: <span class="tok-n">412</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/check&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;to khar hasti&quot;}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-check-get">
+  <summary><span class="method get">GET</span><span class="path">/api/v1/check?text=…</span><span class="desc">بررسی سریع با آدرس</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>برای تست در مرورگر یا ابزارهای ساده. پیش‌فرض خروجی خلاصه است؛ <span class="inline-code">&amp;detailed=true</span> برای جزئیات.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>query</td><td>متن، الزامی</td></tr><tr><td>detailed</td><td>query bool = false</td><td>ریزنمره‌ها</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-check-get-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-check-get-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-check-get-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-check-get-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-check-get-0"><pre><code>curl <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check?text=salam%20khoobi</code></pre></div><div class="panel" id="x-check-get-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check?text=salam%20khoobi");
+console.log(await r.json());</code></pre></div><div class="panel" id="x-check-get-2" hidden><pre><code>import requests
+
+r = requests.get("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check?text=salam%20khoobi")
+print(r.json())</code></pre></div><div class="panel" id="x-check-get-3" hidden><pre><code>{
+  <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;SAFE&quot;</span>,
+  <span class="tok-p">&quot;is_toxic&quot;</span>: <span class="tok-k">false</span>,
+  <span class="tok-p">&quot;flagged&quot;</span>: <span class="tok-k">false</span>,
+  <span class="tok-p">&quot;confidence&quot;</span>: <span class="tok-n">0.031</span>,
+  <span class="tok-p">&quot;script&quot;</span>: <span class="tok-s">&quot;en&quot;</span>,
+  <span class="tok-p">&quot;fingilish_detected&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;fingilish_text&quot;</span>: <span class="tok-s">&quot;سلام خوبی&quot;</span>,
+  <span class="tok-p">&quot;latency_ms&quot;</span>: <span class="tok-n">288</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;GET&quot;, &quot;p&quot;: &quot;/api/v1/check?text=salam%20khoobi&quot;, &quot;b&quot;: null}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-batch">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/check/batch</span><span class="desc">بررسی دسته‌ای تا ۳۲ متن</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>هر متن جداگانه حکم می‌گیرد؛ خطای یک متن بقیه را خراب نمی‌کند.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>texts</td><td>string[]</td><td>آرایه‌ی متن‌ها، الزامی</td></tr><tr><td>detailed</td><td>bool = false</td><td>ریزنمره‌ها برای هر متن</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-batch-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-batch-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-batch-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-batch-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-batch-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check/batch \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;texts&quot;: [&quot;سلام وقت بخیر&quot;, &quot;You are stupid&quot;, &quot;kir&quot;]}'</span></code></pre></div><div class="panel" id="x-batch-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check/batch", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;texts&quot;: [&quot;سلام وقت بخیر&quot;, &quot;You are stupid&quot;, &quot;kir&quot;]}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-batch-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check/batch", json={&#x27;texts&#x27;: [&#x27;سلام وقت بخیر&#x27;, &#x27;You are stupid&#x27;, &#x27;kir&#x27;]})
+print(r.json())</code></pre></div><div class="panel" id="x-batch-3" hidden><pre><code>{
+  <span class="tok-p">&quot;count&quot;</span>: <span class="tok-n">3</span>,
+  <span class="tok-p">&quot;summary&quot;</span>: {
+    <span class="tok-p">&quot;SAFE&quot;</span>: <span class="tok-n">1</span>,
+    <span class="tok-p">&quot;SUSPECT&quot;</span>: <span class="tok-n">0</span>,
+    <span class="tok-p">&quot;TOXIC&quot;</span>: <span class="tok-n">2</span>,
+    <span class="tok-p">&quot;errors&quot;</span>: <span class="tok-n">0</span>
+  },
+  <span class="tok-p">&quot;flagged_indexes&quot;</span>: [
+    1,
+    2
+  ],
+  <span class="tok-p">&quot;results&quot;</span>: [
+    {
+      <span class="tok-p">&quot;index&quot;</span>: <span class="tok-n">0</span>,
+      <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;SAFE&quot;</span>,
+      <span class="tok-p">&quot;confidence&quot;</span>: <span class="tok-n">0.02</span>
+    },
+    {
+      <span class="tok-p">&quot;index&quot;</span>: <span class="tok-n">1</span>,
+      <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;TOXIC&quot;</span>,
+      <span class="tok-p">&quot;confidence&quot;</span>: <span class="tok-n">0.93</span>
+    },
+    {
+      <span class="tok-p">&quot;index&quot;</span>: <span class="tok-n">2</span>,
+      <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;TOXIC&quot;</span>,
+      <span class="tok-p">&quot;confidence&quot;</span>: <span class="tok-n">0.97</span>
+    }
+  ],
+  <span class="tok-p">&quot;latency_ms&quot;</span>: <span class="tok-n">1130</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/check/batch&quot;, &quot;b&quot;: {&quot;texts&quot;: [&quot;سلام وقت بخیر&quot;, &quot;You are stupid&quot;, &quot;kir&quot;]}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-verdict">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/verdict</span><span class="desc">کوچک‌ترین پاسخ: بفرستم یا نه؟</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>مناسب برای فرم‌ها و کامنت‌ها: فقط حکم و پرچم.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن، الزامی</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-verdict-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-verdict-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-verdict-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-verdict-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-verdict-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/verdict \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;khafe sho ahmagh&quot;}'</span></code></pre></div><div class="panel" id="x-verdict-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/verdict", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;khafe sho ahmagh&quot;}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-verdict-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/verdict", json={&#x27;text&#x27;: &#x27;khafe sho ahmagh&#x27;})
+print(r.json())</code></pre></div><div class="panel" id="x-verdict-3" hidden><pre><code>{
+  <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;TOXIC&quot;</span>,
+  <span class="tok-p">&quot;flagged&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;is_toxic&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;confidence&quot;</span>: <span class="tok-n">0.88</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/verdict&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;khafe sho ahmagh&quot;}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-score">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/score</span><span class="desc">نمره‌ی خام هر مدل، بدون رأی‌گیری</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>برای کالیبره کردن یا ساختن منطق تصمیم خودت.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن، الزامی</td></tr><tr><td>models</td><td>string[]?</td><td>زیرمجموعه‌ای از مدل‌ها</td></tr><tr><td>script</td><td>fa | en | mixed ?</td><td>تحمیل زبان</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-score-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-score-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-score-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-score-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-score-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/score \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;you idiot&quot;, &quot;models&quot;: [&quot;textdetox_lg&quot;, &quot;twitter_off&quot;]}'</span></code></pre></div><div class="panel" id="x-score-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/score", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;you idiot&quot;, &quot;models&quot;: [&quot;textdetox_lg&quot;, &quot;twitter_off&quot;]}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-score-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/score", json={&#x27;text&#x27;: &#x27;you idiot&#x27;, &#x27;models&#x27;: [&#x27;textdetox_lg&#x27;, &#x27;twitter_off&#x27;]})
+print(r.json())</code></pre></div><div class="panel" id="x-score-3" hidden><pre><code>{
+  <span class="tok-p">&quot;script&quot;</span>: <span class="tok-s">&quot;en&quot;</span>,
+  <span class="tok-p">&quot;scores&quot;</span>: {
+    <span class="tok-p">&quot;textdetox_lg&quot;</span>: <span class="tok-n">0.941</span>,
+    <span class="tok-p">&quot;twitter_off&quot;</span>: <span class="tok-n">0.887</span>
+  },
+  <span class="tok-p">&quot;votes&quot;</span>: {
+    <span class="tok-p">&quot;textdetox_lg&quot;</span>: <span class="tok-k">true</span>,
+    <span class="tok-p">&quot;twitter_off&quot;</span>: <span class="tok-k">true</span>
+  },
+  <span class="tok-p">&quot;skipped_models&quot;</span>: [],
+  <span class="tok-p">&quot;latency_ms&quot;</span>: <span class="tok-n">96</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/score&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;you idiot&quot;, &quot;models&quot;: [&quot;textdetox_lg&quot;, &quot;twitter_off&quot;]}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-sentences">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/sentences</span><span class="desc">حکم جمله‌به‌جمله</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>برای متن‌های بلند: دقیقاً کدام جمله مشکل دارد، با موقعیت شروع و پایان.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن، حداکثر ۴۰ جمله</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-sentences-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-sentences-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-sentences-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-sentences-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-sentences-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/sentences \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;سلام. تو خیلی احمقی! فردا می‌بینمت.&quot;}'</span></code></pre></div><div class="panel" id="x-sentences-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/sentences", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;سلام. تو خیلی احمقی! فردا می‌بینمت.&quot;}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-sentences-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/sentences", json={&#x27;text&#x27;: &#x27;سلام. تو خیلی احمقی! فردا می\u200cبینمت.&#x27;})
+print(r.json())</code></pre></div><div class="panel" id="x-sentences-3" hidden><pre><code>{
+  <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;TOXIC&quot;</span>,
+  <span class="tok-p">&quot;count&quot;</span>: <span class="tok-n">3</span>,
+  <span class="tok-p">&quot;sentences&quot;</span>: [
+    {
+      <span class="tok-p">&quot;text&quot;</span>: <span class="tok-s">&quot;سلام.&quot;</span>,
+      <span class="tok-p">&quot;start&quot;</span>: <span class="tok-n">0</span>,
+      <span class="tok-p">&quot;end&quot;</span>: <span class="tok-n">5</span>,
+      <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;SAFE&quot;</span>
+    },
+    {
+      <span class="tok-p">&quot;text&quot;</span>: <span class="tok-s">&quot;تو خیلی احمقی!&quot;</span>,
+      <span class="tok-p">&quot;start&quot;</span>: <span class="tok-n">6</span>,
+      <span class="tok-p">&quot;end&quot;</span>: <span class="tok-n">20</span>,
+      <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;TOXIC&quot;</span>
+    },
+    {
+      <span class="tok-p">&quot;text&quot;</span>: <span class="tok-s">&quot;فردا می‌بینمت.&quot;</span>,
+      <span class="tok-p">&quot;start&quot;</span>: <span class="tok-n">21</span>,
+      <span class="tok-p">&quot;end&quot;</span>: <span class="tok-n">35</span>,
+      <span class="tok-p">&quot;decision&quot;</span>: <span class="tok-s">&quot;SAFE&quot;</span>
+    }
+  ],
+  <span class="tok-p">&quot;latency_ms&quot;</span>: <span class="tok-n">940</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/sentences&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;سلام. تو خیلی احمقی! فردا می‌بینمت.&quot;}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-censor">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/censor</span><span class="desc">سانسور خودکار</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>حالت <span class="inline-code">words</span> فقط واژه‌های توهین‌آمیز شناخته‌شده را می‌پوشاند (فوری). حالت <span class="inline-code">sentences</span> جمله‌های سمی را کامل می‌پوشاند.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن، الزامی</td></tr><tr><td>mode</td><td>words | sentences</td><td>پیش‌فرض words</td></tr><tr><td>char</td><td>string = *</td><td>نویسه‌ی پوشش</td></tr><tr><td>include_contextual</td><td>bool = false</td><td>پوشاندن واژه‌های وابسته به بافت (مثل khar)</td></tr><tr><td>keep_first_letter</td><td>bool = false</td><td>حرف اول بماند</td></tr><tr><td>min_decision</td><td>TOXIC | SUSPECT</td><td>آستانه در حالت sentences</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-censor-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-censor-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-censor-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-censor-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-censor-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/censor \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;you are a k1r, have a nice day&quot;}'</span></code></pre></div><div class="panel" id="x-censor-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/censor", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;you are a k1r, have a nice day&quot;}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-censor-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/censor", json={&#x27;text&#x27;: &#x27;you are a k1r, have a nice day&#x27;})
+print(r.json())</code></pre></div><div class="panel" id="x-censor-3" hidden><pre><code>{
+  <span class="tok-p">&quot;mode&quot;</span>: <span class="tok-s">&quot;words&quot;</span>,
+  <span class="tok-p">&quot;text&quot;</span>: <span class="tok-s">&quot;you are a ***, have a nice day&quot;</span>,
+  <span class="tok-p">&quot;masked_count&quot;</span>: <span class="tok-n">1</span>,
+  <span class="tok-p">&quot;changed&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;masked&quot;</span>: [
+    {
+      <span class="tok-p">&quot;token&quot;</span>: <span class="tok-s">&quot;k1r&quot;</span>,
+      <span class="tok-p">&quot;start&quot;</span>: <span class="tok-n">10</span>,
+      <span class="tok-p">&quot;end&quot;</span>: <span class="tok-n">13</span>,
+      <span class="tok-p">&quot;persian&quot;</span>: <span class="tok-s">&quot;کیر&quot;</span>,
+      <span class="tok-p">&quot;script&quot;</span>: <span class="tok-s">&quot;latin&quot;</span>,
+      <span class="tok-p">&quot;contextual&quot;</span>: <span class="tok-k">false</span>
+    }
+  ]
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/censor&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;you are a k1r, have a nice day&quot;}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-moderations">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/moderations</span><span class="desc">سازگار با OpenAI Moderation</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>همان شکل پاسخ <span class="inline-code">/v1/moderations</span>؛ کد فعلی‌ات فقط با عوض کردن آدرس کار می‌کند.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>input</td><td>string | string[]</td><td>یک یا چند متن</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-moderations-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-moderations-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-moderations-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-moderations-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-moderations-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/moderations \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;input&quot;: [&quot;You are stupid&quot;, &quot;hello&quot;]}'</span></code></pre></div><div class="panel" id="x-moderations-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/moderations", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;input&quot;: [&quot;You are stupid&quot;, &quot;hello&quot;]}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-moderations-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/moderations", json={&#x27;input&#x27;: [&#x27;You are stupid&#x27;, &#x27;hello&#x27;]})
+print(r.json())</code></pre></div><div class="panel" id="x-moderations-3" hidden><pre><code>{
+  <span class="tok-p">&quot;id&quot;</span>: <span class="tok-s">&quot;modr-3b1f…&quot;</span>,
+  <span class="tok-p">&quot;model&quot;</span>: <span class="tok-s">&quot;unicollect-guard&quot;</span>,
+  <span class="tok-p">&quot;results&quot;</span>: [
+    {
+      <span class="tok-p">&quot;flagged&quot;</span>: <span class="tok-k">true</span>,
+      <span class="tok-p">&quot;categories&quot;</span>: {
+        <span class="tok-p">&quot;harassment&quot;</span>: <span class="tok-k">true</span>,
+        <span class="tok-p">&quot;toxic&quot;</span>: <span class="tok-k">true</span>,
+        <span class="tok-p">&quot;suspect&quot;</span>: <span class="tok-k">false</span>
+      },
+      <span class="tok-p">&quot;category_scores&quot;</span>: {
+        <span class="tok-p">&quot;harassment&quot;</span>: <span class="tok-n">0.95</span>,
+        <span class="tok-p">&quot;toxic&quot;</span>: <span class="tok-n">0.91</span>
+      }
+    },
+    {
+      <span class="tok-p">&quot;flagged&quot;</span>: <span class="tok-k">false</span>,
+      <span class="tok-p">&quot;categories&quot;</span>: {
+        <span class="tok-p">&quot;harassment&quot;</span>: <span class="tok-k">false</span>,
+        <span class="tok-p">&quot;toxic&quot;</span>: <span class="tok-k">false</span>,
+        <span class="tok-p">&quot;suspect&quot;</span>: <span class="tok-k">false</span>
+      },
+      <span class="tok-p">&quot;category_scores&quot;</span>: {
+        <span class="tok-p">&quot;harassment&quot;</span>: <span class="tok-n">0.02</span>,
+        <span class="tok-p">&quot;toxic&quot;</span>: <span class="tok-n">0.02</span>
+      }
+    }
+  ]
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/moderations&quot;, &quot;b&quot;: {&quot;input&quot;: [&quot;You are stupid&quot;, &quot;hello&quot;]}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details></section><section class="doc-sec" id="g-utilities"><h2>ابزارهای متن (بدون مدل، فوری)</h2><details class="ep reveal" id="ep-profanity">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/profanity</span><span class="desc">واژه‌های توهین‌آمیز با موقعیت</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>فقط واژه‌نامه، بدون مدل؛ حتی وقتی مدل‌ها در حال بارگذاری‌اند جواب می‌دهد.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن، الزامی</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-profanity-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-profanity-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-profanity-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-profanity-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-profanity-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/profanity \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;jakesh, کسکش&quot;}'</span></code></pre></div><div class="panel" id="x-profanity-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/profanity", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;jakesh, کسکش&quot;}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-profanity-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/profanity", json={&#x27;text&#x27;: &#x27;jakesh, کسکش&#x27;})
+print(r.json())</code></pre></div><div class="panel" id="x-profanity-3" hidden><pre><code>{
+  <span class="tok-p">&quot;found&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;count&quot;</span>: <span class="tok-n">2</span>,
+  <span class="tok-p">&quot;strong_count&quot;</span>: <span class="tok-n">2</span>,
+  <span class="tok-p">&quot;terms&quot;</span>: [
+    {
+      <span class="tok-p">&quot;token&quot;</span>: <span class="tok-s">&quot;jakesh&quot;</span>,
+      <span class="tok-p">&quot;start&quot;</span>: <span class="tok-n">0</span>,
+      <span class="tok-p">&quot;end&quot;</span>: <span class="tok-n">6</span>,
+      <span class="tok-p">&quot;persian&quot;</span>: <span class="tok-s">&quot;جاکش&quot;</span>,
+      <span class="tok-p">&quot;script&quot;</span>: <span class="tok-s">&quot;latin&quot;</span>,
+      <span class="tok-p">&quot;contextual&quot;</span>: <span class="tok-k">false</span>
+    },
+    {
+      <span class="tok-p">&quot;token&quot;</span>: <span class="tok-s">&quot;کسکش&quot;</span>,
+      <span class="tok-p">&quot;start&quot;</span>: <span class="tok-n">8</span>,
+      <span class="tok-p">&quot;end&quot;</span>: <span class="tok-n">12</span>,
+      <span class="tok-p">&quot;persian&quot;</span>: <span class="tok-s">&quot;کسکش&quot;</span>,
+      <span class="tok-p">&quot;script&quot;</span>: <span class="tok-s">&quot;persian&quot;</span>,
+      <span class="tok-p">&quot;contextual&quot;</span>: <span class="tok-k">false</span>
+    }
+  ]
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/profanity&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;jakesh, کسکش&quot;}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-language">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/language</span><span class="desc">تشخیص زبان و خط</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن، الزامی</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-language-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-language-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-language-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-language-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-language-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/language \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;salam khoobi&quot;}'</span></code></pre></div><div class="panel" id="x-language-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/language", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;salam khoobi&quot;}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-language-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/language", json={&#x27;text&#x27;: &#x27;salam khoobi&#x27;})
+print(r.json())</code></pre></div><div class="panel" id="x-language-3" hidden><pre><code>{
+  <span class="tok-p">&quot;script&quot;</span>: <span class="tok-s">&quot;en&quot;</span>,
+  <span class="tok-p">&quot;fingilish&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;language&quot;</span>: <span class="tok-s">&quot;fingilish&quot;</span>,
+  <span class="tok-p">&quot;persian_ratio&quot;</span>: <span class="tok-n">0.0</span>,
+  <span class="tok-p">&quot;latin_ratio&quot;</span>: <span class="tok-n">1.0</span>,
+  <span class="tok-p">&quot;persian_chars&quot;</span>: <span class="tok-n">0</span>,
+  <span class="tok-p">&quot;latin_chars&quot;</span>: <span class="tok-n">11</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/language&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;salam khoobi&quot;}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-fing-detect">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/fingilish/detect</span><span class="desc">این متن فینگیلیش است؟</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن، الزامی</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-fing-detect-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-fing-detect-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-fing-detect-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-fing-detect-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-fing-detect-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/fingilish/detect \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;to khar hasti&quot;}'</span></code></pre></div><div class="panel" id="x-fing-detect-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/fingilish/detect", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;to khar hasti&quot;}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-fing-detect-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/fingilish/detect", json={&#x27;text&#x27;: &#x27;to khar hasti&#x27;})
+print(r.json())</code></pre></div><div class="panel" id="x-fing-detect-3" hidden><pre><code>{
+  <span class="tok-p">&quot;fingilish&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;script&quot;</span>: <span class="tok-s">&quot;en&quot;</span>,
+  <span class="tok-p">&quot;profane_terms&quot;</span>: [
+    <span class="tok-s">&quot;خر&quot;</span>
+  ]
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/fingilish/detect&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;to khar hasti&quot;}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-fing-tr">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/fingilish/transliterate</span><span class="desc">فینگیلیش به فارسی</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن، الزامی</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-fing-tr-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-fing-tr-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-fing-tr-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-fing-tr-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-fing-tr-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/fingilish/transliterate \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;salam khoobi&quot;}'</span></code></pre></div><div class="panel" id="x-fing-tr-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/fingilish/transliterate", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;salam khoobi&quot;}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-fing-tr-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/fingilish/transliterate", json={&#x27;text&#x27;: &#x27;salam khoobi&#x27;})
+print(r.json())</code></pre></div><div class="panel" id="x-fing-tr-3" hidden><pre><code>{
+  <span class="tok-p">&quot;input&quot;</span>: <span class="tok-s">&quot;salam khoobi&quot;</span>,
+  <span class="tok-p">&quot;persian&quot;</span>: <span class="tok-s">&quot;سلام خوبی&quot;</span>,
+  <span class="tok-p">&quot;fingilish&quot;</span>: <span class="tok-k">true</span>,
+  <span class="tok-p">&quot;script_after&quot;</span>: <span class="tok-s">&quot;fa&quot;</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/fingilish/transliterate&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;salam khoobi&quot;}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-normalize">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/normalize</span><span class="desc">باز کردن پنهان‌کاری</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p><span class="inline-code">k1r</span>، <span class="inline-code">k.i.r</span> و <span class="inline-code">kiiiir</span> همه می‌شوند <span class="inline-code">kir</span>.</p>
+    <div class="table-wrap"><table class="params"><thead><tr><th>فیلد</th><th>نوع</th><th>توضیح</th></tr></thead><tbody><tr><td>text</td><td>string</td><td>متن، الزامی</td></tr></tbody></table></div>
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-normalize-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-normalize-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-normalize-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-normalize-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-normalize-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/normalize \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{&quot;text&quot;: &quot;K.1.R kiiiir&quot;}'</span></code></pre></div><div class="panel" id="x-normalize-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/normalize", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({&quot;text&quot;: &quot;K.1.R kiiiir&quot;}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-normalize-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/normalize", json={&#x27;text&#x27;: &#x27;K.1.R kiiiir&#x27;})
+print(r.json())</code></pre></div><div class="panel" id="x-normalize-3" hidden><pre><code>{
+  <span class="tok-p">&quot;input&quot;</span>: <span class="tok-s">&quot;K.1.R kiiiir&quot;</span>,
+  <span class="tok-p">&quot;normalized&quot;</span>: <span class="tok-s">&quot;kir kir&quot;</span>,
+  <span class="tok-p">&quot;changed&quot;</span>: <span class="tok-k">true</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/normalize&quot;, &quot;b&quot;: {&quot;text&quot;: &quot;K.1.R kiiiir&quot;}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details></section><section class="doc-sec" id="g-discovery"><h2>وضعیت و اطلاعات</h2><details class="ep reveal" id="ep-index">
+  <summary><span class="method get">GET</span><span class="path">/api/v1</span><span class="desc">فهرست همه‌ی مسیرها</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>آدرس کامل هر مسیر بر اساس لینک فعلی سرویس.</p>
+    
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-index-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-index-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-index-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-index-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-index-0"><pre><code>curl <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1</code></pre></div><div class="panel" id="x-index-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1");
+console.log(await r.json());</code></pre></div><div class="panel" id="x-index-2" hidden><pre><code>import requests
+
+r = requests.get("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1")
+print(r.json())</code></pre></div><div class="panel" id="x-index-3" hidden><pre><code>{
+  <span class="tok-p">&quot;name&quot;</span>: <span class="tok-s">&quot;Unicollect Guard API&quot;</span>,
+  <span class="tok-p">&quot;version&quot;</span>: <span class="tok-s">&quot;2.0.0&quot;</span>,
+  <span class="tok-p">&quot;base_url&quot;</span>: <span class="tok-s">&quot;https://YOUR-LINK.trycloudflare.com&quot;</span>,
+  <span class="tok-p">&quot;auth_required&quot;</span>: <span class="tok-k">false</span>,
+  <span class="tok-p">&quot;docs&quot;</span>: {
+    <span class="tok-p">&quot;swagger&quot;</span>: <span class="tok-s">&quot;https://YOUR-LINK.trycloudflare.com/docs&quot;</span>,
+    <span class="tok-p">&quot;redoc&quot;</span>: <span class="tok-s">&quot;https://YOUR-LINK.trycloudflare.com/redoc&quot;</span>
+  },
+  <span class="tok-p">&quot;endpoints&quot;</span>: [
+    <span class="tok-s">&quot;…22 items&quot;</span>
+  ]
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;GET&quot;, &quot;p&quot;: &quot;/api/v1&quot;, &quot;b&quot;: null}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-health">
+  <summary><span class="method get">GET</span><span class="path">/api/v1/health</span><span class="desc">سلامت و بار سرور</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    
+    
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-health-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-health-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-health-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-health-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-health-0"><pre><code>curl <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/health</code></pre></div><div class="panel" id="x-health-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/health");
+console.log(await r.json());</code></pre></div><div class="panel" id="x-health-2" hidden><pre><code>import requests
+
+r = requests.get("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/health")
+print(r.json())</code></pre></div><div class="panel" id="x-health-3" hidden><pre><code>{
+  <span class="tok-p">&quot;status&quot;</span>: <span class="tok-s">&quot;ok&quot;</span>,
+  <span class="tok-p">&quot;mode&quot;</span>: <span class="tok-s">&quot;production&quot;</span>,
+  <span class="tok-p">&quot;version&quot;</span>: <span class="tok-s">&quot;2.0.0&quot;</span>,
+  <span class="tok-p">&quot;loaded_count&quot;</span>: <span class="tok-n">5</span>,
+  <span class="tok-p">&quot;total_models&quot;</span>: <span class="tok-n">5</span>,
+  <span class="tok-p">&quot;errors&quot;</span>: {},
+  <span class="tok-p">&quot;inflight&quot;</span>: <span class="tok-n">0</span>,
+  <span class="tok-p">&quot;peak&quot;</span>: <span class="tok-n">3</span>,
+  <span class="tok-p">&quot;uptime_s&quot;</span>: <span class="tok-n">5120</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;GET&quot;, &quot;p&quot;: &quot;/api/v1/health&quot;, &quot;b&quot;: null}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-ready">
+  <summary><span class="method get">GET</span><span class="path">/api/v1/ready</span><span class="desc">آماده است؟ (۲۰۰ یا ۵۰۳)</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    
+    
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-ready-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-ready-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-ready-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-ready-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-ready-0"><pre><code>curl <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/ready</code></pre></div><div class="panel" id="x-ready-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/ready");
+console.log(await r.json());</code></pre></div><div class="panel" id="x-ready-2" hidden><pre><code>import requests
+
+r = requests.get("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/ready")
+print(r.json())</code></pre></div><div class="panel" id="x-ready-3" hidden><pre><code>{
+  <span class="tok-p">&quot;ready&quot;</span>: <span class="tok-k">true</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;GET&quot;, &quot;p&quot;: &quot;/api/v1/ready&quot;, &quot;b&quot;: null}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-info">
+  <summary><span class="method get">GET</span><span class="path">/api/v1/info</span><span class="desc">اطلاعات سرویس و محدودیت‌ها</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    
+    
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-info-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-info-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-info-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-info-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-info-0"><pre><code>curl <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/info</code></pre></div><div class="panel" id="x-info-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/info");
+console.log(await r.json());</code></pre></div><div class="panel" id="x-info-2" hidden><pre><code>import requests
+
+r = requests.get("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/info")
+print(r.json())</code></pre></div><div class="panel" id="x-info-3" hidden><pre><code>{
+  <span class="tok-p">&quot;name&quot;</span>: <span class="tok-s">&quot;Unicollect Guard&quot;</span>,
+  <span class="tok-p">&quot;version&quot;</span>: <span class="tok-s">&quot;2.0.0&quot;</span>,
+  <span class="tok-p">&quot;languages&quot;</span>: [
+    <span class="tok-s">&quot;fa&quot;</span>,
+    <span class="tok-s">&quot;fingilish&quot;</span>,
+    <span class="tok-s">&quot;en&quot;</span>,
+    <span class="tok-s">&quot;mixed&quot;</span>
+  ],
+  <span class="tok-p">&quot;limits&quot;</span>: {
+    <span class="tok-p">&quot;max_text_length&quot;</span>: <span class="tok-n">20000</span>,
+    <span class="tok-p">&quot;max_batch_items&quot;</span>: <span class="tok-n">32</span>,
+    <span class="tok-p">&quot;max_sentences&quot;</span>: <span class="tok-n">40</span>,
+    <span class="tok-p">&quot;rate_limit_per_minute&quot;</span>: <span class="tok-n">120</span>
+  },
+  <span class="tok-p">&quot;auth_required&quot;</span>: <span class="tok-k">false</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;GET&quot;, &quot;p&quot;: &quot;/api/v1/info&quot;, &quot;b&quot;: null}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-models">
+  <summary><span class="method get">GET</span><span class="path">/api/v1/models</span><span class="desc">پنج مدل و وضعیتشان</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>هر مدل جداگانه هم هست: <span class="inline-code">/api/v1/models/persian</span></p>
+    
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-models-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-models-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-models-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-models-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-models-0"><pre><code>curl <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/models</code></pre></div><div class="panel" id="x-models-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/models");
+console.log(await r.json());</code></pre></div><div class="panel" id="x-models-2" hidden><pre><code>import requests
+
+r = requests.get("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/models")
+print(r.json())</code></pre></div><div class="panel" id="x-models-3" hidden><pre><code>{
+  <span class="tok-p">&quot;loaded&quot;</span>: <span class="tok-n">5</span>,
+  <span class="tok-p">&quot;total&quot;</span>: <span class="tok-n">5</span>,
+  <span class="tok-p">&quot;models&quot;</span>: [
+    {
+      <span class="tok-p">&quot;id&quot;</span>: <span class="tok-s">&quot;persian&quot;</span>,
+      <span class="tok-p">&quot;label_en&quot;</span>: <span class="tok-s">&quot;Unicollect Persian&quot;</span>,
+      <span class="tok-p">&quot;language&quot;</span>: <span class="tok-s">&quot;fa&quot;</span>,
+      <span class="tok-p">&quot;weight&quot;</span>: <span class="tok-n">2.0</span>,
+      <span class="tok-p">&quot;loaded&quot;</span>: <span class="tok-k">true</span>
+    },
+    <span class="tok-s">&quot;…&quot;</span>
+  ]
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;GET&quot;, &quot;p&quot;: &quot;/api/v1/models&quot;, &quot;b&quot;: null}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-config">
+  <summary><span class="method get">GET</span><span class="path">/api/v1/config</span><span class="desc">آستانه‌ها و جدول تصمیم</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    
+    
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-config-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-config-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-config-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-config-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-config-0"><pre><code>curl <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/config</code></pre></div><div class="panel" id="x-config-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/config");
+console.log(await r.json());</code></pre></div><div class="panel" id="x-config-2" hidden><pre><code>import requests
+
+r = requests.get("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/config")
+print(r.json())</code></pre></div><div class="panel" id="x-config-3" hidden><pre><code>{
+  <span class="tok-p">&quot;per_model_vote_threshold&quot;</span>: <span class="tok-n">0.5</span>,
+  <span class="tok-p">&quot;min_votes_for_toxic&quot;</span>: <span class="tok-n">2</span>,
+  <span class="tok-p">&quot;strong_single_model&quot;</span>: <span class="tok-n">0.9</span>,
+  <span class="tok-p">&quot;fingilish_strong_single&quot;</span>: <span class="tok-n">0.95</span>,
+  <span class="tok-p">&quot;solo_vote_corroboration_floor&quot;</span>: <span class="tok-n">0.3</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;GET&quot;, &quot;p&quot;: &quot;/api/v1/config&quot;, &quot;b&quot;: null}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details><details class="ep reveal" id="ep-stats">
+  <summary><span class="method get">GET</span><span class="path">/api/v1/stats</span><span class="desc">آمار از زمان راه‌اندازی</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    
+    
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-stats-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-stats-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-stats-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-stats-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-stats-0"><pre><code>curl <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/stats</code></pre></div><div class="panel" id="x-stats-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/stats");
+console.log(await r.json());</code></pre></div><div class="panel" id="x-stats-2" hidden><pre><code>import requests
+
+r = requests.get("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/stats")
+print(r.json())</code></pre></div><div class="panel" id="x-stats-3" hidden><pre><code>{
+  <span class="tok-p">&quot;requests&quot;</span>: <span class="tok-n">1840</span>,
+  <span class="tok-p">&quot;texts_checked&quot;</span>: <span class="tok-n">1622</span>,
+  <span class="tok-p">&quot;decisions&quot;</span>: {
+    <span class="tok-p">&quot;SAFE&quot;</span>: <span class="tok-n">1201</span>,
+    <span class="tok-p">&quot;SUSPECT&quot;</span>: <span class="tok-n">188</span>,
+    <span class="tok-p">&quot;TOXIC&quot;</span>: <span class="tok-n">233</span>
+  },
+  <span class="tok-p">&quot;cache_hits&quot;</span>: <span class="tok-n">214</span>,
+  <span class="tok-p">&quot;avg_latency_ms&quot;</span>: <span class="tok-n">356.4</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;GET&quot;, &quot;p&quot;: &quot;/api/v1/stats&quot;, &quot;b&quot;: null}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details></section><section class="doc-sec" id="g-admin"><h2>مدیریت</h2><details class="ep reveal" id="ep-cache">
+  <summary><span class="method post">POST</span><span class="path">/api/v1/cache/clear</span><span class="desc">خالی کردن حافظه‌ی موقت</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="ep-body">
+    <p>نیاز به کلید <span class="inline-code">GUARD_ADMIN_KEY</span> در هدر <span class="inline-code">X-API-Key</span>.</p>
+    
+    <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="x-cache-0">curl</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-cache-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-cache-2">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="x-cache-3">پاسخ</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="x-cache-0"><pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/cache/clear \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{}'</span></code></pre></div><div class="panel" id="x-cache-1" hidden><pre><code>const r = await fetch("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/cache/clear", {
+  method: <span class="tok-s">"POST"</span>,
+  headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+  body: JSON.stringify({}),
+});
+console.log(await r.json());</code></pre></div><div class="panel" id="x-cache-2" hidden><pre><code>import requests
+
+r = requests.post("<span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/cache/clear", json={})
+print(r.json())</code></pre></div><div class="panel" id="x-cache-3" hidden><pre><code>{
+  <span class="tok-p">&quot;cleared&quot;</span>: <span class="tok-n">214</span>
+}</code></pre></div></div>
+    <button class="btn btn-line btn-sm try-btn" type="button" data-try="{&quot;m&quot;: &quot;POST&quot;, &quot;p&quot;: &quot;/api/v1/cache/clear&quot;, &quot;b&quot;: {}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>امتحان در کنسول</span></button>
+  </div>
+</details></section>
+  </div>
+</div>
+<script type="application/json" id="ep-data">[{"m": "POST", "p": "/api/v1/check", "b": {"text": "to khar hasti"}}, {"m": "GET", "p": "/api/v1/check?text=salam%20khoobi", "b": null}, {"m": "POST", "p": "/api/v1/check/batch", "b": {"texts": ["سلام وقت بخیر", "You are stupid", "kir"]}}, {"m": "POST", "p": "/api/v1/verdict", "b": {"text": "khafe sho ahmagh"}}, {"m": "POST", "p": "/api/v1/score", "b": {"text": "you idiot", "models": ["textdetox_lg", "twitter_off"]}}, {"m": "POST", "p": "/api/v1/sentences", "b": {"text": "سلام. تو خیلی احمقی! فردا می‌بینمت."}}, {"m": "POST", "p": "/api/v1/censor", "b": {"text": "you are a k1r, have a nice day"}}, {"m": "POST", "p": "/api/v1/moderations", "b": {"input": ["You are stupid", "hello"]}}, {"m": "POST", "p": "/api/v1/profanity", "b": {"text": "jakesh, کسکش"}}, {"m": "POST", "p": "/api/v1/language", "b": {"text": "salam khoobi"}}, {"m": "POST", "p": "/api/v1/fingilish/detect", "b": {"text": "to khar hasti"}}, {"m": "POST", "p": "/api/v1/fingilish/transliterate", "b": {"text": "salam khoobi"}}, {"m": "POST", "p": "/api/v1/normalize", "b": {"text": "K.1.R kiiiir"}}, {"m": "GET", "p": "/api/v1", "b": null}, {"m": "GET", "p": "/api/v1/health", "b": null}, {"m": "GET", "p": "/api/v1/ready", "b": null}, {"m": "GET", "p": "/api/v1/info", "b": null}, {"m": "GET", "p": "/api/v1/models", "b": null}, {"m": "GET", "p": "/api/v1/config", "b": null}, {"m": "GET", "p": "/api/v1/stats", "b": null}, {"m": "POST", "p": "/api/v1/cache/clear", "b": {}}]</script>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <span>© Unicollect Guard · ساخته‌ی موویکسو</span>
+    <nav aria-label="پیوندهای پایانی"><a href="../">خانه</a><a href="../api/">API</a><a href="../how-it-works/">فرآیند</a><a href="../about/">درباره</a><a href="../privacy/">حریم خصوصی</a><a href="../api/links.json" class="ltr">links.json</a></nav>
+    <span>Unicollect می‌تواند اشتباه کند؛ نتیجه‌های مهم را خودت هم مرور کن.</span>
+  </div>
+</footer>
+<div class="modal" id="access" aria-hidden="true">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="access-title">
+    <div class="modal-head"><h3 id="access-title">دسترسی به نگهبان متن</h3><button class="icon-btn" type="button" data-access-close aria-label="بستن"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="base-box"><code data-live-text>در حال دریافت…</code></div>
+    <div class="actions">
+      <a class="btn btn-ink btn-sm" data-live="panel" aria-disabled="true"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><span>باز کردن پنل</span></a>
+      <a class="btn btn-line btn-sm" href="../api/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg><span>مستندات API</span></a>
+      <button class="btn btn-line btn-sm" type="button" data-copy-live><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی لینک</span></button>
+    </div>
+    <div class="modal-foot" data-access-status>این پنجره با میانبر اختصاصی باز می‌شود.</div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span data-toast-text>کپی شد</span></div>
+<script src="../assets/site.js?v=4" defer></script>
+</body>
+</html>
