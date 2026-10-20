@@ -1,195 +1,148 @@
-<!doctype html>
-<html lang="fa" dir="rtl" class="no-js">
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Unicollect · سنجش ایمنی متن فارسی</title>
-<meta name="description" content="API سنجش ایمنی متن فارسی، فینگلیش و انگلیسی با رأی‌گیری پنج مدل تخصصی.">
-<meta name="theme-color" content="#f6f4fb">
+<title>Unicollect Guard · نگهبان متن</title>
+<meta name="description" content="Unicollect Guard متن فارسی، فینگیلیش و انگلیسی را با رأی‌گیری پنج مدل بررسی می‌کند. API کامل و رایگان.">
 <meta name="color-scheme" content="light dark">
-<meta property="og:title" content="Unicollect · سنجش ایمنی متن فارسی">
-<meta property="og:description" content="API سنجش ایمنی متن فارسی، فینگلیش و انگلیسی با رأی‌گیری پنج مدل تخصصی.">
+<meta name="theme-color" content="#f7f3f8">
+<meta property="og:title" content="Unicollect Guard · نگهبان متن">
+<meta property="og:description" content="Unicollect Guard متن فارسی، فینگیلیش و انگلیسی را با رأی‌گیری پنج مدل بررسی می‌کند. API کامل و رایگان.">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-<script>(function(){var t;try{t=localStorage.getItem('unicollect_theme')}catch(e){}if(t!=='light'&&t!=='dark'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap"></noscript>
-<link rel="stylesheet" href="assets/tokens.css">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&family=Khand:wght@600&display=swap">
+<link rel="stylesheet" href="assets/site.css?v=4">
+<script>
+  (function () {
+    var t = null; try { t = localStorage.getItem('unicollect_theme'); } catch (e) {}
+    var dark = t ? t === 'dark' : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.classList.add('dark');
+  })();
+</script>
 </head>
-<body>
-<header class="site-header">
-  <div class="wrap header-row">
-    <a class="brand" href="" aria-label="Unicollect، صفحه اصلی"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle class="m-ring" cx="16" cy="16" r="14"/><path class="m-u" d="M10.5 9v7.5a5.5 5.5 0 0 0 11 0V9"/></svg><span class="brand-name">Unicollect</span></a>
-    <nav class="nav" id="site-nav" aria-label="منوی اصلی"><a href="" aria-current="page">خانه</a><a href="api-docs/">مستندات API</a><a href="how-it-works/">نحوه کار</a><a href="about/">درباره</a><a href="privacy/">حریم خصوصی</a></nav>
-    <div class="header-actions">
-      <a class="btn btn-sm btn-primary header-cta" href="api-docs/#quickstart">شروع با API</a>
-      <button class="icon-btn theme-toggle" type="button" aria-label="تغییر پوسته"><svg class="ic i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><svg class="ic i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
-      <button class="icon-btn burger" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="باز کردن منو"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<body data-root="">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="ink"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></svg>
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="" aria-label="Unicollect Guard، صفحه اصلی"><span class="logo"><svg class="pg-mark breathe" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span><small>Guard</small></a>
+    <nav class="nav" aria-label="ناوبری اصلی"><a href="" aria-current="page">خانه</a><a href="api/">API</a><a href="how-it-works/">فرآیند</a><a href="about/">درباره</a><a href="privacy/">حریم خصوصی</a></nav>
+    <div class="top-end">
+      <a class="pill" href="api/#links" data-status-pill><span class="dot warn" data-status-dot></span><span data-status-text>در حال بررسی…</span></a>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="تغییر حالت روز/شب"><span class="ti-sun"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span><span class="ti-moon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span></button>
+      <button class="icon-btn menu-btn" type="button" data-menu-open aria-label="باز کردن منو" aria-expanded="false" aria-controls="drawer"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
     </div>
   </div>
 </header>
+<div class="drawer" id="drawer" aria-hidden="true">
+  <div class="shade" data-menu-close></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="منو">
+    <div class="sheet-head"><a class="brand" href=""><span class="logo"><svg class="pg-mark " viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span></a><button class="icon-btn" type="button" data-menu-close aria-label="بستن منو"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <nav><a href="" aria-current="page">خانه</a><a href="api/">API</a><a href="how-it-works/">فرآیند</a><a href="about/">درباره</a><a href="privacy/">حریم خصوصی</a></nav>
+    <a class="pill" href="api/#links"><span class="dot warn" data-status-dot></span><span data-status-text>در حال بررسی…</span></a>
+  </div>
+</div>
 <main id="main">
 
-<section class="wrap hero">
-  <div>
-    <p class="kicker">API ایمنی متن، فارسی‌محور</p>
-    <h1>پیش از انتشار،<br><span class="accent">متن را بسنج.</span></h1>
-    <p class="lede">Unicollect متن فارسی، فینگلیش و انگلیسی را با رأی‌گیری پنج مدل تخصصی بررسی می‌کند و نتیجه‌ای شفاف برمی‌گرداند: ایمن، مشکوک یا سمی.</p>
-    <div class="hero-actions">
-      <a class="btn btn-primary" href="api-docs/">مستندات کامل API <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg></a>
-      <a class="btn" href="#links"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>لینک‌های سرویس</a>
-    </div>
-    <div class="hero-langs"><span class="chip">فارسی</span><span class="chip">فینگلیش</span><span class="chip ltr">English</span><span class="chip">۵ مدل رأی‌دهنده</span><span class="chip">پاسخ JSON</span></div>
-  </div>
-  <div class="demo" data-demo aria-label="نمونه‌ی زنده‌ی خروجی Unicollect">
-    <div class="demo-top"><div class="demo-dots"><i></i><i></i><i></i></div><span>زبان تشخیص‌داده‌شده: <b data-demo-lang>فارسی</b></span></div>
-    <div class="demo-input" data-demo-input>سلام، وقت بخیر. از همکاری با شما واقعاً خوشحالم.</div>
-    <div class="demo-body">
-      <div class="bars">
-        <div class="bar-row"><span>مدل فارسی</span><div class="bar"><i></i></div><b>0.02</b></div>
-        <div class="bar-row"><span>چندزبانه پرو</span><div class="bar"><i></i></div><b>0.01</b></div>
-        <div class="bar-row"><span>چندزبانه سریع</span><div class="bar"><i></i></div><b>0.03</b></div>
-        <div class="bar-row"><span>چندزبانه گسترده</span><div class="bar"><i></i></div><b>0.01</b></div>
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow"><span class="bar"></span>نگهبان متن فارسی، فینگیلیش و انگلیسی</span>
+      <h1 class="display">قبل از ارسال، <em>مُهر</em> بگیر.</h1>
+      <p class="lead">پنج مدل متن را جداگانه می‌خوانند و با رأی‌گیری یک حکم روشن می‌دهند: ایمن، مشکوک یا سمی.</p>
+      <div class="cta">
+        <a class="btn btn-ink" data-live="panel" aria-disabled="true"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="18" height="18" x="3" y="3" rx="3"/><path d="M3 9h18M9 21V9"/></svg><span data-live-label>باز کردن پنل</span></a>
+        <a class="btn btn-line" href="api/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>مستندات API</span></a>
       </div>
-      <div class="stamp" data-demo-stamp data-v="SAFE"><div><div class="stamp-fa">ایمن</div><div class="stamp-en">SAFE</div></div></div>
+      <div class="meta-row"><span><b>۵</b> مدل رأی‌دهنده</span><span><b>۳</b> زبان</span><span><b>۲۲</b> مسیر API</span></div>
     </div>
-    <div class="demo-foot"><span data-demo-foot>رأی‌ها ۰ از ۴ · ۲۱۲ میلی‌ثانیه</span><span class="ltr">POST /api/v1/check</span></div>
+
+    <div class="desk reveal" aria-label="نمونه‌ی زنده‌ی حکم Unicollect">
+      <div class="desk-head"><span>میز بررسی</span><span class="mono ltr">POST /api/v1/check</span></div>
+      <div class="letter">
+        <div class="letter-to" data-demo-lang>متن</div>
+        <div class="letter-text" data-demo-text aria-live="polite"></div>
+        <div class="voters" data-demo-voters></div>
+        <div class="stamp" data-demo-stamp aria-hidden="true">
+          <svg class="ring" viewBox="0 0 132 132"><defs><path id="ringp" d="M66 66m-50 0a50 50 0 1 1 100 0a50 50 0 1 1-100 0"/></defs><text><textPath href="#ringp" startOffset="0">UNICOLLECT · GUARD · UNICOLLECT · GUARD ·</textPath></text></svg>
+          <b data-demo-verdict></b><small data-demo-score></small>
+        </div>
+      </div>
+      <div class="desk-chips" role="group" aria-label="نمونه‌ها">
+        <button class="chip" type="button" data-demo="0"><span class="cd safe"></span>دوستانه</button>
+        <button class="chip" type="button" data-demo="1"><span class="cd suspect"></span>لحن تند</button>
+        <button class="chip" type="button" data-demo="2"><span class="cd toxic"></span>توهین</button>
+        <button class="chip" type="button" data-demo="3"><span class="cd safe"></span>فینگیلیش</button>
+        <button class="chip" type="button" data-demo="4"><span class="cd toxic"></span>فینگیلیش تند</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section band">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="eyebrow"><span class="bar"></span>چرا قابل اعتماد است</span><h2>یک مدل اشتباه کند، حکم عوض نمی‌شود.</h2></div>
+    <div class="pillars">
+      <article class="card feature reveal"><span class="glyph"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4m0 0-5 4.5m5-4.5 5 4.5"/></svg></span><h3>رأی اجماعی</h3><p>هیچ مدلی به‌تنهایی نمی‌تواند متنی را سمی اعلام کند؛ دست‌کم یک مدل دیگر باید تأیید کند.</p><div class="big">5 → 1</div></article>
+      <article class="card reveal"><span class="glyph"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg></span><h3>ساخته برای فارسی</h3><p>فینگیلیش به فارسی برگردانده و دوباره بررسی می‌شود؛ <span class="inline-code">k1r</span> و <span class="inline-code">k.i.r</span> هم لو می‌روند.</p></article>
+      <article class="card reveal"><span class="glyph"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg></span><h3>شفاف</h3><p>نمره‌ی هر مدل، تعداد رأی‌ها و دلیل حکم در هر پاسخ هست.</p></article>
+    </div>
   </div>
 </section>
 
 <section class="section">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <div><p class="kicker">چرا Unicollect</p><h2>یک مدل کافی نیست.</h2></div>
-      <p class="lede">هر متن را چند مدل مستقل می‌خوانند و تصمیم با رأی جمعی گرفته می‌شود؛ پس یک مدلِ بیش از حد مطمئن نمی‌تواند به‌تنهایی کاربر را مسدود کند.</p>
-    </div>
-    <div class="grid-3">
-      <article class="card lift reveal"><div class="card-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16V9M12 16V5M17 16v-4"/></svg></div><h3>رأی جمعی، نه حدس یک مدل</h3><p>پنج طبقه‌بند با وزن‌های متفاوت رأی می‌دهند. رأی تنها و تأییدنشده، حداکثر «مشکوک» حساب می‌شود.</p></article>
-      <article class="card lift reveal"><div class="card-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 6 8"/><path d="M11 5c-.5 4-3 7-7 9"/><path d="m13 21 4-9 4 9M14.5 18h5"/></svg></div><h3>فینگلیش را هم می‌فهمد</h3><p>متن لاتینِ فارسی تشخیص داده می‌شود، به فارسی برگردانده می‌شود و یک‌بار دیگر با سخت‌گیری بیشتر بررسی می‌شود.</p></article>
-      <article class="card lift reveal"><div class="card-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div><h3>هر عدد قابل بررسی است</h3><p>امتیاز هر مدل، رأی‌ها، مسیر تحلیل و زمان پاسخ در خروجی هست؛ برای لاگ، بازبینی و اشکال‌زدایی.</p></article>
-    </div>
-  </div>
-</section>
-
-<section class="section section-alt">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <div><p class="kicker">خروجی</p><h2>سه نتیجه، یک تصمیم روشن.</h2></div>
-      <p class="lede">فیلد <code>decision</code> همیشه یکی از این سه مقدار است. منطق محصولت را روی همین بنا کن.</p>
-    </div>
-    <div class="verdicts">
-      <article class="verdict reveal"><h3>ایمن <code>SAFE</code></h3><p>هیچ سیگنال معناداری از قوانین رأی‌گیری عبور نکرده. متن را منتشر کن.</p></article>
-      <article class="verdict suspect reveal"><h3>مشکوک <code>SUSPECT</code></h3><p>سیگنالی هست اما تأیید کافی ندارد. برای بازبینی انسانی نگهش دار.</p></article>
-      <article class="verdict toxic reveal"><h3>سمی <code>TOXIC</code></h3><p>چند رأی، یا یک رأی قوی که مدل دیگری هم تأییدش کرده. جلوی انتشار را بگیر.</p></article>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="api">
-  <div class="wrap split">
+  <div class="wrap api-teaser">
     <div class="reveal">
-      <p class="kicker">مستندات API</p>
-      <h2>یک درخواست، <span class="accent">پاسخ کامل.</span></h2>
-      <p class="lede">بدون SDK و بدون کلید. JSON بفرست و نتیجه‌ی ساختاریافته بگیر. ده مسیر برای بررسی تکی و گروهی، تشخیص زبان، تبدیل فینگلیش، وضعیت مدل‌ها و آمار.</p>
-      <div class="hero-actions"><a class="btn btn-primary" href="api-docs/">ورود به مستندات <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg></a><a class="btn" href="api-docs/#playground"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>محیط آزمایش</a></div>
+      <div class="v1">API v1</div>
+      <h2 style="font-size:clamp(26px,3.4vw,40px);font-weight:900;margin-top:18px">نگهبان را به محصول خودت وصل کن.</h2>
+      <ul class="bullets">
+        <li>بررسی تکی و دسته‌ای تا ۳۲ متن</li>
+        <li>سانسور خودکار و حکم جمله‌به‌جمله</li>
+        <li>سازگار با Moderation API اوپن‌ای‌آی</li>
+        <li>لینک زنده همیشه در <span class="inline-code">api/links.json</span></li>
+      </ul>
+      <a class="btn btn-ink" href="api/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg><span>دیدن همه‌ی مسیرها</span></a>
     </div>
-    <div class="reveal"><div class="code"><div class="code-bar"><div class="tabs" role="tablist"><button class="tab" type="button" data-tab="curl" aria-selected="true">cURL</button><button class="tab" type="button" data-tab="js" aria-selected="false">JavaScript</button><button class="tab" type="button" data-tab="py" aria-selected="false">Python</button></div><button class="copy-btn" type="button" data-copy-from="code"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>کپی</button></div><div data-panel="curl"><pre><code>curl -X POST &quot;$UNICOLLECT_URL/api/v1/check&quot; \
-  -H &quot;Content-Type: application/json&quot; \
-  -d &#x27;{&quot;text&quot;: &quot;سلام، روز خوبی داشته باشی&quot;}&#x27;</code></pre></div><div data-panel="js" hidden><pre><code>const res = await fetch(`${UNICOLLECT_URL}/api/v1/check`, {
-  method: &#x27;POST&#x27;,
-  headers: { &#x27;Content-Type&#x27;: &#x27;application/json&#x27; },
-  body: JSON.stringify({
-    &quot;text&quot;: &quot;سلام، روز خوبی داشته باشی&quot;
-  })
-});
-const data = await res.json();</code></pre></div><div data-panel="py" hidden><pre><code>import requests
+    <div class="code reveal">
+      <div class="code-bar"><span class="tab" aria-selected="true">curl</span><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div>
+<pre><code>curl -X POST <span class="base-url">https://YOUR-LINK.trycloudflare.com</span>/api/v1/check \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{"text": "to khar hasti"}'</span>
 
-res = requests.post(
-    f&quot;{UNICOLLECT_URL}/api/v1/check&quot;,
-    json={&quot;text&quot;: &quot;سلام، روز خوبی داشته باشی&quot;},
-    timeout=180,
-)
-data = res.json()</code></pre></div></div></div>
-  </div>
-  <div class="wrap grid-3" style="margin-top:32px">
-    <a class="card reveal" href="api-docs/#check"><div class="endpoint-title"><span class="path" style="font-size:15px">/api/v1/check</span><span class="method post">POST</span></div><h3 style="margin-top:12px">بررسی یک متن</h3><p>نتیجه، اطمینان، رأی‌ها و امتیاز هر مدل.</p></a>
-    <a class="card reveal" href="api-docs/#batch"><div class="endpoint-title"><span class="path" style="font-size:15px">/api/v1/check/batch</span><span class="method post">POST</span></div><h3 style="margin-top:12px">بررسی گروهی</h3><p>تا ۳۲ متن در یک درخواست، با خلاصه‌ی نتایج.</p></a>
-    <a class="card reveal" href="api-docs/#detect"><div class="endpoint-title"><span class="path" style="font-size:15px">/api/v1/detect</span><span class="method post">POST</span></div><h3 style="margin-top:12px">تشخیص زبان و فینگلیش</h3><p>بدون اجرای مدل‌ها؛ سریع و سبک.</p></a>
-    <a class="card reveal" href="api-docs/#fingilish"><div class="endpoint-title"><span class="path" style="font-size:15px">/api/v1/fingilish</span><span class="method post">POST</span></div><h3 style="margin-top:12px">تبدیل فینگلیش</h3><p>متن لاتینِ فارسی را به خط فارسی برمی‌گرداند.</p></a>
-    <a class="card reveal" href="api-docs/#models"><div class="endpoint-title"><span class="path" style="font-size:15px">/api/v1/models</span><span class="method get">GET</span></div><h3 style="margin-top:12px">وضعیت مدل‌ها</h3><p>پنج مدل، وزن، زبان و وضعیت بارگذاری.</p></a>
-    <a class="card reveal" href="api-docs/#health"><div class="endpoint-title"><span class="path" style="font-size:15px">/health</span><span class="method get">GET</span></div><h3 style="margin-top:12px">سلامت سرویس</h3><p>آماده بودن مدل‌ها و درخواست‌های در جریان.</p></a>
-  </div>
-</section>
-
-<section class="section section-alt" id="links">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <div><p class="kicker">دسترسی</p><h2>لینک‌های زنده‌ی سرویس.</h2></div>
-      <p class="lede">آدرس سرویس با هر اجرا عوض می‌شود و همین‌جا خودکار به‌روز می‌شود. در هر صفحه‌ی سایت هم کافی است <code>muvixo</code> را تایپ کنی.</p>
-    </div>
-    <div class="reveal"><div class="access">
-  <div class="access-head">
-    <div><h2 style="font-size:20px">لینک‌های فعال سرویس</h2><span class="access-meta" data-status-meta></span></div>
-    <span class="status-pill" data-status-pill></span>
-  </div>
-  <ul class="links" data-links></ul>
-</div></div>
-    <div class="base-url reveal"><span class="muted">آدرس پایه:</span><code data-base-url>https://&lt;your-tunnel&gt;.trycloudflare.com</code><button class="btn btn-sm" type="button" data-base-copy disabled><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>کپی</button><a class="btn btn-sm btn-primary" href="#" data-open-panel aria-disabled="true">باز کردن پنل</a></div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap">
-    <div class="cta reveal">
-      <div><h2>آماده‌ی اتصال هستی؟</h2><p>شروع سریع، مرجع کامل فیلدها و محیط آزمایش زنده در مستندات.</p></div>
-      <a class="btn" href="api-docs/#quickstart">شروع سریع <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg></a>
+<span class="tok-c"># →</span>
+{
+  <span class="tok-p">"decision"</span>: <span class="tok-s">"TOXIC"</span>,
+  <span class="tok-p">"confidence"</span>: <span class="tok-n">0.91</span>,
+  <span class="tok-p">"votes_count"</span>: <span class="tok-n">3</span>,
+  <span class="tok-p">"fingilish_text"</span>: <span class="tok-s">"تو خر هستی"</span>,
+  <span class="tok-p">"reason"</span>: <span class="tok-s">"3 of 4 models voted toxic"</span>
+}</code></pre>
     </div>
   </div>
 </section>
 
 </main>
-<footer class="site-footer">
-  <div class="wrap footer-grid">
-    <div class="footer-about">
-      <a class="brand" href=""><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle class="m-ring" cx="16" cy="16" r="14"/><path class="m-u" d="M10.5 9v7.5a5.5 5.5 0 0 0 11 0V9"/></svg><span class="brand-name">Unicollect</span></a>
-      <p>سنجش ایمنی متن فارسی، فینگلیش و انگلیسی با رأی‌گیری پنج مدل تخصصی.</p>
-    </div>
-    <div class="footer-col"><h4>محصول</h4><ul>
-      <li><a href="">خانه</a></li>
-      <li><a href="how-it-works/">نحوه کار</a></li>
-      <li><a href="#" data-open-panel>پنل بررسی متن</a></li>
-      <li><a href="#links">لینک‌های سرویس</a></li>
-    </ul></div>
-    <div class="footer-col"><h4>توسعه‌دهندگان</h4><ul>
-      <li><a href="api-docs/">مستندات API</a></li>
-      <li><a href="api-docs/#check">بررسی متن</a></li>
-      <li><a href="api-docs/#playground">محیط آزمایش</a></li>
-      <li><a href="api-docs/#errors">کدهای خطا</a></li>
-    </ul></div>
-    <div class="footer-col"><h4>Unicollect</h4><ul>
-      <li><a href="about/">درباره</a></li>
-      <li><a href="privacy/">حریم خصوصی</a></li>
-      <li><a href="#" data-open-dialog>دسترسی سریع</a></li>
-    </ul></div>
-  </div>
-  <div class="wrap footer-bottom">
-    <span>© ۱۴۰۵ Unicollect · ساخته‌شده توسط موویکسو</span>
-    <span>تصمیم ماشین یک سیگنال است، نه حکم نهایی.</span>
+<footer class="foot">
+  <div class="wrap">
+    <span>© Unicollect Guard · ساخته‌ی موویکسو</span>
+    <nav aria-label="پیوندهای پایانی"><a href="">خانه</a><a href="api/">API</a><a href="how-it-works/">فرآیند</a><a href="about/">درباره</a><a href="privacy/">حریم خصوصی</a><a href="api/links.json" class="ltr">links.json</a></nav>
+    <span>Unicollect می‌تواند اشتباه کند؛ نتیجه‌های مهم را خودت هم مرور کن.</span>
   </div>
 </footer>
-<div class="dialog" id="access-dialog" role="dialog" aria-modal="true" aria-labelledby="access-title" aria-hidden="true">
-  <div class="dialog-card">
-    <div class="dialog-head">
-      <div><h3 id="access-title">لینک‌های سرویس</h3><span class="access-meta" data-status-meta></span></div>
-      <div style="display:flex;gap:8px;align-items:center"><span class="status-pill" data-status-pill></span><button class="icon-btn dialog-close" type="button" aria-label="بستن"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+<div class="modal" id="access" aria-hidden="true">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="access-title">
+    <div class="modal-head"><h3 id="access-title">دسترسی به نگهبان متن</h3><button class="icon-btn" type="button" data-access-close aria-label="بستن"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="base-box"><code data-live-text>در حال دریافت…</code></div>
+    <div class="actions">
+      <a class="btn btn-ink btn-sm" data-live="panel" aria-disabled="true"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><span>باز کردن پنل</span></a>
+      <a class="btn btn-line btn-sm" href="api/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg><span>مستندات API</span></a>
+      <button class="btn btn-line btn-sm" type="button" data-copy-live><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی لینک</span></button>
     </div>
-    <ul class="links" data-links></ul>
-  </div>
+    <div class="modal-foot" data-access-status>این پنجره با میانبر اختصاصی باز می‌شود.</div>
+  </section>
 </div>
-<script src="assets/site.js" defer></script>
+<div class="toast" id="toast" role="status" aria-live="polite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span data-toast-text>کپی شد</span></div>
+<script src="assets/site.js?v=4" defer></script>
 </body>
 </html>

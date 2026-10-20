@@ -1,356 +1,378 @@
-/* Unicollect - public site behaviour.
-   theme · mobile menu · live service links · copy · code tabs
-   demo · "muvixo" shortcut · docs scrollspy · API playground   */
+/* Unicollect Guard: public site behaviour
+   theme · drawer · live links (api/links.json) · stamp demo · API docs
+   (tabs, copy, TOC, console) · secret "muvixo" access dialog. */
 (function () {
-  'use strict';
+  "use strict";
 
-  var root = document.documentElement;
-  var THEME_KEY = 'unicollect_theme';
-  var SCRIPT_SRC = (document.currentScript && document.currentScript.src) || location.href;
-  var STATUS_URL = new URL('status.json', SCRIPT_SRC).href;
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var faNum = new Intl.NumberFormat('fa-IR');
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var THEME_KEY = "unicollect_theme";
+  var PLACEHOLDER = "https://YOUR-LINK.trycloudflare.com";
 
-  root.classList.remove('no-js');
-
-  function $(sel, ctx) { return (ctx || document).querySelector(sel); }
-  function $$(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
-  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-
-  /* ---------------- theme ---------------- */
-  function storedTheme() { try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; } }
-  function systemTheme() { return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
-  function applyTheme(t) {
-    root.setAttribute('data-theme', t);
-    var meta = $('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#15111f' : '#f6f4fb');
-    $$('.theme-toggle').forEach(function (b) {
-      var label = t === 'dark' ? 'روشن کردن پوسته' : 'تاریک کردن پوسته';
-      b.setAttribute('aria-label', label);
-      b.setAttribute('title', label);
-      b.setAttribute('aria-pressed', String(t === 'dark'));
-    });
+  function scriptBase() {
+    var s = document.currentScript;
+    if (!s) { var all = document.getElementsByTagName("script"); s = all[all.length - 1]; }
+    return s && s.src ? s.src.replace(/[?#].*$/, "").replace(/[^/]*$/, "") : "";
   }
-  applyTheme(storedTheme() || systemTheme());
-  $$('.theme-toggle').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-      applyTheme(next);
+  var ASSETS = scriptBase();                       // .../assets/
+  var ROOT = ASSETS.replace(/assets\/$/, "");      // site root (absolute)
+  var SERVED_BY_SERVICE = location.pathname.indexOf("/site/") === 0;
+
+  function fa(n) { return String(n).replace(/[0-9]/g, function (d) { return "۰۱۲۳۴۵۶۷۸۹"[+d]; }); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, REDUCED ? 0 : ms); }); }
+
+  /* ---------- theme ---------- */
+  function paintThemeColor() {
+    var m = $('meta[name="theme-color"]');
+    if (m) m.setAttribute("content", document.documentElement.classList.contains("dark") ? "#120c2a" : "#f7f3f8");
+  }
+  $$("[data-theme-toggle]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var dark = !document.documentElement.classList.contains("dark");
+      document.documentElement.classList.toggle("dark", dark);
+      try { localStorage.setItem(THEME_KEY, dark ? "dark" : "light"); } catch (e) {}
+      paintThemeColor();
     });
   });
   if (window.matchMedia) {
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    var onSys = function () { if (!storedTheme()) applyTheme(systemTheme()); };
-    if (mq.addEventListener) mq.addEventListener('change', onSys); else if (mq.addListener) mq.addListener(onSys);
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var onMq = function () {
+      var saved = null; try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+      if (!saved) { document.documentElement.classList.toggle("dark", mq.matches); paintThemeColor(); }
+    };
+    if (mq.addEventListener) mq.addEventListener("change", onMq); else if (mq.addListener) mq.addListener(onMq);
   }
-  window.addEventListener('storage', function (e) { if (e.key === THEME_KEY) applyTheme(e.newValue || systemTheme()); });
+  paintThemeColor();
 
-  /* ---------------- toast ---------------- */
-  var toastEl, toastTimer;
-  function toast(msg) {
-    if (!toastEl) { toastEl = document.createElement('div'); toastEl.className = 'toast'; toastEl.setAttribute('role', 'status'); document.body.appendChild(toastEl); }
-    toastEl.textContent = msg;
-    toastEl.classList.add('is-on');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove('is-on'); }, 1800);
-  }
+  /* ---------- header + drawer ---------- */
+  var top = $("#top");
+  function onScroll() { if (top) top.classList.toggle("scrolled", window.scrollY > 8); }
+  window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
 
-  /* ---------------- copy ---------------- */
-  function copyText(text) {
-    function fallback() {
-      var ta = document.createElement('textarea');
-      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); } catch (e) {}
-      ta.remove();
-    }
-    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).catch(fallback); else fallback();
-    toast('کپی شد');
-  }
-  document.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-copy], [data-copy-from]');
-    if (!b) return;
-    e.preventDefault();
-    var text = b.getAttribute('data-copy');
-    if (text == null) {
-      var src = b.getAttribute('data-copy-from') === 'code'
-        ? b.closest('.code').querySelector('[data-panel]:not([hidden]) pre, pre')
-        : document.querySelector(b.getAttribute('data-copy-from'));
-      text = src ? src.innerText.trim() : '';
-    }
-    if (text) copyText(text);
-  });
-
-  /* ---------------- mobile menu ---------------- */
-  var header = $('.site-header'), burger = $('.burger');
+  var drawer = $("#drawer"), opener = $("[data-menu-open]");
   function setMenu(open) {
-    if (!header || !burger) return;
-    header.classList.toggle('menu-open', open);
-    burger.setAttribute('aria-expanded', String(open));
-    burger.setAttribute('aria-label', open ? 'بستن منو' : 'باز کردن منو');
-    document.body.style.overflow = open ? 'hidden' : '';
+    if (!drawer) return;
+    drawer.classList.toggle("open", open);
+    drawer.setAttribute("aria-hidden", open ? "false" : "true");
+    if (opener) opener.setAttribute("aria-expanded", open ? "true" : "false");
+    document.body.style.overflow = open ? "hidden" : "";
   }
-  if (burger) {
-    burger.addEventListener('click', function () { setMenu(!header.classList.contains('menu-open')); });
-    header.addEventListener('click', function (e) { if (e.target === header || e.target.closest('.nav a')) setMenu(false); });
-    document.addEventListener('click', function (e) {
-      if (header.classList.contains('menu-open') && !e.target.closest('.nav') && !e.target.closest('.burger')) setMenu(false);
-    });
-    window.addEventListener('resize', function () { if (window.innerWidth > 860) setMenu(false); });
-  }
+  if (opener) opener.addEventListener("click", function () { setMenu(true); });
+  $$("[data-menu-close]").forEach(function (b) { b.addEventListener("click", function () { setMenu(false); }); });
+  if (drawer) $$("a", drawer).forEach(function (a) { a.addEventListener("click", function () { setMenu(false); }); });
+  window.addEventListener("resize", function () { if (window.innerWidth > 820) setMenu(false); });
 
-  /* ---------------- code tabs ---------------- */
-  $$('.code .tabs').forEach(function (tabs) {
-    var code = tabs.closest('.code');
-    tabs.addEventListener('click', function (e) {
-      var tab = e.target.closest('.tab');
-      if (!tab) return;
-      var lang = tab.getAttribute('data-tab');
-      $$('.tab', tabs).forEach(function (t) { t.setAttribute('aria-selected', String(t === tab)); });
-      $$('[data-panel]', code).forEach(function (p) { p.hidden = p.getAttribute('data-panel') !== lang; });
-    });
+  /* ---------- reveal on scroll ---------- */
+  document.documentElement.classList.add("js");
+  var reveals = $$(".reveal");
+  if ("IntersectionObserver" in window && !REDUCED) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    reveals.forEach(function (el) { io.observe(el); });
+  } else reveals.forEach(function (el) { el.classList.add("in"); });
+
+  /* ---------- toast + clipboard ---------- */
+  var toastTimer;
+  function toast(msg) {
+    var t = $("#toast"); if (!t) return;
+    var s = $("[data-toast-text]", t); if (s) s.textContent = msg || "کپی شد";
+    t.classList.add("show"); clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1500);
+  }
+  function copy(text) {
+    if (!text) return;
+    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(function () { toast(); }, fallback); return; }
+    fallback();
+    function fallback() {
+      var a = document.createElement("textarea"); a.value = text; a.setAttribute("readonly", "");
+      a.style.cssText = "position:fixed;top:-1000px;opacity:0"; document.body.appendChild(a); a.select();
+      try { document.execCommand("copy"); } catch (e) {} a.remove(); toast();
+    }
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-copy-code]");
+    if (!b) return;
+    var box = b.closest(".code");
+    var panel = box && ($(".panel:not([hidden]) pre", box) || $("pre", box));
+    if (panel) copy(panel.innerText.replace(/\u00a0/g, " "));
   });
 
-  /* ---------------- live service links ---------------- */
-  var LINKS = [
-    { name: 'پنل بررسی متن', hint: 'رابط کاربری Unicollect', path: '/' },
-    { name: 'اطلاعات API', hint: 'نسخه، محدودیت‌ها و مسیرها', path: '/api/v1/info' },
-    { name: 'Swagger UI', hint: 'مستندات تعاملی', path: '/docs' },
-    { name: 'ReDoc', hint: 'مستندات خوانا', path: '/redoc' },
-    { name: 'OpenAPI', hint: 'فایل JSON مشخصات', path: '/openapi.json' },
-    { name: 'سلامت سرویس', hint: 'وضعیت مدل‌ها', path: '/health' },
-    { name: 'مدل‌ها', hint: 'فهرست پنج مدل', path: '/api/v1/models' },
-    { name: 'آمار', hint: 'زمان کار و شمارنده‌ها', path: '/api/v1/stats' }
-  ];
-  var ICON_OPEN = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M10 14 20 4"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>';
-  var ICON_COPY = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>';
-  var service = { state: 'loading', url: '' };
+  /* ---------- code tabs ---------- */
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-tab]");
+    if (!t) return;
+    var box = t.closest("[data-tabs]");
+    $$("[data-tab]", box).forEach(function (x) { x.setAttribute("aria-selected", String(x === t)); });
+    $$(".panel", box).forEach(function (p) { p.hidden = p.id !== t.dataset.tab; });
+  });
 
-  function decodePayload(p) {
-    if (!p) return '';
-    try { var s = atob(p); try { return decodeURIComponent(s); } catch (e) { return s; } } catch (e) { return ''; }
+  /* ---------- live links ---------- */
+  var live = { url: "", status: "unknown", updated: null, run: null };
+
+  function setDots(cls, text) {
+    $$("[data-status-dot]").forEach(function (d) { d.className = "dot " + cls; });
+    $$("[data-status-text]").forEach(function (t) { t.textContent = text; });
+  }
+  var LINK_PATHS = { panel: "", api: "/api/v1", swagger: "/docs", redoc: "/redoc", openapi: "/openapi.json", health: "/api/v1/health", guide: "/api-docs" };
+
+  function paintLinks() {
+    var url = live.url;
+    $$("[data-live]").forEach(function (a) {
+      var k = a.getAttribute("data-live"), p = LINK_PATHS[k] || "";
+      if (url) { a.href = url + p; a.target = "_blank"; a.rel = "noopener"; a.removeAttribute("aria-disabled"); }
+      else { a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); }
+    });
+    $$("[data-live-url]").forEach(function (s) {
+      var p = LINK_PATHS[s.getAttribute("data-live-url")] || "";
+      s.textContent = (url || PLACEHOLDER).replace(/^https?:\/\//, "") + p;
+    });
+    $$("[data-live-text]").forEach(function (s) { s.textContent = url || "سرویس فعلاً آنلاین نیست"; });
+    $$(".base-url").forEach(function (s) { s.textContent = url || PLACEHOLDER; });
+    $$("[data-live-label]").forEach(function (s) { s.textContent = url ? "باز کردن پنل" : "پنل فعلاً آفلاین است"; });
+    var pages = SERVED_BY_SERVICE ? "https://USER.github.io/REPO/" : ROOT;
+    $$("[data-pages-url]").forEach(function (s) { s.textContent = pages; });
+    $$("[data-pages-url-js]").forEach(function (s) {
+      var tail = /links\.json/.test(s.textContent) ? "api/links.json" : "";
+      s.textContent = '"' + pages + tail + '"';
+    });
+    var when = $("[data-status-when]");
+    if (when) {
+      if (live.status === "online") when.textContent = "آنلاین" + (live.updated ? " · به‌روزرسانی " + relTime(live.updated) : "");
+      else if (live.status === "starting") when.textContent = "در حال راه‌اندازی سرویس…";
+      else when.textContent = "آفلاین" + (live.updated ? " · آخرین تغییر " + relTime(live.updated) : "");
+    }
   }
   function relTime(iso) {
-    if (!iso) return '';
-    var diff = (Date.parse(iso) - Date.now()) / 1000;
-    if (isNaN(diff)) return '';
-    var rtf = new Intl.RelativeTimeFormat('fa', { numeric: 'auto' });
-    var a = Math.abs(diff);
-    if (a < 60) return rtf.format(Math.round(diff), 'second');
-    if (a < 3600) return rtf.format(Math.round(diff / 60), 'minute');
-    if (a < 86400) return rtf.format(Math.round(diff / 3600), 'hour');
-    return rtf.format(Math.round(diff / 86400), 'day');
+    var d = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (!(d >= 0)) return "";
+    if (d < 60) return "همین الان";
+    if (d < 3600) return fa(Math.round(d / 60)) + " دقیقه پیش";
+    if (d < 86400) return fa(Math.round(d / 3600)) + " ساعت پیش";
+    return fa(Math.round(d / 86400)) + " روز پیش";
   }
-  function renderLinks() {
-    var online = service.state === 'online';
-    $$('[data-links]').forEach(function (ul) {
-      ul.setAttribute('data-state', online ? 'online' : 'offline');
-      ul.innerHTML = LINKS.map(function (l) {
-        var full = online ? service.url + (l.path === '/' ? '/' : l.path) : '';
-        return '<li class="link-row">' +
-          '<div class="link-name">' + esc(l.name) + '<small>' + esc(l.hint) + '</small></div>' +
-          '<div class="link-url" title="' + esc(full) + '">' + (online ? esc(full.replace(/^https?:\/\//, '')) : esc(l.path)) + '</div>' +
-          '<div class="link-actions">' +
-            '<a class="icon-btn" ' + (online ? 'href="' + esc(full) + '" target="_blank" rel="noopener"' : 'aria-disabled="true" tabindex="-1"') + ' aria-label="باز کردن ' + esc(l.name) + '">' + ICON_OPEN + '</a>' +
-            '<button class="icon-btn" type="button" ' + (online ? 'data-copy="' + esc(full) + '"' : 'disabled') + ' aria-label="کپی لینک ' + esc(l.name) + '">' + ICON_COPY + '</button>' +
-          '</div></li>';
-      }).join('');
+  function decode(v) {
+    if (!v) return "";
+    try { return decodeURIComponent(escape(atob(v))); } catch (e) { try { return atob(v); } catch (e2) { return ""; } }
+  }
+  function ping(url) {
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, 8000);
+    return fetch(url + "/health", { cache: "no-store", signal: ctrl ? ctrl.signal : undefined })
+      .then(function (r) { clearTimeout(t); return r.ok ? r.json() : null; })
+      .catch(function () { clearTimeout(t); return null; });
+  }
+  function applyStatus() {
+    paintLinks();
+    if (!live.url) { setDots(live.status === "starting" ? "warn" : "bad", live.status === "starting" ? "در حال راه‌اندازی" : "آفلاین"); return; }
+    setDots("warn", "در حال بررسی…");
+    ping(live.url).then(function (h) {
+      if (h && h.status === "ok") { live.status = "online"; setDots("ok", "آنلاین"); }
+      else if (h) { live.status = "starting"; setDots("warn", "در حال بارگذاری مدل‌ها"); }
+      else { setDots(live.status === "online" ? "warn" : "bad", live.status === "online" ? "آنلاین (پاسخ نداد)" : "آفلاین"); }
+      paintLinks();
     });
-    var labels = { online: 'آنلاین', preparing: 'در حال آماده‌سازی', offline: 'آفلاین', loading: 'در حال بررسی…' };
-    $$('[data-status-pill]').forEach(function (p) {
-      p.setAttribute('data-state', service.state === 'loading' ? 'preparing' : service.state);
-      p.innerHTML = '<span class="dot"></span>' + labels[service.state];
-    });
-    $$('[data-status-meta]').forEach(function (m) {
-      m.textContent = service.updated ? 'آخرین به‌روزرسانی ' + relTime(service.updated) : '';
-    });
-    $$('[data-base-url]').forEach(function (el) { el.textContent = online ? service.url : 'https://<your-tunnel>.trycloudflare.com'; });
-    $$('[data-base-copy]').forEach(function (b) { if (online) b.setAttribute('data-copy', service.url); else b.removeAttribute('data-copy'); b.disabled = !online; });
-    $$('[data-open-panel]').forEach(function (a) {
-      if (online) { a.href = service.url + '/'; a.removeAttribute('aria-disabled'); a.target = '_blank'; a.rel = 'noopener'; }
-      else { a.setAttribute('aria-disabled', 'true'); }
-    });
-    var urlField = $('#play-base');
-    if (urlField && online && !urlField.dataset.touched) urlField.value = service.url;
   }
   function loadStatus() {
-    if (!$('[data-links], [data-status-pill], [data-base-url], #play-base, [data-open-panel]')) return;
-    fetch(STATUS_URL + '?t=' + Date.now(), { cache: 'no-store' })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (d) {
-        var url = decodePayload(d.url_payload).replace(/\/+$/, '');
-        service.updated = d.updated_at || '';
-        if (d.status === 'online' && /^https:\/\//.test(url)) {
-          service.state = 'online'; service.url = url; renderLinks();
-          // confirm the tunnel really answers before trusting it
-          var ctrl = window.AbortController ? new AbortController() : null;
-          var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 8000);
-          fetch(url + '/health', { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
-            .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error(r.status); })
-            .catch(function () { clearTimeout(timer); service.state = 'offline'; renderLinks(); });
-        } else {
-          service.state = (d.status === 'preparing' || d.status === 'starting') ? 'preparing' : 'offline';
-          service.url = ''; renderLinks();
-        }
+    if (SERVED_BY_SERVICE) {
+      live.url = location.origin; live.status = "online"; applyStatus(); return Promise.resolve();
+    }
+    var bust = "?t=" + Date.now();
+    return fetch(ROOT + "api/links.json" + bust, { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { live.url = (d.base_url || "").replace(/\/+$/, ""); live.status = d.status || "offline"; live.updated = d.updated_at; })
+      .catch(function () {
+        return fetch(ASSETS + "status.json" + bust, { cache: "no-store" })
+          .then(function (r) { return r.json(); })
+          .then(function (d) { live.url = decode(d.url_payload).replace(/\/+$/, ""); live.status = d.status || "offline"; live.updated = d.updated_at; })
+          .catch(function () { live.url = ""; live.status = "offline"; });
       })
-      .catch(function () { service.state = 'offline'; service.url = ''; renderLinks(); });
+      .then(function () { if (live.status === "offline") live.url = ""; applyStatus(); });
   }
-  renderLinks();
   loadStatus();
   setInterval(function () { if (!document.hidden) loadStatus(); }, 60000);
 
-  /* ---------------- "muvixo" shortcut -> links dialog ---------------- */
-  var dialog = $('#access-dialog'), lastFocus = null;
-  function openDialog() {
-    if (!dialog) return;
-    lastFocus = document.activeElement;
-    dialog.classList.add('is-open'); dialog.setAttribute('aria-hidden', 'false');
-    var c = $('.dialog-close', dialog); if (c) c.focus();
-    loadStatus();
+  $$("[data-copy-live]").forEach(function (b) { b.addEventListener("click", function () { copy(live.url); }); });
+
+  /* ---------- stamp demo (home) ---------- */
+  var MODELS = ["فارسی", "پرو", "سریع", "گسترده", "انگلیسی"];
+  var WORD = { safe: "ایمن", suspect: "مشکوک", toxic: "سمی" };
+  var COLOR = { safe: "var(--safe)", suspect: "var(--suspect)", toxic: "var(--toxic)" };
+  var EX = [
+    { t: "میشه لطفاً فردا ساعت ۵ وقت بذاریم صحبت کنیم؟", lang: "فارسی", v: "safe", s: 4, m: [3, 6, 4, 7, null] },
+    { t: "اصلاً حواست به کارت هست یا نه؟ این دومین باره.", lang: "فارسی", v: "suspect", s: 61, m: [61, 48, 35, 22, null] },
+    { t: "خیلی احمقی، دیگه هیچ‌وقت بهم پیام نده.", lang: "فارسی", v: "toxic", s: 96, m: [97, 93, 95, 88, null] },
+    { t: "salam, mamnoon az komaket, kheili lotf kardi", lang: "فینگیلیش → سلام، ممنون از کمکت…", v: "safe", s: 3, m: [2, 4, 3, 5, 6] },
+    { t: "khafe sho ahmagh", lang: "فینگیلیش → خفه شو احمق", v: "toxic", s: 91, m: [94, 89, 77, 41, 70] }
+  ];
+  var dText = $("[data-demo-text]"), dLang = $("[data-demo-lang]"), dVoters = $("[data-demo-voters]"), dStamp = $("[data-demo-stamp]");
+  var chips = $$("[data-demo]"), runId = 0, auto = true;
+
+  if (dVoters) dVoters.innerHTML = MODELS.map(function (n, i) {
+    return '<div class="voter"><div class="meter"><i style="--n:' + i + '"></i><span></span></div>' + n + "</div>";
+  }).join("");
+
+  function setVoters(ex) {
+    $$(".voter", dVoters).forEach(function (v, i) {
+      var val = ex ? ex.m[i] : null, bar = $("i", v), lab = $("span", v);
+      bar.style.setProperty("--h", val == null ? "0%" : Math.max(4, val) + "%");
+      bar.style.setProperty("--c", val == null ? "var(--text-3)" : val >= 50 ? COLOR.toxic : val >= 30 ? COLOR.suspect : COLOR.safe);
+      lab.textContent = !ex ? "" : val == null ? "—" : fa(val);
+      lab.style.color = val != null && val >= 40 ? "#fff" : "";
+      v.style.opacity = ex && val == null ? ".45" : "1";
+    });
   }
-  function closeDialog() {
-    if (!dialog || !dialog.classList.contains('is-open')) return;
-    dialog.classList.remove('is-open'); dialog.setAttribute('aria-hidden', 'true');
+  async function play(i) {
+    if (!dText) return;
+    var me = ++runId, ex = EX[i];
+    chips.forEach(function (c) { c.setAttribute("aria-pressed", String(+c.dataset.demo === i)); });
+    dStamp.className = "stamp"; setVoters(null);
+    dLang.textContent = "متن";
+    dText.innerHTML = '<span class="typed"></span><span class="caret"></span>';
+    var typed = $(".typed", dText), chars = Array.from(ex.t);
+    dText.dir = /[a-z]/i.test(ex.t) ? "ltr" : "rtl";
+    for (var c = 0; c < chars.length; c++) {
+      if (me !== runId) return;
+      typed.textContent += chars[c];
+      await wait(chars[c] === " " ? 38 : 26);
+    }
+    await wait(250); if (me !== runId) return;
+    var caret = $(".caret", dText); if (caret) caret.remove();
+    dLang.textContent = "زبان: " + ex.lang;
+    setVoters(ex);
+    await wait(900); if (me !== runId) return;
+    $("[data-demo-verdict]").textContent = WORD[ex.v];
+    $("[data-demo-score]").textContent = ex.s + "%";
+    void dStamp.offsetWidth;
+    dStamp.className = "stamp " + ex.v + " on";
+    if (auto) { await wait(3200); if (me !== runId || !auto) return; play((i + 1) % EX.length); }
+  }
+  if (dText) {
+    chips.forEach(function (c) { c.addEventListener("click", function () { auto = false; play(+c.dataset.demo); }); });
+    var started = false, start = function () { if (!started) { started = true; play(0); } };
+    if ("IntersectionObserver" in window) {
+      var dio = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { start(); dio.disconnect(); } });
+      dio.observe(dText);
+    } else start();
+    document.addEventListener("visibilitychange", function () { if (document.hidden) auto = false; });
+  }
+
+  /* ---------- API docs: TOC highlight ---------- */
+  var toc = $("[data-toc]");
+  if (toc && "IntersectionObserver" in window) {
+    var links = $$('a[href^="#"]', toc), map = {};
+    links.forEach(function (a) { var t = document.getElementById(a.getAttribute("href").slice(1)); if (t) map[t.id] = a; });
+    var tio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.remove("active"); });
+        var a = map[e.target.id]; if (a) { a.classList.add("active"); if (window.innerWidth <= 960) a.scrollIntoView({ block: "nearest", inline: "center" }); }
+      });
+    }, { rootMargin: "-20% 0px -70% 0px" });
+    Object.keys(map).forEach(function (id) { tio.observe(document.getElementById(id)); });
+    links.forEach(function (a) {
+      a.addEventListener("click", function () {
+        var t = document.getElementById(a.getAttribute("href").slice(1));
+        if (t && t.tagName === "DETAILS") t.open = true;
+      });
+    });
+  }
+  if (location.hash) { var h = document.getElementById(location.hash.slice(1)); if (h && h.tagName === "DETAILS") h.open = true; }
+
+  /* ---------- API console ---------- */
+  var dataEl = $("#ep-data"), sel = $("[data-con-ep]");
+  if (dataEl && sel) {
+    var EPS = JSON.parse(dataEl.textContent);
+    var body = $("[data-con-body]"), keyIn = $("[data-con-key]"), sendBtn = $("[data-con-send]");
+    var resp = $("[data-con-resp]"), out = $("[data-con-out]"), stEl = $("[data-con-status]"), tmEl = $("[data-con-time]"), urlEl = $("[data-con-url]");
+    try { keyIn.value = sessionStorage.getItem("guard_key") || ""; } catch (e) {}
+    var fill = function () {
+      var ep = EPS[+sel.value];
+      body.value = ep.m === "POST" ? JSON.stringify(ep.b || {}, null, 2) : "";
+      body.disabled = ep.m !== "POST";
+      body.placeholder = ep.m === "POST" ? "" : "GET: بدنه ندارد";
+    };
+    sel.addEventListener("change", fill); fill();
+    var hlJson = function (s) {
+      return esc(s)
+        .replace(/(&quot;(?:[^&]|&(?!quot;))*?&quot;)(\s*:)/g, '<span class="tok-p">$1</span>$2')
+        .replace(/(:\s*|\[\s*|,\s*|^\s+)(&quot;(?:[^&]|&(?!quot;))*?&quot;)/gm, '$1<span class="tok-s">$2</span>')
+        .replace(/(:\s*)(-?\d+(?:\.\d+)?)/g, '$1<span class="tok-n">$2</span>')
+        .replace(/(:\s*)(true|false|null)/g, '$1<span class="tok-k">$2</span>');
+    };
+    var send = function () {
+      var ep = EPS[+sel.value];
+      if (!live.url) { toast("سرویس فعلاً آنلاین نیست"); return; }
+      var payload;
+      if (ep.m === "POST") {
+        try { payload = JSON.stringify(JSON.parse(body.value || "{}")); }
+        catch (e) { toast("JSON نامعتبر است"); body.focus(); return; }
+      }
+      var headers = { "Content-Type": "application/json" };
+      var key = keyIn.value.trim(); if (key) headers["X-API-Key"] = key;
+      try { sessionStorage.setItem("guard_key", key); } catch (e) {}
+      var url = live.url + ep.p, t0 = performance.now();
+      sendBtn.setAttribute("aria-disabled", "true");
+      resp.hidden = false; stEl.className = "status-code"; stEl.textContent = "…"; tmEl.textContent = ""; urlEl.textContent = ep.m + " " + ep.p; out.textContent = "";
+      fetch(url, { method: ep.m, headers: headers, body: payload })
+        .then(function (r) { return r.text().then(function (t) { return { r: r, t: t }; }); })
+        .then(function (x) {
+          stEl.textContent = x.r.status; stEl.className = "status-code " + (x.r.ok ? "ok" : "err");
+          tmEl.textContent = fa(Math.round(performance.now() - t0)) + " میلی‌ثانیه";
+          var pretty = x.t; try { pretty = JSON.stringify(JSON.parse(x.t), null, 2); } catch (e) {}
+          out.innerHTML = hlJson(pretty);
+        })
+        .catch(function (err) {
+          stEl.textContent = "ERR"; stEl.className = "status-code err";
+          out.textContent = "درخواست نرسید: " + (err && err.message ? err.message : "network error");
+        })
+        .then(function () { sendBtn.removeAttribute("aria-disabled"); });
+    };
+    sendBtn.addEventListener("click", send);
+    body.addEventListener("keydown", function (e) { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") send(); });
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-try]"); if (!b) return;
+      var d = JSON.parse(b.getAttribute("data-try"));
+      var idx = EPS.findIndex(function (x) { return x.m === d.m && x.p.split("?")[0] === d.p.split("?")[0]; });
+      if (idx >= 0) { sel.value = String(idx); fill(); }
+      document.getElementById("console").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" });
+    });
+  }
+
+  /* ---------- secret access dialog: type "muvixo" ---------- */
+  var access = $("#access"), lastFocus = null;
+  function openAccess() {
+    if (!access) return;
+    lastFocus = document.activeElement;
+    access.classList.add("open"); access.setAttribute("aria-hidden", "false");
+    loadStatus().then(function () {
+      var s = $("[data-access-status]", access);
+      if (s) s.textContent = live.url ? "سرویس " + (live.status === "online" ? "آنلاین است." : "در حال آماده‌سازی است.") : "لینک فعالی منتشر نشده است.";
+    });
+    var c = $("[data-access-close]", access); if (c) setTimeout(function () { c.focus(); }, 50);
+  }
+  function closeAccess() {
+    if (!access || !access.classList.contains("open")) return;
+    access.classList.remove("open"); access.setAttribute("aria-hidden", "true");
     if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
-  if (dialog) {
-    dialog.addEventListener('click', function (e) { if (e.target === dialog || e.target.closest('.dialog-close')) closeDialog(); });
-    $$('[data-open-dialog]').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); openDialog(); }); });
+  if (access) {
+    access.addEventListener("click", function (e) { if (e.target === access) closeAccess(); });
+    $$("[data-access-close]", access).forEach(function (b) { b.addEventListener("click", closeAccess); });
   }
-  var typed = '';
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { closeDialog(); setMenu(false); return; }
-    var t = e.target;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-    if (!e.key || e.key.length !== 1) return;
-    typed = (typed + e.key.toLowerCase()).slice(-6);
-    if (typed === 'muvixo') { typed = ''; openDialog(); }
+  function typing(el) {
+    if (!el) return false;
+    var t = (el.tagName || "").toLowerCase();
+    return t === "input" || t === "textarea" || t === "select" || el.isContentEditable === true;
+  }
+  var SECRET = "muvixo", buf = "";
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" || e.key === "Esc") { closeAccess(); setMenu(false); return; }
+    if (!e.key || e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (typing(e.target) || typing(document.activeElement)) return;
+    buf = (buf + e.key.toLowerCase()).slice(-SECRET.length);
+    if (buf === SECRET) { buf = ""; openAccess(); }
   });
-
-  /* ---------------- home demo ---------------- */
-  var demo = $('[data-demo]');
-  if (demo) {
-    var SAMPLES = [
-      { text: 'سلام، وقت بخیر. از همکاری با شما واقعاً خوشحالم.', v: 'SAFE', fa: 'ایمن', s: [0.02, 0.01, 0.03, 0.01], votes: 0, ms: 212, lang: 'فارسی' },
-      { text: 'in harfa chie mizani, kheyli bi mazeyi', v: 'SUSPECT', fa: 'مشکوک', s: [0.66, 0.31, 0.22, 0.08], votes: 1, ms: 388, lang: 'فینگلیش' },
-      { text: 'You are completely stupid and useless', v: 'TOXIC', fa: 'سمی', s: [0.12, 0.94, 0.89, 0.81], votes: 3, ms: 247, lang: 'انگلیسی' }
-    ];
-    var input = $('[data-demo-input]', demo), stamp = $('[data-demo-stamp]', demo);
-    var bars = $$('.bar i', demo), nums = $$('.bar-row b', demo), foot = $('[data-demo-foot]', demo), langEl = $('[data-demo-lang]', demo);
-    var colorFor = function (x) { return x >= 0.5 ? 'var(--toxic)' : x >= 0.25 ? 'var(--suspect)' : 'var(--safe)'; };
-    var idx = 0, timer = null;
-    var show = function (smp) {
-      stamp.classList.remove('is-wait');
-      stamp.setAttribute('data-v', smp.v);
-      $('.stamp-fa', stamp).textContent = smp.fa;
-      $('.stamp-en', stamp).textContent = smp.v;
-      stamp.classList.remove('is-in'); void stamp.offsetWidth; stamp.classList.add('is-in');
-      bars.forEach(function (b, i) { b.style.width = Math.max(3, smp.s[i] * 100) + '%'; b.style.background = colorFor(smp.s[i]); });
-      nums.forEach(function (n, i) { n.textContent = smp.s[i].toFixed(2); });
-      foot.textContent = 'رأی‌ها ' + faNum.format(smp.votes) + ' از ' + faNum.format(4) + ' · ' + faNum.format(smp.ms) + ' میلی‌ثانیه';
-      langEl.textContent = smp.lang;
-    };
-    var play = function () {
-      var smp = SAMPLES[idx % SAMPLES.length]; idx++;
-      bars.forEach(function (b) { b.style.width = '0%'; });
-      langEl.textContent = smp.lang;
-      stamp.classList.add('is-wait');
-      if (reduceMotion) { input.textContent = smp.text; show(smp); timer = setTimeout(play, 4200); return; }
-      input.innerHTML = '<span></span><i class="caret"></i>';
-      var span = input.firstChild, i = 0, chars = Array.from(smp.text);
-      var type = function () {
-        if (i < chars.length) { span.textContent += chars[i++]; timer = setTimeout(type, 34); }
-        else { timer = setTimeout(function () { show(smp); timer = setTimeout(play, 3600); }, 380); }
-      };
-      type();
-    };
-    document.addEventListener('visibilitychange', function () { if (document.hidden) clearTimeout(timer); else { clearTimeout(timer); play(); } });
-    play();
-  }
-
-  /* ---------------- reveal on scroll ---------------- */
-  var pending = $$('.reveal');
-  var revealTick = false;
-  function revealVisible() {
-    revealTick = false;
-    var limit = window.innerHeight * 0.94;
-    pending = pending.filter(function (el) {
-      if (reduceMotion || el.getBoundingClientRect().top < limit) { el.classList.add('is-in'); return false; }
-      return true;
-    });
-    if (!pending.length) { window.removeEventListener('scroll', onRevealScroll); window.removeEventListener('resize', onRevealScroll); }
-  }
-  function onRevealScroll() { if (!revealTick) { revealTick = true; requestAnimationFrame(revealVisible); } }
-  window.addEventListener('scroll', onRevealScroll, { passive: true });
-  window.addEventListener('resize', onRevealScroll);
-  revealVisible();
-
-  /* ---------------- docs scrollspy ---------------- */
-  var tocLinks = $$('.toc a[href^="#"]');
-  if (tocLinks.length && 'IntersectionObserver' in window) {
-    var map = {};
-    tocLinks.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
-    var spy = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting && map[en.target.id]) {
-          tocLinks.forEach(function (a) { a.classList.remove('is-active'); });
-          map[en.target.id].classList.add('is-active');
-        }
-      });
-    }, { rootMargin: '-20% 0px -70% 0px' });
-    Object.keys(map).forEach(function (id) { var el = document.getElementById(id); if (el) spy.observe(el); });
-  }
-
-  /* ---------------- API playground ---------------- */
-  var pg = $('#playground');
-  if (pg) {
-    var ENDPOINTS = {
-      'check': { m: 'POST', p: '/api/v1/check', b: { text: 'سلام، روز خوبی داشته باشی', detailed: true } },
-      'batch': { m: 'POST', p: '/api/v1/check/batch', b: { texts: ['سلام دوست من', 'You are useless'], detailed: false } },
-      'detect': { m: 'POST', p: '/api/v1/detect', b: { text: 'salam khoobi?' } },
-      'fingilish': { m: 'POST', p: '/api/v1/fingilish', b: { text: 'merci ke komak kardi' } },
-      'legacy': { m: 'POST', p: '/api/check', b: { text: 'Have a nice day' } },
-      'health': { m: 'GET', p: '/health' },
-      'info': { m: 'GET', p: '/api/v1/info' },
-      'models': { m: 'GET', p: '/api/v1/models' },
-      'thresholds': { m: 'GET', p: '/api/v1/thresholds' },
-      'stats': { m: 'GET', p: '/api/v1/stats' }
-    };
-    var sel = $('#play-endpoint', pg), base = $('#play-base', pg), body = $('#play-body', pg);
-    var out = $('#play-out', pg), stat = $('#play-status', pg), send = $('#play-send', pg), sig = $('#play-sig', pg);
-    base.addEventListener('input', function () { base.dataset.touched = '1'; });
-    var sync = function () {
-      var ep = ENDPOINTS[sel.value];
-      sig.textContent = ep.m + ' ' + ep.p;
-      body.value = ep.b ? JSON.stringify(ep.b, null, 2) : '';
-      body.disabled = !ep.b;
-      body.placeholder = ep.b ? '' : 'این مسیر بدنه ندارد';
-    };
-    sel.addEventListener('change', sync); sync();
-    var run = function () {
-      var ep = ENDPOINTS[sel.value], url = (base.value || '').trim().replace(/\/+$/, '');
-      if (!/^https?:\/\//.test(url)) { stat.className = 'http-status err'; stat.textContent = 'آدرس معتبر نیست'; out.textContent = 'آدرس پایه سرویس را وارد کن؛ مثلاً https://xxxx.trycloudflare.com'; return; }
-      var opts = { method: ep.m, headers: { 'Accept': 'application/json' } };
-      if (ep.b) {
-        try { opts.body = JSON.stringify(JSON.parse(body.value)); } catch (e) { stat.className = 'http-status err'; stat.textContent = 'JSON نامعتبر'; out.textContent = String(e.message); return; }
-        opts.headers['Content-Type'] = 'application/json';
-      }
-      send.disabled = true; stat.className = 'http-status'; stat.textContent = 'در حال ارسال…'; out.textContent = '';
-      var t0 = performance.now();
-      fetch(url + ep.p, opts)
-        .then(function (r) {
-          var ms = Math.round(performance.now() - t0);
-          return r.text().then(function (txt) {
-            stat.className = 'http-status ' + (r.ok ? 'ok' : 'err');
-            stat.textContent = r.status + ' · ' + ms + 'ms';
-            try { out.textContent = JSON.stringify(JSON.parse(txt), null, 2); } catch (e) { out.textContent = txt; }
-          });
-        })
-        .catch(function (e) { stat.className = 'http-status err'; stat.textContent = 'خطای شبکه'; out.textContent = 'اتصال برقرار نشد. سرویس آنلاین است؟\n' + e; })
-        .then(function () { send.disabled = false; });
-    };
-    send.addEventListener('click', run);
-    body.addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); run(); } });
-  }
 })();
