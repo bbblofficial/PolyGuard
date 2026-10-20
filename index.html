@@ -12,7 +12,7 @@
 <meta property="og:description" content="Unicollect Guard متن فارسی، فینگیلیش و انگلیسی را با رأی‌گیری پنج مدل بررسی می‌کند. API کامل و رایگان.">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="preload" href="assets/fonts/Vazirmatn.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=6">
+<link rel="stylesheet" href="assets/site.css?v=7">
 <script>
   // same rule as the chat panel: explicit choice wins, otherwise dark unless the OS asks for light
   (function () {
@@ -24,22 +24,25 @@
 </head>
 <body data-root="">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="ink"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></svg>
-<header class="top" id="top">
-  <div class="wrap">
+<a class="skip" href="#main">رفتن به محتوا</a>
+<header class="top" id="top" data-top>
+  <div class="top-bar">
     <a class="brand" href="" aria-label="Unicollect Guard، صفحه اصلی"><span class="logo"><svg class="pg-mark breathe" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span><small>Guard</small></a>
-    <nav class="nav" aria-label="ناوبری اصلی"><a href="" aria-current="page">خانه</a><a href="api/">API</a><a href="how-it-works/">فرآیند</a><a href="about/">درباره</a><a href="privacy/">حریم خصوصی</a></nav>
+    <nav class="nav" aria-label="ناوبری اصلی" data-nav><a href="" aria-current="page" data-nav-key="home"><span>خانه</span></a><a href="chat/" data-nav-key="chat"><span>چت</span></a><a href="api/" data-nav-key="api"><span>API</span></a><a href="how-it-works/" data-nav-key="how"><span>فرآیند</span></a><a href="about/" data-nav-key="about"><span>درباره</span></a><a href="privacy/" data-nav-key="privacy"><span>حریم خصوصی</span></a><span class="nav-ink" aria-hidden="true"></span></nav>
     <div class="top-end">
       <a class="pill" href="api/#links" data-status-pill><span class="dot warn" data-status-dot></span><span data-status-text>در حال بررسی…</span></a>
+      <a class="icon-btn top-chat" href="chat/" aria-label="باز کردن چت" title="چت"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></a>
       <button class="icon-btn" type="button" data-theme-toggle aria-label="تغییر حالت روز/شب"><span class="ti-sun"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span><span class="ti-moon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span></button>
       <button class="icon-btn menu-btn" type="button" data-menu-open aria-label="باز کردن منو" aria-expanded="false" aria-controls="drawer"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
     </div>
   </div>
+  <span class="top-progress" aria-hidden="true"><i data-progress></i></span>
 </header>
 <div class="drawer" id="drawer" aria-hidden="true">
   <div class="shade" data-menu-close></div>
   <div class="sheet" role="dialog" aria-modal="true" aria-label="منو">
-    <div class="sheet-head"><a class="brand" href=""><span class="logo"><svg class="pg-mark " viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span></a><button class="icon-btn" type="button" data-menu-close aria-label="بستن منو"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-    <nav><a href="" aria-current="page">خانه</a><a href="api/">API</a><a href="how-it-works/">فرآیند</a><a href="about/">درباره</a><a href="privacy/">حریم خصوصی</a></nav>
+    <div class="sheet-head"><a class="brand" href=""><span class="logo"><svg class="pg-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span></a><button class="icon-btn" type="button" data-menu-close aria-label="بستن منو"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <nav><a href="" aria-current="page" data-nav-key="home"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/></svg><span>خانه</span></a><a href="chat/" data-nav-key="chat"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><span>چت</span></a><a href="api/" data-nav-key="api"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>API</span></a><a href="how-it-works/" data-nav-key="how"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4m0 0-5 4.5m5-4.5 5 4.5"/></svg><span>فرآیند</span></a><a href="about/" data-nav-key="about"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>درباره</span></a><a href="privacy/" data-nav-key="privacy"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg><span>حریم خصوصی</span></a></nav>
     <a class="pill" href="api/#links"><span class="dot warn" data-status-dot></span><span data-status-text>در حال بررسی…</span></a>
   </div>
 </div>
@@ -52,10 +55,10 @@
       <h1 class="display">قبل از ارسال، <em>مُهر</em> بگیر.</h1>
       <p class="lead">پنج مدل متن را جداگانه می‌خوانند و با رأی‌گیری یک حکم روشن می‌دهند: ایمن، مشکوک یا سمی.</p>
       <div class="cta">
-        <a class="btn btn-ink" data-live="panel" aria-disabled="true"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="18" height="18" x="3" y="3" rx="3"/><path d="M3 9h18M9 21V9"/></svg><span data-live-label>باز کردن پنل</span></a>
+        <a class="btn btn-ink" href="chat/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><span>شروع چت</span></a>
         <a class="btn btn-line" href="api/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>مستندات API</span></a>
       </div>
-      <div class="meta-row"><span><b>۵</b> مدل رأی‌دهنده</span><span><b>۳</b> زبان</span><span><b>۲۲</b> مسیر API</span></div>
+      <div class="meta-row"><span><b>۵</b> مدل رأی‌دهنده</span><span><b>۳</b> زبان</span><span><b>۲۲</b> مسیر API</span><a class="meta-link" data-live="panel" aria-disabled="true"><span data-live-label>باز کردن پنل</span></a></div>
     </div>
 
     <div class="desk reveal" aria-label="نمونه‌ی زنده‌ی حکم Unicollect">
@@ -129,11 +132,25 @@
 </section>
 
 </main>
-<footer class="foot">
-  <div class="wrap">
-    <span>© Unicollect Guard · ساخته‌ی موویکسو</span>
-    <nav aria-label="پیوندهای پایانی"><a href="">خانه</a><a href="api/">API</a><a href="how-it-works/">فرآیند</a><a href="about/">درباره</a><a href="privacy/">حریم خصوصی</a><a href="api/links.json" class="ltr">links.json</a></nav>
-    <span>Unicollect می‌تواند اشتباه کند؛ نتیجه‌های مهم را خودت هم مرور کن.</span>
+<footer class="foot" data-foot>
+  <div class="foot-card">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a class="brand" href=""><span class="logo"><svg class="pg-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(0 12 12)"><path class="pt" style="--k:0" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(60 12 12)"><path class="pt" style="--k:1" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(120 12 12)"><path class="pt" style="--k:2" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(180 12 12)"><path class="pt" style="--k:3" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(240 12 12)"><path class="pt" style="--k:4" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><g transform="rotate(300 12 12)"><path class="pt" style="--k:5" d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z"/></g><circle class="core" cx="12" cy="12" r="2.1"/></svg></span><span>Unicollect</span><small>Guard</small></a>
+        <p>نگهبان متن فارسی، فینگیلیش و انگلیسی؛ پنج مدل، یک مُهر.</p>
+        <a class="foot-status" href="api/#links"><span class="dot warn" data-status-dot></span><span data-status-text>در حال بررسی…</span><span class="mono" data-status-ms></span></a>
+      </div>
+      <nav class="foot-cols" aria-label="پیوندهای پایانی">
+        <div><h4>محصول</h4><a href="chat/">چت نگهبان</a><a href="how-it-works/">فرآیند</a><a href="about/">درباره</a></div>
+        <div><h4>توسعه‌دهنده</h4><a href="api/">مستندات API</a><a href="api/#console">کنسول</a><a data-live="swagger" aria-disabled="true">Swagger</a><a href="api/links.json" class="ltr">links.json</a></div>
+        <div><h4>حقوقی</h4><a href="privacy/">حریم خصوصی</a><a href="api/#auth">کلید و محدودیت</a></div>
+      </nav>
+    </div>
+    <div class="foot-bottom">
+      <span>© Unicollect Guard · ساخته‌ی موویکسو</span>
+      <span class="foot-note">Unicollect می‌تواند اشتباه کند؛ نتیجه‌های مهم را خودت هم مرور کن.</span>
+      <button class="to-top" type="button" data-to-top aria-label="برگشت به بالا"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 7-7 7 7M12 19V5"/></svg><span>بالا</span></button>
+    </div>
   </div>
 </footer>
 <div class="modal" id="access" aria-hidden="true">
@@ -149,6 +166,6 @@
   </section>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span data-toast-text>کپی شد</span></div>
-<script src="assets/site.js?v=6" defer></script>
+<script src="assets/site.js?v=7" defer></script>
 </body>
 </html>

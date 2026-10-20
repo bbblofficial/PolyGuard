@@ -1,131 +1,131 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://divx-louisiana-punch-insulin.trycloudflare.com",
+  "status": "starting",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://divx-louisiana-punch-insulin.trycloudflare.com",
-    "api": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1",
-    "health": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/health",
-    "swagger": "https://divx-louisiana-punch-insulin.trycloudflare.com/docs",
-    "redoc": "https://divx-louisiana-punch-insulin.trycloudflare.com/redoc",
-    "openapi": "https://divx-louisiana-punch-insulin.trycloudflare.com/openapi.json",
-    "guide": "https://divx-louisiana-punch-insulin.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://divx-louisiana-punch-insulin.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-20T18:02:05+00:00",
-  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39470868047",
-  "run_number": 94,
-  "commit": "ba775fe"
+  "updated_at": "2026-10-20T18:30:44+00:00",
+  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39475360004",
+  "run_number": 95,
+  "commit": "be03410"
 }
