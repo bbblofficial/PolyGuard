@@ -22,11 +22,16 @@ env:
   # --- Unicollect Chat (second service, own TryCloudflare link) ---
   # Served through Ollama (bundles its own llama.cpp runtime + pulls/caches
   # GGUF weights itself) instead of a manually downloaded llama.cpp release
-  # binary + GGUF file: best speed/quality/RAM balance for a 4-core, 16 GB,
-  # no-GPU GitHub runner, and it sidesteps ggml-org/llama.cpp's release-asset
+  # binary + GGUF file, and it sidesteps ggml-org/llama.cpp's release-asset
   # naming changing out from under us.
-  OLLAMA_MODEL: qwen2.5:3b
-  CHAT_MODEL_LABEL: Qwen2.5-3B-Instruct
+  # 7B instead of 3B: noticeably better reasoning/instruction-following and
+  # far fewer format slip-ups, still q4_K_M so it fits in RAM comfortably on
+  # a 4-core/16GB runner - just slower tokens/sec than 3B. If responses feel
+  # too slow for your traffic, drop this back to qwen2.5:3b (or try
+  # qwen2.5:3b / qwen2.5:14b for the other direction) - no code change
+  # needed, just update these two lines.
+  OLLAMA_MODEL: qwen2.5:7b
+  CHAT_MODEL_LABEL: Qwen2.5-7B-Instruct
   LLAMA_PORT: "8001"
   CHAT_PROXY_PORT: "8002"
   LLAMA_SERVER_URL: http://127.0.0.1:8001

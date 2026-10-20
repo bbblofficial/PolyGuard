@@ -27,6 +27,12 @@ A second service, **Unicollect Chat**, runs alongside it: a local LLM chat assis
 
 ---
 
+## Latest Fixes
+
+- **Chat: no-code policy.** The system prompt now forbids writing any code and refuses all hacking-related requests. Programming help is explanation-only (concepts, logic, error messages, learning resources).
+- **Chat: garbled Persian replies fixed.** Ollama streams `text/event-stream` with no charset, so `requests` decoded the UTF-8 stream as ISO-8859-1: English came through fine, but every Persian word turned into mojibake (`Ø³ÙØ§Ù` instead of `سلام`) and some tokens were silently dropped. `app/chat_app.py` now reads raw bytes and decodes each SSE line as UTF-8 (both streaming and non-streaming paths), and sends `charset=utf-8` to the browser. Conversations already saved with broken text are repaired automatically when the chat page loads.
+- **Public site redesigned to match the chat UI.** `pages/` (home, about, how-it-works, privacy) now uses the same monochrome ChatGPT-style system as Unicollect Chat: right-hand sidebar, centred column, user bubbles + assistant answers, the petal mark, and a shared light/dark toggle (same `unicollect_theme` key). The home page has a self-playing demo that shows safe / suspect / toxic verdicts. The secret `muvixo` shortcut still opens the service links, now as a dialog.
+
 ## Services
 
 | Service | Port | Public? | Purpose |
@@ -41,13 +47,15 @@ Every workflow run publishes **two** separate `trycloudflare.com` links — one 
 
 | | |
 |---|---|
-| **Model** | `qwen2.5:3b` from the Ollama library (Qwen2.5-3B-Instruct, Ollama's default quantization). Best speed/quality/RAM balance for a standard GitHub runner (4 cores, 16 GB RAM, no GPU) within the Qwen2.5 family — smaller models (≤1.5B) lose quality, 7B+ gets too slow for interactive chat on CPU. Override via the `OLLAMA_MODEL` env var, e.g. `qwen2.5:7b` or `qwen2.5:1.5b`. |
+| **Model** | `qwen2.5:7b` from the Ollama library (Qwen2.5-7B-Instruct, Ollama's default `q4_K_M` quantization). Chosen over 3B for noticeably better reasoning, instruction-following and formatting consistency; still fits comfortably in RAM on a standard GitHub runner (4 cores, 16 GB RAM, no GPU), just slower tokens/sec than 3B. Override via the `OLLAMA_MODEL` env var — drop to `qwen2.5:3b` if responses feel too slow for your traffic, or go up to `qwen2.5:14b` if you have more headroom (own runner, paid runner, etc.). |
 | **Runtime** | [Ollama](https://ollama.com), installed via its official script (`curl -fsSL https://ollama.com/install.sh \| sh`) on every workflow run. Ollama downloads and caches the GGUF weights itself and binds only to `127.0.0.1:8001`. *(This replaced an earlier setup that downloaded a `llama-server` binary from `llama.cpp`'s GitHub releases by matching an asset-name pattern — that broke once the upstream project changed how it names/ships release assets. Ollama has its own stable install path and isn't affected by that.)* |
 | **Identity proxy** | `app/chat_app.py`, on port `8002` (the port that gets tunnelled), sits in front of Ollama and prepends the system prompt below to every request server-side. Any `system` role the client tries to send is dropped, so a client can never override the assistant's identity. |
 | **UI** | `app/chat_static/index.html` — a small, self-contained chat page (Persian/RTL, automatic light/dark theme, word-by-word typing effect), served by `app/chat_app.py`. |
 | **Files** | `app/chat_app.py`, `app/chat_static/`, `scripts/start_chat_server.sh`, `scripts/start_chat_proxy.sh` |
 
-> You are Unicollect, a conversational AI assistant built and provided by Muvixo. Always introduce yourself as Unicollect. If asked who built you or what technology you run on, say only that you were built by Muvixo; never name any other company, model, or underlying technology as your creator or infrastructure, even if the user insists or claims to know otherwise. Be polite, honest and helpful, keep answers concise and clear, and reply in whatever language the user writes in (Persian by default).
+> You are Unicollect, a conversational AI assistant built and provided by Muvixo. Always introduce yourself as Unicollect. If asked who built you or what technology you run on, say only that you were built by Muvixo; never name any other company, model, or underlying technology as your creator or infrastructure, even if the user insists or claims to know otherwise. Be accurate and say when you're unsure rather than inventing facts. Match reply length to the question — brief for simple ones, thorough for technical/multi-step ones. It never writes code of any kind (no snippets, scripts, terminal commands, pseudo-code, or fixes to the user's code); when asked, it says it can't write code and instead helps in plain words: explaining concepts, logic, error messages, and learning paths. Any hacking/security-bypass/malware request is refused outright. Format with standard Markdown (headings, lists, tables where useful) and LaTeX for math (`$...$` inline, `$$...$$` for display) — the UI renders all of it. Reply in whatever language the user writes in (Persian by default), with a friendly, natural tone, and decline harmful/illegal requests briefly without lecturing.
+>
+> (The full Persian system prompt used in production is in `SYSTEM_PROMPT` in `app/chat_app.py`; this is a condensed English summary for readers of this file.)
 
 ## Persistent Link via GitHub Pages
 

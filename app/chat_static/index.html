@@ -1,218 +1,181 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Unicollect Chat</title>
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1b1b1b" media="(prefers-color-scheme: dark)">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#ffffff; --bg-2:#f6f6f6; --text:#1b1b1b; --muted:#6b6b6b;
-  --border:#e4e4e4; --accent:#e06a2c; --bubble-user:#f0f0f0; --bubble-bot:#ffffff;
-  color-scheme: light dark;
-}
-@media (prefers-color-scheme: dark){
-  :root{ --bg:#1b1b1b; --bg-2:#222222; --text:#f1f1f1; --muted:#9a9a9a;
-         --border:#333333; --bubble-user:#2a2a2a; --bubble-bot:#1b1b1b; }
-}
-*{box-sizing:border-box;}
-html,body{height:100%;margin:0;}
-body{
-  font-family:"Vazirmatn", system-ui, sans-serif;
-  background:var(--bg); color:var(--text);
-  display:flex; flex-direction:column; min-height:100%;
-  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
-}
-header{
-  display:flex; align-items:center; gap:10px; padding:14px 18px;
-  border-bottom:1px solid var(--border); position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); z-index:5;
-}
-.mark{width:22px;height:22px;color:var(--accent);flex:none;}
-header h1{font-size:15px; font-weight:600; margin:0;}
-header .tag{font-size:12px; color:var(--muted); margin-inline-start:auto;}
-#dot{width:8px;height:8px;border-radius:50%;background:#c9c9c9;display:inline-block;margin-inline-end:6px;}
-#dot.ok{background:#3dae5a;} #dot.bad{background:#d9534f;}
-main{flex:1; overflow-y:auto; padding:18px 14px 8px;}
-.wrap{max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:14px;}
-.msg{display:flex; gap:10px; max-width:92%;}
-.msg.user{align-self:flex-end; flex-direction:row-reverse;}
-.msg.bot{align-self:flex-start;}
-.bubble{
-  padding:10px 14px; border-radius:14px; line-height:1.8; font-size:14.5px;
-  white-space:pre-wrap; word-break:break-word;
-}
-.msg.user .bubble{background:var(--bubble-user); border-top-right-radius:4px;}
-.msg.bot .bubble{background:var(--bubble-bot); border:1px solid var(--border); border-top-left-radius:4px;}
-.empty{color:var(--muted); text-align:center; margin-top:18vh; font-size:14px; line-height:2;}
-.thinking{display:flex; gap:4px; padding:6px 2px;}
-.thinking span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:b 1.1s infinite ease-in-out;}
-.thinking span:nth-child(2){animation-delay:.15s;} .thinking span:nth-child(3){animation-delay:.3s;}
-@keyframes b{0%,80%,100%{opacity:.25; transform:translateY(0);} 40%{opacity:1; transform:translateY(-3px);}}
-footer{border-top:1px solid var(--border); padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));}
-.composer{max-width:720px; margin:0 auto; display:flex; align-items:flex-end; gap:8px;
-  border:1px solid var(--border); border-radius:16px; padding:8px 10px; background:var(--bg-2);}
-textarea{flex:1; resize:none; border:0; background:transparent; color:var(--text);
-  font-family:inherit; font-size:14.5px; line-height:1.6; max-height:160px; outline:none; padding:6px 4px;}
-button#send{
-  border:0; background:var(--accent); color:#fff; width:34px; height:34px; border-radius:10px;
-  flex:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
-}
-button#send:disabled{opacity:.45; cursor:default;}
-.foot-note{max-width:720px; margin:8px auto 0; font-size:11px; color:var(--muted); text-align:center;}
-@media (prefers-reduced-motion: reduce){ .thinking span{animation:none;} }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Unicollect | گفتگو</title>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#212121" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cstyle%3Eg%7Bfill:%230d0d0d%7D%40media%28prefers-color-scheme:dark%29%7Bg%7Bfill:%23fff%7D%7D%3C/style%3E%3Cg%3E%3Cpath transform='rotate%280 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%2860 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28120 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28180 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28240 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Cpath transform='rotate%28300 12 12%29' d='M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z'/%3E%3Ccircle cx='12' cy='12' r='2.1'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/style.css?v=__V__">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script>
+    // explicit choice wins; otherwise follow the OS (like ChatGPT "System")
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('unicollect_theme'); } catch (e) {}
+      var dark = t ? t === 'dark' : !(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+      if (dark) document.documentElement.classList.add('dark');
+    })();
+  </script>
 </head>
 <body>
-<header>
-  <svg class="mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(0 12 12)"/>
-    <path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(60 12 12)"/>
-    <path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(120 12 12)"/>
-    <path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(180 12 12)"/>
-    <path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(240 12 12)"/>
-    <path d="M12 1.5c1.9 0 2.6 2.1 1.9 4.1l-.9 2.5c-.35.95-1.65.95-2 0l-.9-2.5C9.4 3.6 10.1 1.5 12 1.5z" transform="rotate(300 12 12)"/>
-    <circle cx="12" cy="12" r="2.1"/>
-  </svg>
-  <h1>Unicollect Chat</h1>
-  <span class="tag"><span id="dot"></span><span id="status-text">در حال اتصال…</span></span>
-</header>
-<main id="main">
-  <div class="wrap" id="wrap">
-    <div class="empty" id="empty">با Unicollect گفتگو کن.<br>ساخته شده توسط موویکسو.</div>
+<div class="app" id="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-top">
+        <button class="icon-btn logo-btn" onclick="createNewThread()" title="Unicollect"><i data-mark=""></i></button>
+        <button class="icon-btn" onclick="toggleSidebar()" title="بستن نوار کناری"><i data-i="sidebar"></i></button>
+      </div>
+
+      <nav class="sb-nav">
+        <button class="sb-item" onclick="createNewThread()"><i data-i="edit"></i><span>گفتگوی جدید</span></button>
+        <button class="sb-item" onclick="openSearch()"><i data-i="search"></i><span>جستجوی گفتگوها</span><kbd class="kbd sb-kbd">Ctrl K</kbd></button>
+        <button class="sb-item" onclick="openSettingsModal()"><i data-i="layers"></i><span>مدل و وضعیت</span></button>
+      </nav>
+
+      <div class="sb-label">گفتگوها</div>
+      <div id="threads-list" class="sb-threads"></div>
+
+      <div class="sb-footer">
+        <button class="profile" onclick="openSettingsModal()">
+          <span class="avatar"><i data-mark=""></i></span>
+          <span class="profile-text">
+            <span class="profile-name">Unicollect Chat</span>
+            <span class="profile-status"><span id="status-dot" class="sdot warn"></span><span id="status-text">در حال اتصال…</span></span>
+          </span>
+        </button>
+        <div class="creator-watermark" aria-label="ساخته شده توسط موویکسو">ساخته شده توسط موویکسو</div>
+      </div>
+    </div>
+  </aside>
+  <div id="backdrop" class="backdrop" onclick="toggleSidebar()"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main id="main" class="main welcome">
+    <header class="topbar">
+      <div class="tb-start">
+        <button id="open-sidebar-btn" class="icon-btn" onclick="toggleSidebar()" title="باز کردن نوار کناری"><i data-i="sidebar"></i></button>
+        <button id="new-chat-top-btn" class="icon-btn" onclick="createNewThread()" title="گفتگوی جدید"><i data-i="edit"></i></button>
+
+        <button class="model-btn" onclick="openSettingsModal()" title="وضعیت مدل">
+          <span class="model-name" id="model-name">Unicollect</span>
+        </button>
+      </div>
+
+      <div class="tb-end">
+        <button class="icon-btn" onclick="openSearch()" title="جستجو (Ctrl+K)"><i data-i="search"></i></button>
+        <button class="icon-btn" onclick="exportCurrentThread()" title="خروجی JSON گفتگو"><i data-i="share"></i></button>
+        <button class="icon-btn" onclick="toggleTheme()" title="تغییر حالت روز/شب"><i id="theme-icon" data-i="sun"></i></button>
+      </div>
+    </header>
+
+    <div class="body">
+      <h1 id="hero" class="hero"><span class="hero-mark"><i data-mark="intro"></i></span><span class="hero-text hero-greeting" id="hero-greeting">وقت بخیر</span><span class="hero-text hero-prompt" id="hero-prompt">امروز چطور کمکت کنم؟</span></h1>
+
+      <section id="messages-container" class="scroll">
+        <div id="chat-stream" class="col"></div>
+      </section>
+
+      <div class="composer-area">
+        <div class="col">
+          <div class="composer">
+            <div class="ta-wrap" id="ta-wrap">
+              <div class="ta-mirror" id="ta-mirror" aria-hidden="true"><div class="ta-mirror-inner" id="ta-mirror-inner"></div></div>
+              <div class="ta-ph" id="ta-ph" dir="rtl" aria-hidden="true">پیامت را بنویس…</div>
+              <textarea id="prompt-input" rows="1" dir="rtl" maxlength="8000" placeholder="پیامت را بنویس…"
+                        aria-label="پیام شما" spellcheck="false" autocomplete="off" enterkeyhint="send"></textarea>
+            </div>
+            <div class="composer-row">
+              <div class="cr-start">
+                <button class="round-btn" onclick="pasteClipboard()" title="جای‌گذاری از کلیپ‌بورد"><i data-i="plus"></i></button>
+              </div>
+              <div class="cr-end">
+                <span id="char-counter" class="counter off" aria-live="off"></span>
+                <button id="send-btn" class="send-btn" onclick="onSendClick()" disabled title="ارسال" aria-label="ارسال">
+                  <span class="sb-ico sb-send"><i data-i="arrowup"></i></span>
+                  <span class="sb-ico sb-stop"><i></i></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="chips" class="chips">
+            <button class="chip" style="--i:0" onclick="useStarter('سلام! خودتو معرفی کن.')"><i data-i="smile"></i><span>معرفی</span></button>
+            <button class="chip" style="--i:1" onclick="useStarter('یک ایمیل رسمی و کوتاه برای درخواست مرخصی بنویس.')"><i data-i="edit"></i><span>نوشتن ایمیل</span></button>
+            <button class="chip" style="--i:2" onclick="useStarter('این جمله را به انگلیسی روان ترجمه کن: &quot;امیدوارم روز خوبی داشته باشید&quot;')"><i data-i="globe"></i><span>ترجمه</span></button>
+            <button class="chip" style="--i:3" onclick="useStarter('یک برنامه‌ی هفتگی ساده برای یادگیری یک زبان جدید پیشنهاد بده.')"><i data-i="layers"></i><span>برنامه‌ریزی</span></button>
+            <button class="chip" style="--i:4" onclick="useStarter('یک داستان کوتاه و خلاقانه در سه خط بنویس.')"><i data-i="lang"></i><span>داستان کوتاه</span></button>
+            <button class="chip" style="--i:5" onclick="useStarter('این متن را خلاصه کن و نکات کلیدی‌اش را بگو: ')"><i data-i="search"></i><span>خلاصه‌سازی</span></button>
+          </div>
+
+          <p class="disclaimer">Unicollect می‌تواند اشتباه کند. پاسخ‌های مهم را بررسی کنید.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SETTINGS MODAL ============ -->
+<div id="settings-modal" class="modal" onclick="if(event.target===this)closeSettingsModal()">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="تنظیمات">
+    <div class="modal-head">
+      <h3>تنظیمات و وضعیت مدل</h3>
+      <button class="icon-btn" onclick="closeSettingsModal()"><i data-i="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="kv"><span>مدل گفتگو</span><b id="cfg-model" class="kv-v mono">—</b></div>
+      <div class="kv"><span>دما (Temperature)</span><b class="kv-v">۰٫۷۰</b></div>
+      <div class="kv"><span>Top-p</span><b class="kv-v">۰٫۹۰</b></div>
+      <div class="kv"><span>حداکثر طول پاسخ</span><b class="kv-v">۱٬۵۳۶ توکن</b></div>
+      <div class="kv"><span>حداکثر طول پیام</span><b class="kv-v">۸٬۰۰۰ نویسه</b></div>
+      <div class="kv col-kv">
+        <span>وضعیت اتصال</span>
+        <div id="cfg-models" class="models-list">در حال بررسی…</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-danger" onclick="clearAllHistory()"><i data-i="trash"></i><span>پاک کردن همه گفتگوها</span></button>
+      <button class="btn-primary" onclick="closeSettingsModal()">بستن</button>
+    </div>
   </div>
-</main>
-<footer>
-  <div class="composer">
-    <textarea id="input" rows="1" placeholder="پیامت را بنویس…"></textarea>
-    <button id="send" title="ارسال" disabled>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l15-8-6 8 6 8-15-8Z" fill="currentColor"/></svg>
-    </button>
+</div>
+
+<!-- ============ SEARCH MODAL (Gemini-style) ============ -->
+<div id="search-modal" class="modal search-modal" onclick="if(event.target===this)closeSearch()">
+  <div class="search-card" role="dialog" aria-modal="true" aria-label="جستجوی گفتگوها">
+    <div class="search-head">
+      <i data-i="search" class="search-ico"></i>
+      <input id="search-input" type="text" dir="auto" placeholder="جستجو در گفتگوها…" autocomplete="off" spellcheck="false">
+      <button id="search-clear" class="icon-btn sm hidden-soft" onclick="clearSearch()" title="پاک کردن"><i data-i="x"></i></button>
+    </div>
+    <div class="search-body">
+      <div id="search-label" class="search-label">اخیر</div>
+      <div id="search-results" class="search-results" role="listbox"></div>
+    </div>
+    <div class="search-foot">
+      <span><span class="kbd-ico" title="کلید بالا"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg></span><span class="kbd-ico" title="کلید پایین"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></span> جابه‌جایی</span>
+      <span><span class="kbd-ico wide" title="کلید Enter"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 4v7a4 4 0 0 1-4 4H4"/><path d="m9 10-5 5 5 5"/></svg></span> باز کردن</span>
+      <span><kbd class="kbd">Esc</kbd> بستن</span>
+    </div>
   </div>
-  <div class="foot-note">© Unicollect · موویکسو</div>
-</footer>
-<script>
-(function(){
-  "use strict";
-  var wrap = document.getElementById("wrap");
-  var empty = document.getElementById("empty");
-  var input = document.getElementById("input");
-  var sendBtn = document.getElementById("send");
-  var dot = document.getElementById("dot");
-  var statusText = document.getElementById("status-text");
-  var history = []; // {role, content}
-  var busy = false;
+</div>
 
-  function autosize(){
-    input.style.height = "auto";
-    input.style.height = Math.min(input.scrollHeight, 160) + "px";
-  }
-  input.addEventListener("input", function(){
-    autosize();
-    sendBtn.disabled = busy || !input.value.trim();
-  });
+<div id="toast" class="toast" role="status" aria-live="polite"><i data-i="check"></i><span id="toast-message">انجام شد</span></div>
 
-  function addMessage(role, text){
-    if (empty) { empty.remove(); empty = null; }
-    var row = document.createElement("div");
-    row.className = "msg " + (role === "user" ? "user" : "bot");
-    var bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.textContent = text;
-    row.appendChild(bubble);
-    wrap.appendChild(row);
-    row.scrollIntoView({behavior:"smooth", block:"end"});
-    return bubble;
-  }
-
-  function addThinking(){
-    var row = document.createElement("div");
-    row.className = "msg bot";
-    var bubble = document.createElement("div");
-    bubble.className = "bubble thinking";
-    bubble.innerHTML = "<span></span><span></span><span></span>";
-    row.appendChild(bubble);
-    wrap.appendChild(row);
-    row.scrollIntoView({behavior:"smooth", block:"end"});
-    return row;
-  }
-
-  function revealWordByWord(bubble, text){
-    var words = text.split(/(\s+)/);
-    var i = 0;
-    (function step(){
-      if (i >= words.length) return;
-      bubble.textContent += words[i++];
-      wrap.lastChild.scrollIntoView({behavior:"smooth", block:"end"});
-      setTimeout(step, 16);
-    })();
-  }
-
-  function send(){
-    var text = input.value.trim();
-    if (!text || busy) return;
-    busy = true;
-    sendBtn.disabled = true;
-    addMessage("user", text);
-    history.push({role:"user", content:text});
-    input.value = "";
-    autosize();
-
-    var thinkingRow = addThinking();
-
-    fetch("api/chat", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({message:text, history: history.slice(0,-1)})
-    }).then(function(r){ return r.json().then(function(data){ return {ok:r.ok, data:data}; }); })
-      .then(function(res){
-        thinkingRow.remove();
-        if (!res.ok || res.data.error){
-          var b = addMessage("bot", "");
-          revealWordByWord(b, res.data.error || "خطایی رخ داد.");
-          return;
-        }
-        history.push({role:"assistant", content:res.data.reply});
-        var b = addMessage("bot", "");
-        revealWordByWord(b, res.data.reply);
-      })
-      .catch(function(){
-        thinkingRow.remove();
-        var b = addMessage("bot", "");
-        revealWordByWord(b, "اتصال به سرویس برقرار نشد. دوباره تلاش کن.");
-      })
-      .finally(function(){
-        busy = false;
-        sendBtn.disabled = !input.value.trim();
-      });
-  }
-
-  sendBtn.addEventListener("click", send);
-  input.addEventListener("keydown", function(e){
-    if (e.key === "Enter" && !e.shiftKey){
-      e.preventDefault();
-      send();
-    }
-  });
-
-  function pollHealth(){
-    fetch("health", {cache:"no-store"}).then(function(r){ return r.json(); })
-      .then(function(d){
-        if (d && d.status === "ok"){
-          dot.className = "ok"; statusText.textContent = "آنلاین";
-        } else {
-          dot.className = "bad"; statusText.textContent = "در حال آماده‌سازی…";
-        }
-      })
-      .catch(function(){ dot.className = "bad"; statusText.textContent = "در دسترس نیست"; });
-  }
-  pollHealth();
-  setInterval(pollHealth, 20000);
-})();
-</script>
+<!-- Markdown / code / math rendering for assistant replies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="/static/script.js?v=__V__"></script>
 </body>
 </html>
