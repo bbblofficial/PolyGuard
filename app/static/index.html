@@ -37,7 +37,8 @@
         <button class="sb-item" onclick="openSearch()"><i data-i="search"></i><span>جستجوی گفتگوها</span><kbd class="kbd sb-kbd">Ctrl K</kbd></button>
         <button class="sb-item" onclick="openSettingsModal()"><i data-i="layers"></i><span>مدل‌ها و وضعیت</span></button>
         <a class="sb-item" href="/api-docs" target="_blank" rel="noopener"><i data-i="code"></i><span>مستندات API</span></a>
-        <a class="sb-item" href="/docs" target="_blank" rel="noopener"><i data-i="info"></i><span>Swagger / OpenAPI</span></a>
+        <a class="sb-item" href="/docs" data-live-href="/docs" target="_blank" rel="noopener"><i data-i="info"></i><span>Swagger / OpenAPI</span></a>
+        <a class="sb-item" href="/site/" data-site-home><i data-i="home"></i><span>سایت Unicollect</span></a>
       </nav>
 
       <div class="sb-label">گفتگوها</div>
@@ -94,7 +95,7 @@
         <a class="icon-btn" href="/api-docs" target="_blank" rel="noopener" title="مستندات API" aria-label="مستندات API"><i data-i="code"></i></a>
         <button class="icon-btn" onclick="openSearch()" title="جستجو (Ctrl+K)"><i data-i="search"></i></button>
         <button class="icon-btn" onclick="exportCurrentThread()" title="خروجی JSON گفتگو"><i data-i="share"></i></button>
-        <button class="icon-btn" onclick="toggleTheme()" title="تغییر حالت روز/شب"><i id="theme-icon" data-i="sun"></i></button>
+        <button class="icon-btn" onclick="toggleTheme(event)" title="تغییر حالت روز/شب"><i id="theme-icon" data-i="sun"></i></button>
       </div>
     </header>
 
@@ -107,6 +108,11 @@
 
       <div class="composer-area">
         <div class="col">
+          <div id="svc-banner" class="svc-banner" role="status" aria-hidden="true">
+            <span class="svc-ico"><i data-i="wifioff"></i></span>
+            <span class="svc-text"><b>سرویس فعلاً آفلاین است.</b> <span>هر اجرای سرویس لینک تازه می‌گیرد؛ چند دقیقه بعد دوباره امتحان کن.</span></span>
+            <button id="svc-retry" class="svc-retry" type="button" onclick="retryService()"><i data-i="refresh"></i><span>تلاش دوباره</span></button>
+          </div>
           <div class="composer">
             <div class="ta-wrap" id="ta-wrap">
               <div class="ta-mirror" id="ta-mirror" aria-hidden="true"><div class="ta-mirror-inner" id="ta-mirror-inner"></div></div>
@@ -158,11 +164,18 @@
       <div class="kv"><span>تک‌مدل قاطع</span><b class="kv-v">۰٫۹۰</b></div>
       <div class="kv"><span>تک‌مدل قاطع (فینگیلیش)</span><b class="kv-v">۰٫۹۵</b></div>
       <div class="kv"><span>همزمانی پردازش</span><b id="cfg-concurrency" class="mono">—</b></div>
-      <div class="kv"><span>API</span><b class="mono"><a href="/api-docs" target="_blank" rel="noopener">/api/v1</a> · <a href="/docs" target="_blank" rel="noopener">/docs</a></b></div>
+      <div class="kv"><span>API</span><b class="mono"><a href="/api-docs" data-docs-href target="_blank" rel="noopener">/api/v1</a> · <a href="/docs" data-live-href="/docs" target="_blank" rel="noopener">/docs</a></b></div>
+      <div class="kv"><span>اتصال</span><b id="cfg-endpoint">همین سرور</b></div>
+      <label class="kv field-kv"><span><i data-i="key"></i>کلید API <small>(اختیاری)</small></span><input id="cfg-key" class="cfg-in" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="X-API-Key"></label>
+      <label class="kv field-kv"><span><i data-i="link"></i>سرور سفارشی <small>(اختیاری)</small></span><input id="cfg-base" class="cfg-in" type="url" dir="ltr" autocomplete="off" spellcheck="false" placeholder="https://…trycloudflare.com"></label>
       <div class="kv col-kv">
         <span>مدل‌های بارگذاری‌شده</span>
         <div id="cfg-models" class="models-list">در حال بررسی…</div>
       </div>
+    </div>
+    <div class="io-row">
+      <button class="btn-ghost" type="button" onclick="exportAllThreads()"><i data-i="download"></i><span>خروجی همه‌ی گفتگوها</span></button>
+      <label class="btn-ghost" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}"><i data-i="upload"></i><span>وارد کردن از JSON</span><input id="import-file" type="file" accept="application/json,.json" hidden></label>
     </div>
     <div class="modal-foot">
       <button class="btn-danger" onclick="clearAllHistory()"><i data-i="trash"></i><span>پاک کردن همه گفتگوها</span></button>

@@ -8,6 +8,7 @@ Unicollect Guard: FastAPI app.
   /docs  /redoc     Interactive OpenAPI docs
   /api-docs         Persian API guide (the same page as GitHub Pages /api/)
   /site/*           The public site in pages/, served from the service too
+  /chat             Redirects to /site/chat/ (the chat page of the public site)
   404               Browsers get pages/404.html, API clients get JSON
 """
 import hashlib
@@ -275,6 +276,13 @@ def favicon():
 @app.get("/site", include_in_schema=False)
 def site_root():
     return RedirectResponse("/site/")
+
+
+@app.get("/chat", include_in_schema=False)
+@app.get("/chat/", include_in_schema=False)
+def chat_page():
+    # the public site's chat page (same UI as /, but in the site's frame)
+    return RedirectResponse("/site/chat/")
 
 
 @app.get("/api", include_in_schema=False)

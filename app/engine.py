@@ -37,7 +37,7 @@ from app.consensus import (
     detect_script, decide, worst,
 )
 
-VERSION = "2.1.0"
+VERSION = "2.2.0"
 DEMO_MODE = os.environ.get("GUARD_DEMO_MODE", "").lower() in ("1", "true", "yes")
 
 if not DEMO_MODE:

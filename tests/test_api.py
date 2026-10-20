@@ -108,3 +108,8 @@ def test_cors_preflight():
         "Origin": "https://example.github.io", "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "content-type"})
     assert r.status_code == 200
+
+
+def test_chat_shortcut_redirects_to_site_chat():
+    r = client.get("/chat", follow_redirects=False)
+    assert r.status_code in (302, 307) and r.headers["location"] == "/site/chat/"

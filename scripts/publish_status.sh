@@ -40,6 +40,8 @@ if [ "$CURRENT_RUN" -lt "$OLD_RUN" ]; then
     exit 0
 fi
 
+# the chat page is generated from app/static (single source of truth)
+python3 "$ROOT/scripts/sync_chat.py" >/dev/null || echo "::warning::sync_chat.py failed; publishing the committed chat copy"
 cp -R "$ROOT/pages/." .
 touch .nojekyll
 

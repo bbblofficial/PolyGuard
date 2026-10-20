@@ -15,10 +15,104 @@ const state = {
   health: null,
   justAddedThreadId: null,
   ctrl: null,          // AbortController of the in-flight request
-  userAborted: false
+  userAborted: false,
+  online: null
 };
 
 const $ = id => document.getElementById(id);
+
+/* ---------------- where is the service? ----------------
+   The same script runs in two places:
+   - "local": the panel served by the service itself (/). Same origin,
+     legacy /api/check + /health, exactly like before.
+   - "pages": the chat on the public site (GitHub Pages /chat/ or the
+     service's own /site/chat/). The live tunnel link changes every run,
+     so it is read from api/links.json (fallback assets/status.json) and
+     re-read whenever the service stops answering. ?api=<url> or the
+     settings field pins a custom server. */
+const API_BASE_KEY = 'guard_api_base';
+const API_KEY_KEY = 'guard_key';
+const API = {
+  mode: document.documentElement.dataset.api === 'pages' ? 'pages' : 'local',
+  base: null,          // '' = same origin, null = unknown / offline
+  status: 'unknown',
+  updated: null,
+  resolving: null,
+  get checkPath() { return this.mode === 'local' ? '/api/check' : '/api/v1/check'; },
+  url(p) { return (this.base || '') + p; },
+  override() { try { return (localStorage.getItem(API_BASE_KEY) || '').trim().replace(/\/+$/, ''); } catch (e) { return ''; } },
+  key() {
+    try { return (sessionStorage.getItem(API_KEY_KEY) || localStorage.getItem(API_KEY_KEY) || '').trim(); } catch (e) { return ''; }
+  },
+  headers(json) {
+    const h = json ? { 'Content-Type': 'application/json' } : {};
+    const k = this.key();
+    if (k) h['X-API-Key'] = k;
+    return h;
+  }
+};
+if (API.mode === 'local') API.base = '';
+(function readApiParam() {
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\//i.test(q)) localStorage.setItem(API_BASE_KEY, q.replace(/\/+$/, ''));
+  } catch (e) {}
+})();
+
+function decodePayload(v) {
+  if (!v) return '';
+  try { return decodeURIComponent(escape(atob(v))); } catch (e) { try { return atob(v); } catch (e2) { return ''; } }
+}
+async function fetchJSON(url, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms || 8000);
+  try {
+    const r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+async function resolveApi(force) {
+  if (API.mode === 'local') return '';
+  const pinned = API.override();
+  if (pinned) { API.base = pinned; API.status = 'custom'; return pinned; }
+  if (API.base && !force) return API.base;
+  if (API.resolving) return API.resolving;
+  API.resolving = (async () => {
+    // served by the service itself (/site/chat/): same origin
+    if (location.pathname === '/site' || location.pathname.indexOf('/site/') === 0) {
+      API.base = location.origin; API.status = 'online'; return API.base;
+    }
+    const root = new URL(document.documentElement.dataset.root || './', location.href).href;
+    const bust = '?t=' + Date.now();
+    try {
+      const d = await fetchJSON(root + 'api/links.json' + bust);
+      API.base = (d.base_url || '').replace(/\/+$/, '') || null;
+      API.status = d.status || (API.base ? 'online' : 'offline');
+      API.updated = d.updated_at || null;
+    } catch (e) {
+      try {
+        const d = await fetchJSON(root + 'assets/status.json' + bust);
+        API.base = decodePayload(d.url_payload).replace(/\/+$/, '') || null;
+        API.status = d.status || 'offline';
+        API.updated = d.updated_at || null;
+      } catch (e2) { API.base = null; API.status = 'offline'; }
+    }
+    if (API.status === 'offline') API.base = null;
+    paintLiveLinks();
+    return API.base;
+  })();
+  try { return await API.resolving; } finally { API.resolving = null; }
+}
+// links that point at the live service (Swagger, raw panel, …)
+function paintLiveLinks() {
+  document.querySelectorAll('[data-live-href]').forEach(a => {
+    const p = a.getAttribute('data-live-href');
+    if (API.base !== null && (API.base || API.mode === 'local')) {
+      a.href = API.url(p); a.removeAttribute('aria-disabled');
+    } else { a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true'); }
+  });
+}
 
 /* تبدیل ارقام لاتین به ارقام فارسی (۰-۹) */
 function faDigits(v) {
@@ -56,7 +150,14 @@ const ICONS = {
   info:        '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
   clock:       '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
   msg:         '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
-  stop:        '<rect x="7" y="7" width="10" height="10" rx="2"/>'
+  stop:        '<rect x="7" y="7" width="10" height="10" rx="2"/>',
+  eyeoff:      '<path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="m2 2 20 20"/>',
+  download:    '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  upload:      '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+  home:        '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/>',
+  wifioff:     '<path d="M12 20h.01"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/><path d="M5 12.86a10 10 0 0 1 5.17-2.69"/><path d="M19 12.86a10 10 0 0 0-2-1.43"/><path d="M2 8.82a15 15 0 0 1 4.18-2.65"/><path d="M22 8.82a15 15 0 0 0-11.29-3.76"/><path d="m2 2 20 20"/>',
+  key:         '<circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 8.8-8.8M16 7l3 3M18 5l2 2"/>',
+  link:        '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'
 };
 
 function svg(name) {
@@ -97,7 +198,9 @@ window.addEventListener('DOMContentLoaded', () => {
   renderActiveThread();
   initComposer();
   initSearch();
-  checkHealth();
+  initSettingsFields();
+  paintLiveLinks();
+  checkHealth().then(prefillFromUrl);
   setInterval(() => { if (!document.hidden) checkHealth(); }, 12000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) checkHealth(); });
   watchSystemTheme();
@@ -110,6 +213,11 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function onGlobalKey(e) {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'o' || e.key === 'O')) {
+    e.preventDefault();
+    createNewThread();
+    return;
+  }
   if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
     e.preventDefault();
     isOpen('search-modal') ? closeSearch() : openSearch();
@@ -179,10 +287,13 @@ async function checkHealth() {
   const txt = $('status-text');
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), HEALTH_TIMEOUT_MS);
-  let cls, label, pill;
+  let cls, label, pill, online = false;
   try {
-    const r = await fetch('/health', { cache: 'no-store', signal: ctrl.signal });
+    const base = await resolveApi();
+    if (base === null) throw new Error('offline');
+    const r = await fetch(API.url('/health'), { cache: 'no-store', signal: ctrl.signal });
     const d = await r.json();
+    online = true;
     state.health = d;
     const n = (d.loaded_models || []).length;
     const total = n + Object.keys(d.errors || {}).length || 5;
@@ -191,17 +302,40 @@ async function checkHealth() {
     else { cls = 'sdot bad'; label = 'خطا در بارگذاری'; pill = 'خطا در مدل‌ها'; }
     if (isOpen('settings-modal')) renderHealthDetails(d);
   } catch (e) {
-    cls = 'sdot bad'; label = 'سرور در دسترس نیست'; pill = 'آفلاین';
+    cls = 'sdot bad'; pill = 'آفلاین';
+    label = API.mode === 'pages' && API.base === null ? 'سرویس فعلاً آفلاین است' : 'سرور در دسترس نیست';
+    // the tunnel link may have changed: read links.json again next time
+    if (API.mode === 'pages' && !API.override()) API.base = null;
   } finally {
     clearTimeout(to);
     healthBusy = false;
   }
+  setOnline(online);
   if (dot.className !== cls) dot.className = cls;
   if (txt.textContent !== label) txt.textContent = label;
   const p = $('models-pill');
   if (p && p.textContent !== pill) p.textContent = pill;
 }
 function fa(n) { return Number(n).toLocaleString('fa-IR'); }
+
+/* banner above the composer while the service can't be reached */
+function setOnline(on) {
+  const was = state.online;
+  state.online = on;
+  const b = $('svc-banner');
+  if (!b) return;
+  b.classList.toggle('show', !on);
+  b.setAttribute('aria-hidden', on ? 'true' : 'false');
+  if (on && was === false) showToast('سرویس دوباره در دسترس است');
+}
+async function retryService() {
+  const b = $('svc-retry');
+  if (b) b.classList.add('spin');
+  API.base = API.mode === 'local' ? '' : null;
+  await resolveApi(true);
+  await checkHealth();
+  if (b) setTimeout(() => b.classList.remove('spin'), 400);
+}
 function renderHealthDetails(d) {
   const c = $('cfg-concurrency');
   if (c && d.concurrency) c.textContent = `${faDigits(d.concurrency)} (اوج ${faDigits(d.peak || 0)})`;
@@ -549,13 +683,16 @@ function streamText(el, text, opts, token) {
    Animated mark (petal wave) + a status line that cross-fades between
    phases + an elapsed-time counter that appears after 2 s. */
 const THINK_PHASES = ['در حال فکر کردن', 'در حال بررسی', 'رأی اجتماعی', 'پرسش از مدل ها'];
-const thinking = { phaseTimer: 0, clockTimer: 0, t0: 0, phaseIndex: 0, phaseDoneAt: 0 };
+const thinking = { phaseTimer: 0, clockTimer: 0, t0: 0, phaseIndex: 0, phaseDoneAt: 0, fast: false };
+// dwell per phase: relaxed while waiting, brisk once the answer is already here
+function phaseDwell() { return thinking.fast ? 260 + Math.random() * 120 : 600 + Math.random() * 600; }
 
 function startThinking() {
   stopThinking();
   thinking.t0 = performance.now();
   thinking.phaseIndex = 0;
   thinking.phaseDoneAt = 0;
+  thinking.fast = false;
 
   const label = () => $('think-text');
 
@@ -572,7 +709,7 @@ function startThinking() {
       thinking.phaseTimer = setTimeout(() => {
         thinking.phaseDoneAt = performance.now();
         thinking.phaseTimer = 0;
-      }, 700 + Math.random() * 1000);
+      }, phaseDwell());
       return;
     }
 
@@ -590,12 +727,12 @@ function startThinking() {
       }, 200);
     }
 
-    thinking.phaseTimer = setTimeout(nextPhase, 700 + Math.random() * 1000);
+    thinking.phaseTimer = setTimeout(nextPhase, phaseDwell());
   };
 
   // phase[0] is already visible (written by appendPendingTurn), so wait one
   // dwell interval, then start advancing.
-  thinking.phaseTimer = setTimeout(nextPhase, 700 + Math.random() * 1000);
+  thinking.phaseTimer = setTimeout(nextPhase, phaseDwell());
 
   thinking.clockTimer = setInterval(() => {
     const t = $('think-time');
@@ -819,14 +956,142 @@ function buildTurnHTML(msg, opts) {
         </div>
         ${breakdown}
       </div>
+      ${censorNoteHTML(msg)}
       <div class="actions ${revealCls}">
         <button class="icon-btn" onclick="copyReport('${mid}')" title="کپی گزارش">${svg('copy')}</button>
+        ${decision !== 'SAFE' ? `<button class="icon-btn" id="censor-btn-${mid}" onclick="censorMessage('${mid}')" title="نسخه‌ی سانسورشده">${svg('eyeoff')}</button>` : ''}
         <button class="icon-btn" onclick="copyMessageJSON('${mid}')" title="کپی JSON">${svg('code')}</button>
         <button class="icon-btn" onclick="reAnalyze('${mid}')" title="تحلیل مجدد">${svg('refresh')}</button>
       </div>
     </div></div>`;
 }
 
+
+/* ---------------- censor: masked copy of a flagged text ---------------- */
+function censorNoteHTML(msg, fresh) {
+  const c = msg.censored;
+  if (!c) return `<div class="censor-slot" id="censor-${escapeHtml(msg.id)}"></div>`;
+  const body = c.error
+    ? `<span class="cn-err">${escapeHtml(c.error)}</span>`
+    : `<div class="cn-text" dir="auto">${escapeHtml(c.text)}</div>`;
+  const meta = c.error ? '' : `<span class="cn-meta">${c.count ? `${fa(c.count)} مورد پوشانده شد` : 'چیزی برای پوشاندن پیدا نشد'}${c.mode === 'sentences' ? ' · جمله‌به‌جمله' : ''}</span>`;
+  return `<div class="censor-slot" id="censor-${escapeHtml(msg.id)}"><div class="censor-note${fresh ? ' fresh' : ''}">
+    <div class="cn-head">${svg('eyeoff')}<span>نسخه‌ی سانسورشده</span>${meta}
+      ${c.error ? '' : `<button class="icon-btn sm" onclick="copyCensored('${escapeHtml(msg.id)}')" title="کپی">${svg('copy')}</button>`}</div>
+    ${body}
+  </div></div>`;
+}
+async function censorMessage(id) {
+  const msg = findMessage(id);
+  if (!msg) return;
+  const btn = $(`censor-btn-${id}`);
+  if (btn) { if (btn.classList.contains('busy')) return; btn.classList.add('busy'); }
+  const call = async (body) => {
+    const r = await fetch(API.url('/api/v1/censor'), { method: 'POST', headers: API.headers(true), body: JSON.stringify(body) });
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j || j.error) throw new Error(normalizeResult(j || {}, r.status).error || `HTTP ${r.status}`);
+    return j;
+  };
+  try {
+    const base = await resolveApi();
+    if (base === null) throw new Error('سرویس فعلاً آفلاین است');
+    // known insults first (instant); if none, mask whole toxic sentences
+    let j = await call({ text: msg.text, mode: 'words', include_contextual: true });
+    if (!j.masked_count) {
+      try { const k = await call({ text: msg.text, mode: 'sentences', min_decision: 'SUSPECT' }); if (k.masked_count) j = k; } catch (e) {}
+    }
+    msg.censored = { text: j.text, count: j.masked_count || 0, mode: j.mode };
+  } catch (e) {
+    msg.censored = { error: 'سانسور انجام نشد: ' + (e.message || 'خطا') };
+  } finally {
+    if (btn) btn.classList.remove('busy');
+  }
+  saveState();
+  const slot = $(`censor-${id}`);
+  if (slot) {
+    const tpl = document.createElement('template');
+    tpl.innerHTML = censorNoteHTML(msg, true);
+    slot.replaceWith(tpl.content);
+    keepPinned();
+  }
+}
+function copyCensored(id) {
+  const m = findMessage(id);
+  if (m && m.censored && m.censored.text) copyText(m.censored.text).then(() => showToast('متن سانسورشده کپی شد'));
+}
+
+/* ---------------- ?text=… opens a new chat and checks it ---------------- */
+function prefillFromUrl() {
+  let q = null;
+  try { q = new URLSearchParams(location.search).get('text'); } catch (e) {}
+  if (!q || !q.trim()) return;
+  try {
+    const u = new URL(location.href);
+    u.searchParams.delete('text');
+    history.replaceState(null, '', u.pathname + u.search + u.hash);
+  } catch (e) {}
+  state.activeThreadId = null;
+  renderActiveThread();
+  analyze(q.slice(0, MAX_TEXT));
+}
+
+/* ---------------- settings: API key, custom server, import/export ---------------- */
+function initSettingsFields() {
+  const k = $('cfg-key'), b = $('cfg-base');
+  if (k) {
+    k.value = API.key();
+    k.addEventListener('change', () => {
+      const v = k.value.trim();
+      try { if (v) { sessionStorage.setItem(API_KEY_KEY, v); localStorage.setItem(API_KEY_KEY, v); } else { sessionStorage.removeItem(API_KEY_KEY); localStorage.removeItem(API_KEY_KEY); } } catch (e) {}
+      showToast(v ? 'کلید ذخیره شد' : 'کلید پاک شد');
+    });
+  }
+  if (b) {
+    b.value = API.override();
+    b.addEventListener('change', () => {
+      const v = b.value.trim().replace(/\/+$/, '');
+      if (v && !/^https?:\/\//i.test(v)) { showToast('آدرس باید با http(s):// شروع شود'); return; }
+      try { if (v) localStorage.setItem(API_BASE_KEY, v); else localStorage.removeItem(API_BASE_KEY); } catch (e) {}
+      API.base = null;
+      showToast(v ? 'سرور سفارشی تنظیم شد' : 'برگشت به سرور پیش‌فرض');
+      retryService();
+    });
+  }
+  if (b && API.mode === 'local') { const row = b.closest('.kv'); if (row) row.hidden = true; }
+  const f = $('import-file');
+  if (f) f.addEventListener('change', () => { if (f.files && f.files[0]) importThreads(f.files[0]); f.value = ''; });
+  const where = $('cfg-endpoint');
+  if (where) where.textContent = API.mode === 'local' ? 'همین سرور' : 'لینک زنده (links.json)';
+}
+function exportAllThreads() {
+  if (!state.threads.length) { showToast('گفتگویی برای خروجی نیست'); return; }
+  const blob = new Blob([JSON.stringify({ app: 'unicollect-guard', version: 1, exported_at: new Date().toISOString(), threads: state.threads }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `unicollect_threads_${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  showToast(`${fa(state.threads.length)} گفتگو دانلود شد`);
+}
+function importThreads(file) {
+  if (state.isAnalyzing) return busyToast();
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const d = JSON.parse(rd.result);
+      const list = Array.isArray(d) ? d : Array.isArray(d.threads) ? d.threads : (d && d.id && d.messages ? [d] : []);
+      const ok = list.filter(t => t && typeof t.id === 'string' && Array.isArray(t.messages));
+      if (!ok.length) throw new Error('empty');
+      const have = new Set(state.threads.map(t => t.id));
+      let added = 0;
+      ok.forEach(t => { if (!have.has(t.id)) { state.threads.push(t); added++; } });
+      saveState();
+      renderSidebarThreads();
+      showToast(added ? `${fa(added)} گفتگو اضافه شد` : 'همه‌ی این گفتگوها از قبل بودند');
+    } catch (e) { showToast('فایل JSON معتبر نیست'); }
+  };
+  rd.readAsText(file);
+}
 
 /* انیمیشن باز/بسته شدن details.breakdown (ارتفاع نرم) */
 function initBreakdowns(root) {
@@ -835,44 +1100,36 @@ function initBreakdowns(root) {
     const summary = d.querySelector('summary');
     const card = d.querySelector('.bd-card');
     if (!summary || !card) return;
-
+    d.classList.toggle('is-open', d.open);
     summary.addEventListener('click', e => {
       e.preventDefault();
-      if (REDUCED_MOTION) { d.open = !d.open; return; }
-      if (card.classList.contains('animating')) return;
-      card.classList.add('animating');
-
-      if (!d.open) {
-        // ---- باز شدن ----
-        card.style.height = '0px';
-        d.open = true;
-        const target = card.scrollHeight;
-        requestAnimationFrame(() => {
-          card.style.transition = 'height .35s cubic-bezier(.22,1,.36,1)';
-          card.style.height = target + 'px';
-        });
-        setTimeout(() => {
-          card.style.transition = '';
-          card.style.height = '';
-          card.classList.remove('animating');
-        }, 380);
-      } else {
-        // ---- بسته شدن ----
-        const start = card.scrollHeight;
-        card.style.height = start + 'px';
-        requestAnimationFrame(() => {
-          card.style.transition = 'height .3s cubic-bezier(.22,1,.36,1)';
-          card.style.height = '0px';
-        });
-        setTimeout(() => {
-          d.open = false;
-          card.style.transition = '';
-          card.style.height = '';
-          card.classList.remove('animating');
-        }, 320);
-      }
+      toggleBreakdown(d, !d.classList.contains('is-open'));
     });
   });
+}
+// height + opacity via the Web Animations API: a second click mid-way
+// reverses smoothly from wherever the card currently is.
+function toggleBreakdown(d, open) {
+  const card = d.querySelector('.bd-card');
+  if (!card) { d.open = open; return; }
+  const from = d.open ? card.getBoundingClientRect().height : 0;
+  if (d._anim) { d._anim.cancel(); d._anim = null; }
+  d.classList.toggle('is-open', open);
+  if (REDUCED_MOTION || !card.animate) { d.open = open; return; }
+  d.open = true;
+  const to = open ? card.getBoundingClientRect().height : 0;
+  card.style.overflow = 'hidden';
+  const a = card.animate(
+    [{ height: from + 'px', opacity: open ? (from ? 1 : 0) : 1 }, { height: to + 'px', opacity: open ? 1 : 0 }],
+    { duration: open ? 380 : 280, easing: open ? 'cubic-bezier(.22,1,.36,1)' : 'cubic-bezier(.4,0,.2,1)' }
+  );
+  d._anim = a;
+  a.onfinish = () => {
+    d._anim = null;
+    card.style.overflow = '';
+    if (!open) d.open = false;
+    if (open) keepPinned();
+  };
 }
 
 /* ---------------- analyze ---------------- */
@@ -908,8 +1165,20 @@ function setBusy(on) {
   syncComposer();
 }
 
+const ERROR_TEXT = {
+  rate_limited: 'درخواست‌ها زیاد شد؛ یک دقیقه صبر کن و دوباره بفرست.',
+  unauthorized: 'این سرویس کلید API می‌خواهد؛ از «مدل‌ها و وضعیت» واردش کن.',
+  not_ready: 'مدل‌ها هنوز در حال بارگذاری‌اند؛ چند ثانیه دیگر دوباره امتحان کن.',
+  no_models: 'مدلی آماده نیست؛ کمی بعد دوباره امتحان کن.',
+  text_too_long: `متن طولانی است (حداکثر ${MAX_TEXT.toLocaleString('fa-IR')} نویسه).`,
+  empty_text: 'متن خالی است.'
+};
 function normalizeResult(r, status) {
   if (!r || typeof r !== 'object') return { error: `پاسخ نامعتبر از سرور (HTTP ${status})` };
+  if (r.error && typeof r.error === 'object' && !Array.isArray(r.error)) {
+    // /api/v1 error shape: {"error": {"code", "message", "status"}}
+    return { error: ERROR_TEXT[r.error.code] || r.error.message || `HTTP ${status}`, code: r.error.code };
+  }
   if (r.error) return r;
   if (!r.decision) {
     // e.g. FastAPI 422 {"detail": [...]}, or a proxy error page parsed as JSON
@@ -961,18 +1230,27 @@ async function analyze(overrideText) {
   try {
     let result;
     try {
-      const r = await fetch('/api/check', {
+      const base = await resolveApi();
+      if (base === null) throw Object.assign(new Error('offline'), { name: 'OfflineError' });
+      const r = await fetch(API.url(API.checkPath), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        headers: API.headers(true),
+        body: JSON.stringify(API.mode === 'local' ? { text } : { text, detailed: true }),
         signal: ctrl.signal
       });
       let body = null;
       try { body = await r.json(); } catch (_) { body = null; }
       result = normalizeResult(body, r.status);
+      thinking.fast = true;
     } catch (e) {
+      thinking.fast = true;
       if (state.userAborted) result = null;
-      else result = { error: e.name === 'AbortError' ? 'زمان پاسخ‌گویی سرور تمام شد' : 'ارتباط با سرور برقرار نشد' };
+      else if (e.name === 'OfflineError') { result = { error: 'سرویس فعلاً آفلاین است؛ چند دقیقه بعد دوباره امتحان کن.' }; setOnline(false); }
+      else {
+        result = { error: e.name === 'AbortError' ? 'زمان پاسخ‌گویی سرور تمام شد' : 'ارتباط با سرور برقرار نشد' };
+        if (API.mode === 'pages' && !API.override()) API.base = null;   // re-read the live link next time
+        checkHealth();
+      }
     }
 
     // ---- user pressed Stop: drop the turn, give the text back ----
@@ -1275,7 +1553,7 @@ function setViewMode(mode) {
   updateViewModeCheckmarks();
   updateModelButtonLabel();
   // toggle open/closed in place instead of re-rendering (keeps scroll + no flash)
-  document.querySelectorAll('#chat-stream details.breakdown').forEach(d => { d.open = mode === 'detailed'; });
+  document.querySelectorAll('#chat-stream details.breakdown').forEach(d => toggleBreakdown(d, mode === 'detailed'));
 }
 
 function updateViewModeCheckmarks() {
@@ -1305,10 +1583,24 @@ function setTheme(dark) {
   root.classList.toggle('dark', dark);
   syncThemeIcon();
 }
-function toggleTheme() {
+function toggleTheme(ev) {
   const dark = !document.documentElement.classList.contains('dark');
-  setTheme(dark);
   try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (e) {}
+  const btn = ev && ev.currentTarget && ev.currentTarget.getBoundingClientRect ? ev.currentTarget : null;
+  if (!REDUCED_MOTION && document.startViewTransition && btn) {
+    const r = btn.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const far = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const vt = document.startViewTransition(() => {
+      document.documentElement.classList.toggle('dark', dark);
+      syncThemeIcon();
+    });
+    vt.ready.then(() => document.documentElement.animate(
+      { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${far}px at ${x}px ${y}px)`] },
+      { duration: 560, easing: 'cubic-bezier(.22,1,.36,1)', pseudoElement: '::view-transition-new(root)' }
+    )).catch(() => {});
+    return;
+  }
+  setTheme(dark);
 }
 // follow the OS theme until the user picks one explicitly
 function watchSystemTheme() {

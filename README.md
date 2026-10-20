@@ -7,6 +7,8 @@
 
 Toxic / offensive content detection for **Persian**, **Fingilish** and **English**, decided by consensus voting across 5 models. One service: a FastAPI backend, a web panel, a full JSON API (`/api/v1`), and a public GitHub Pages site with API docs and the live link.
 
+> v2.2: **Chat on the public site**: `pages/chat/` is the full Guard chat panel (threads, search, settings, thinking animation, result cards, breakdown) running on GitHub Pages. It finds the live service through `api/links.json`, shows a banner + retry when the service is offline, and re-reads the link when a tunnel changes. It's generated from `app/static` by `scripts/sync_chat.py` (one source of truth; `publish_status.sh` runs it, `tests/test_pages.py` checks it). New in the chat (both on Pages and the service panel): **censor button** on flagged results (`/api/v1/censor`, word mode then sentence mode), API key + custom server in settings, export/import all threads as JSON, `?text=…` opens a new chat and checks it, `Ctrl+Shift+O` new chat, faster thinking phases once the answer is back, cancelable breakdown accordion, circular theme reveal. **Site**: floating ("suspended") header that hides on scroll down / returns on scroll up, with a sliding nav pill and reading-progress line; floating footer card with link columns, live status + latency and back-to-top. **API docs**: every endpoint slides open and closed (reversible mid-animation), expand/collapse all, copy-link per endpoint, URL hash follows the open endpoint. **Animation fixes**: logo hover no longer replays the intro or leaves petals dimmed, voter bars animate with transforms, the stamp lifts off instead of vanishing, code tabs fade, staggered reveals, modals/drawer can't be tabbed into while hidden, drawer traps focus. `/chat` on the service redirects to `/site/chat/`.
+>
 > v2.1: Fonts are self-hosted (Vazirmatn + JetBrains Mono as subset variable WOFF2 in `pages/assets/fonts` and `app/static/fonts`, preloaded, `font-display: swap`), so Persian renders correctly even when Google Fonts is slow or blocked. GitHub Pages restyled to match the chat panel, 404 page with working assets, live check on the home page, endpoint search + copy-as-curl in the docs, SVG icons instead of emoji, Python examples use plain `requests` (no client package).
 >
 > v2.0: the chat model (Unicollect Chat / Ollama) has been removed completely: code, scripts, workflow steps, status page and docs. The repo is now Guard only.
@@ -38,6 +40,7 @@ Toxic / offensive content detection for **Persian**, **Fingilish** and **English
 | `/api-docs` | Persian API guide (same page as Pages `/api/`, served from `pages/`) |
 | `/api/check`, `/health` | Legacy endpoints (kept for the panel and old integrations) |
 | `/site/*` | The public site, served by the service too |
+| `/chat` | Redirects to `/site/chat/` (the site's chat page) |
 | any unknown path | Browsers get the styled 404 page, API clients get JSON |
 
 The service listens on port `8000` and is published through a Cloudflare Quick Tunnel. Every run gets a fresh `trycloudflare.com` link that is published to GitHub Pages automatically.
@@ -156,7 +159,7 @@ Every run publishes to the `gh-pages` branch:
 
 | File | Use |
 |---|---|
-| `index.html`, `api/`, `how-it-works/`, `about/`, `privacy/` | The public site (redesigned, responsive, light/dark) |
+| `index.html`, `chat/`, `api/`, `how-it-works/`, `about/`, `privacy/` | The public site (responsive, light/dark, floating header/footer) |
 | `api/links.json` | **Machine-readable live links**: `base_url`, panel, API, Swagger, ReDoc, OpenAPI, health, and every endpoint URL |
 | `api/links.txt` | Just the base URL (or `offline`) for shell scripts |
 | `assets/status.json` | Status for the site (also used by the secret `muvixo` dialog) |
@@ -164,6 +167,7 @@ Every run publishes to the `gh-pages` branch:
 
 The site uses the same colour theme as the chat panel (monochrome, plum accent, dark by default unless the OS asks for light; the choice is shared with the panel). All icons are inline SVG, no emoji.
 
+- **Chat** (`/chat/`): the complete chat panel, talking to the live service found in `api/links.json`. `?text=…` starts a check right away; `?api=https://…` pins a custom server.
 - **Home**: the stamp desk plays examples, and the input under it runs a **real check** on the live service (5 model bars + verdict stamp).
 - **API page** (`/api/`): live links with copy/open buttons, docs for every endpoint with curl / JavaScript / Python (`requests`) examples, **endpoint search** (press `/`), and a console that sends real requests, shows `X-Request-ID` / rate-limit headers and can **copy the request as curl**.
 - **404 page** (`404.html`): GitHub Pages serves it for any missing path, so its `<base>` is pinned to the site root (written by `publish_status.sh`, override with `PAGES_BASE`) and CSS/JS no longer 404 on nested URLs. It suggests the page you probably meant, and points `/api/v1/...` paths at the live service.
@@ -257,11 +261,12 @@ app/main.py                      FastAPI app: middleware, errors, legacy endpoin
 app/consensus.py                 Voting logic (no torch, unit-tested)
 app/fingilish.py                 Fingilish detection, transliteration, insult finder/masker
 app/static/                      Guard web panel
-pages/                           Public site + API docs + 404 (GitHub Pages and /site on the service)
+pages/                           Public site + chat + API docs + 404 (GitHub Pages and /site on the service)
 pages/api/links.json             Placeholder, overwritten with the live link on gh-pages
 clients/js/                      JS client (browser + Node)
 clients/curl-examples.sh         Every endpoint with curl
 scripts/publish_status.sh        Publishes site + links.json + links.txt to gh-pages
+scripts/sync_chat.py             Copies the chat panel (app/static) into pages/chat + pages/assets/chat.*
 scripts/download_models.py       Downloads the 5 models
 scripts/start_server.sh          Gunicorn (preload, 2 workers)
 scripts/smoke_test.py            Smoke test for a running server (all endpoints)
@@ -275,4 +280,6 @@ pip install -r requirements-dev.txt
 GUARD_DEMO_MODE=1 pytest
 ```
 
-`tests/test_consensus.py` and `tests/test_fingilish.py` cover the voting and Fingilish logic; `tests/test_api.py` exercises every API endpoint, error shapes, API keys and CORS in demo mode.
+`tests/test_consensus.py` and `tests/test_fingilish.py` cover the voting and Fingilish logic; `tests/test_api.py` exercises every API endpoint, error shapes, API keys and CORS in demo mode; `tests/test_pages.py` checks the site (chat in sync, header/footer on every page, links resolve, docs accordion ids).
+
+Editing the chat UI: change `app/static/*`, then run `python scripts/sync_chat.py`.
