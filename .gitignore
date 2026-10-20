@@ -8,3 +8,4 @@ tunnel.log
 cloudflared
 folder_structure.txt
 ee.py
+*.log

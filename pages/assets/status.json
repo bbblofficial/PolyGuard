@@ -1,5 +1,5 @@
 {
-  "_comment": "url_payload = base64(encodeURIComponent(url)). status = online | preparing | offline. An empty url_payload hides the service behind the friendly 'not available' state.",
-  "status": "preparing",
-  "url_payload": ""
+  "status": "offline",
+  "url_payload": null,
+  "updated_at": null
 }

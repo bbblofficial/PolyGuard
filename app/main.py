@@ -15,7 +15,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Optional
 
 import torch
 torch.set_num_threads(1)
@@ -24,11 +24,12 @@ from anyio import to_thread
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel, Field
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from app.fingilish import fingilish_to_persian, looks_like_fingilish
+from app import consensus as _consensus
 from app.consensus import (
     PER_MODEL_VOTE_THRESHOLD, MIN_VOTES_FOR_TOXIC, SEVERITY,
     detect_script, decide, worst,
@@ -341,6 +342,30 @@ def ensemble_predict(text: str) -> Dict:
 # ------------------------------------------------------------------
 # FastAPI
 # ------------------------------------------------------------------
+APP_NAME = "Unicollect Text Safety API"
+APP_VERSION = "2.0.0"
+STARTED_AT = time.time()
+MAX_BATCH_ITEMS = 32
+
+stats = {
+    "requests": 0,
+    "checks": 0,
+    "batches": 0,
+    "errors": 0,
+    "decisions": {"SAFE": 0, "SUSPECT": 0, "TOXIC": 0},
+}
+
+
+class CheckIn(BaseModel):
+    text: str = Field(..., description="Persian, Fingilish or English text (max 20,000 chars)")
+    detailed: bool = Field(True, description="false returns only the compact summary")
+
+
+class BatchIn(BaseModel):
+    texts: List[str] = Field(..., description=f"1 to {MAX_BATCH_ITEMS} texts")
+    detailed: bool = Field(False, description="true returns the full result for every item")
+
+
 @asynccontextmanager
 async def _lifespan(_app):
     # (replaces the deprecated @app.on_event("startup"))
@@ -351,17 +376,102 @@ async def _lifespan(_app):
     yield
 
 
-app = FastAPI(title="Unicollect Ensemble", lifespan=_lifespan)
+app = FastAPI(
+    title=APP_NAME,
+    version=APP_VERSION,
+    description="Toxicity and offensive-language detection for Persian, Fingilish and English, "
+                "decided by consensus voting across five classifiers.",
+    lifespan=_lifespan,
+)
 
-# The GitHub Pages status page (another origin) pings GET /health to show
-# whether the tunnel is live. Only GET is allowed cross-origin; /api/check
-# stays same-origin.
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"],
-                   allow_headers=[])
+# The public site (GitHub Pages, another origin) polls /health and runs the
+# API playground, so GET and POST are allowed cross-origin. Restrict with
+# CORS_ALLOW_ORIGINS="https://you.github.io,https://example.com".
+_origins = [o.strip() for o in os.environ.get("CORS_ALLOW_ORIGINS", "*").split(",") if o.strip()]
+app.add_middleware(CORSMiddleware, allow_origins=_origins or ["*"],
+                   allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type"])
 
 
-@app.get("/health")
+def _error(status: int, code: str, message: str, **extra):
+    with _counter_lock:
+        stats["errors"] += 1
+    return JSONResponse(status_code=status,
+                        content={"error": {"code": code, "message": message, **extra}})
+
+
+def _text_problem(text: str, need_models: bool = True) -> Optional[tuple]:
+    """(http_status, code, message) when the text can't be analysed, else None."""
+    if need_models and (not state["ready"] or not state["models"]):
+        return 503, "models_loading", "models are still loading, retry in a few seconds"
+    if not isinstance(text, str) or not text.strip():
+        return 400, "empty_text", "text is empty"
+    if len(text) > MAX_TEXT_LENGTH:
+        return 413, "text_too_long", f"text too long ({len(text)} chars, max {MAX_TEXT_LENGTH})"
+    return None
+
+
+def _guarded_predict(text: str) -> Dict:
+    with _infer_sem:
+        with _counter_lock:
+            state["inflight"] += 1
+            state["peak"] = max(state["peak"], state["inflight"])
+        try:
+            result = ensemble_predict(text)
+        finally:
+            with _counter_lock:
+                state["inflight"] -= 1
+    with _counter_lock:
+        stats["checks"] += 1
+        d = result.get("decision")
+        if d in stats["decisions"]:
+            stats["decisions"][d] += 1
+    return result
+
+
+def _compact(result: Dict) -> Dict:
+    keys = ("decision", "confidence", "max_raw", "votes_count", "total_models",
+            "script", "fingilish_detected", "decided_by", "latency_ms")
+    return {k: result.get(k) for k in keys}
+
+
+def _count_request():
+    with _counter_lock:
+        stats["requests"] += 1
+
+
+def _models_info() -> List[Dict]:
+    out = []
+    for name, spec in MODEL_SPECS.items():
+        out.append({
+            "id": name,
+            "label": spec["label"],
+            "label_en": spec["label_en"],
+            "language": spec["lang"],
+            "weight": spec["weight"],
+            "loaded": name in state["models"],
+            "error": state["errors"].get(name),
+        })
+    return out
+
+
+ENDPOINTS = [
+    {"method": "GET",  "path": "/health",                "summary": "service readiness"},
+    {"method": "GET",  "path": "/api/v1/health",         "summary": "service readiness (v1 alias)"},
+    {"method": "GET",  "path": "/api/v1/info",           "summary": "name, version, limits, endpoints"},
+    {"method": "GET",  "path": "/api/v1/models",         "summary": "the five classifiers and their state"},
+    {"method": "GET",  "path": "/api/v1/thresholds",     "summary": "consensus voting thresholds"},
+    {"method": "GET",  "path": "/api/v1/stats",          "summary": "uptime, request and decision counters"},
+    {"method": "POST", "path": "/api/v1/check",          "summary": "analyse one text"},
+    {"method": "POST", "path": "/api/v1/check/batch",    "summary": f"analyse up to {MAX_BATCH_ITEMS} texts"},
+    {"method": "POST", "path": "/api/v1/detect",         "summary": "script and Fingilish detection (no models)"},
+    {"method": "POST", "path": "/api/v1/fingilish",      "summary": "transliterate Fingilish to Persian"},
+    {"method": "POST", "path": "/api/check",             "summary": "legacy single check (errors as 200)"},
+]
+
+
+@app.get("/health", tags=["status"])
 def health():
+    _count_request()
     return {
         "status": "ok" if state["ready"] and state["models"] else
                   ("loading" if not state["ready"] else "error"),
@@ -370,32 +480,139 @@ def health():
         "inflight": state["inflight"],
         "peak": state["peak"],
         "concurrency": MAX_CONCURRENT_INFERENCES,
+        "version": APP_VERSION,
     }
 
 
-@app.post("/api/check")
-def check(data: TextIn):
+@app.get("/api/v1/health", tags=["status"])
+def health_v1():
+    return health()
+
+
+@app.get("/api/v1/info", tags=["status"])
+def info():
+    _count_request()
+    return {
+        "name": APP_NAME,
+        "version": APP_VERSION,
+        "languages": ["fa", "fingilish", "en"],
+        "decisions": ["SAFE", "SUSPECT", "TOXIC"],
+        "limits": {"max_text_length": MAX_TEXT_LENGTH, "max_batch_items": MAX_BATCH_ITEMS,
+                   "max_concurrent_inferences": MAX_CONCURRENT_INFERENCES},
+        "docs": {"swagger": "/docs", "redoc": "/redoc", "openapi": "/openapi.json"},
+        "endpoints": ENDPOINTS,
+    }
+
+
+@app.get("/api/v1/models", tags=["status"])
+def models():
+    _count_request()
+    items = _models_info()
+    return {"count": len(items), "loaded": sum(m["loaded"] for m in items), "models": items}
+
+
+@app.get("/api/v1/thresholds", tags=["status"])
+def thresholds():
+    _count_request()
+    names = ("PER_MODEL_VOTE_THRESHOLD", "MIN_VOTES_FOR_TOXIC", "STRONG_SINGLE_MODEL",
+             "WEAK_SUSPECT_THRESHOLD", "FINGILISH_STRONG_SINGLE",
+             "SOLO_VOTE_CORROBORATION_FLOOR", "SOLO_VOTE_SUSPECT_FLOOR", "SPECIALIST_SAFE_FLOOR")
+    return {n.lower(): getattr(_consensus, n) for n in names if hasattr(_consensus, n)}
+
+
+@app.get("/api/v1/stats", tags=["status"])
+def get_stats():
+    _count_request()
+    with _counter_lock:
+        snap = {k: (dict(v) if isinstance(v, dict) else v) for k, v in stats.items()}
+    snap.update({"uptime_s": round(time.time() - STARTED_AT), "inflight": state["inflight"],
+                 "peak": state["peak"], "concurrency": MAX_CONCURRENT_INFERENCES})
+    return snap
+
+
+@app.post("/api/v1/check", tags=["analysis"])
+def check_v1(data: CheckIn):
+    _count_request()
+    problem = _text_problem(data.text)
+    if problem:
+        return _error(*problem)
     try:
-        if not state["ready"] or not state["models"]:
-            return {"error": state["errors"] or "no models loaded yet"}
+        result = _guarded_predict(data.text)
+    except Exception as exc:
+        print(f"[Ensemble] /api/v1/check EXC:\n{traceback.format_exc()}", flush=True)
+        return _error(500, "internal_error", f"{type(exc).__name__}: {exc}")
+    if "error" in result:
+        return _error(503, "no_models_applicable", str(result["error"]))
+    return result if data.detailed else _compact(result)
 
-        if len(data.text) > MAX_TEXT_LENGTH:
-            return {"error": f"text too long ({len(data.text)} chars, max {MAX_TEXT_LENGTH})"}
 
-        if not data.text.strip():
-            # an empty/whitespace-only string used to run all 5 models for nothing
-            return {"error": "text is empty"}
+@app.post("/api/v1/check/batch", tags=["analysis"])
+def check_batch(data: BatchIn):
+    _count_request()
+    if not data.texts:
+        return _error(400, "empty_batch", "texts must contain at least one item")
+    if len(data.texts) > MAX_BATCH_ITEMS:
+        return _error(413, "batch_too_large", f"max {MAX_BATCH_ITEMS} texts per batch")
+    if not state["ready"] or not state["models"]:
+        return _error(503, "models_loading", "models are still loading, retry in a few seconds")
+    t0 = time.perf_counter()
+    items, summary = [], {"SAFE": 0, "SUSPECT": 0, "TOXIC": 0, "errors": 0}
+    for i, text in enumerate(data.texts):
+        problem = _text_problem(text)
+        if problem:
+            summary["errors"] += 1
+            items.append({"index": i, "error": {"code": problem[1], "message": problem[2]}})
+            continue
+        try:
+            result = _guarded_predict(text)
+        except Exception as exc:
+            result = {"error": f"{type(exc).__name__}: {exc}"}
+        if "error" in result:
+            summary["errors"] += 1
+            items.append({"index": i, "error": {"code": "analysis_failed", "message": str(result["error"])}})
+            continue
+        summary[result["decision"]] += 1
+        items.append({"index": i, **(result if data.detailed else _compact(result))})
+    with _counter_lock:
+        stats["batches"] += 1
+    worst_decision = worst(it["decision"] for it in items if "decision" in it) if any(
+        "decision" in it for it in items) else None
+    return {"count": len(items), "worst": worst_decision, "summary": summary,
+            "latency_ms": round((time.perf_counter() - t0) * 1000), "results": items}
 
-        with _infer_sem:
-            with _counter_lock:
-                state["inflight"] += 1
-                if state["inflight"] > state["peak"]:
-                    state["peak"] = state["inflight"]
-            try:
-                return ensemble_predict(data.text)
-            finally:
-                with _counter_lock:
-                    state["inflight"] -= 1
+
+@app.post("/api/v1/detect", tags=["language"])
+def detect(data: TextIn):
+    _count_request()
+    problem = _text_problem(data.text, need_models=False)
+    if problem:
+        return _error(*problem)
+    script = detect_script(data.text)
+    fingilish = script == "en" and looks_like_fingilish(data.text)
+    converted = fingilish_to_persian(data.text) if fingilish else None
+    return {"script": script, "fingilish_detected": fingilish, "fingilish_text": converted,
+            "length": len(data.text)}
+
+
+@app.post("/api/v1/fingilish", tags=["language"])
+def fingilish(data: TextIn):
+    _count_request()
+    problem = _text_problem(data.text, need_models=False)
+    if problem:
+        return _error(*problem)
+    return {"input": data.text, "output": fingilish_to_persian(data.text),
+            "looks_like_fingilish": looks_like_fingilish(data.text)}
+
+
+@app.post("/api/check", tags=["analysis"])
+def check(data: TextIn):
+    """Legacy endpoint: same result as /api/v1/check, errors come back as 200 {"error": "..."}."""
+    _count_request()
+    try:
+        problem = _text_problem(data.text)
+        if problem:
+            return {"error": problem[2]}
+        return _guarded_predict(data.text)
     except Exception as exc:
         print(f"[Ensemble] /api/check EXC:\n{traceback.format_exc()}", flush=True)
         return {"error": f"{type(exc).__name__}: {exc}"}
@@ -403,7 +620,7 @@ def check(data: TextIn):
 
 def _asset_version() -> str:
     h = hashlib.sha1()
-    for f in ("style.css", "script.js"):
+    for f in ("tokens.css", "style.css", "script.js"):
         try:
             h.update((BASE_DIR / "static" / f).read_bytes())
         except OSError:
@@ -417,7 +634,7 @@ _INDEX_HTML = (BASE_DIR / "static" / "index.html").read_text(encoding="utf-8") \
     .replace("__V__", _asset_version())
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def index():
     return HTMLResponse(_INDEX_HTML, headers={"Cache-Control": "no-cache"})
 

@@ -1,4 +1,4 @@
-name: Unicollect Ensemble Web + Cloudflare Tunnel
+name: Unicollect API Web + Cloudflare Tunnel
 
 on:
   workflow_dispatch:
@@ -18,23 +18,6 @@ env:
   TWITTER_OFFENSIVE_ID:  cardiffnlp/twitter-roberta-base-offensive
 
   MODELS_ROOT: ${{ github.workspace }}/models
-
-  # --- Unicollect Chat (second service, own TryCloudflare link) ---
-  # Served through Ollama (bundles its own llama.cpp runtime + pulls/caches
-  # GGUF weights itself) instead of a manually downloaded llama.cpp release
-  # binary + GGUF file, and it sidesteps ggml-org/llama.cpp's release-asset
-  # naming changing out from under us.
-  # 7B instead of 3B: noticeably better reasoning/instruction-following and
-  # far fewer format slip-ups, still q4_K_M so it fits in RAM comfortably on
-  # a 4-core/16GB runner - just slower tokens/sec than 3B. If responses feel
-  # too slow for your traffic, drop this back to qwen2.5:3b (or try
-  # qwen2.5:3b / qwen2.5:14b for the other direction) - no code change
-  # needed, just update these two lines.
-  OLLAMA_MODEL: qwen2.5:7b
-  CHAT_MODEL_LABEL: Qwen2.5-7B-Instruct
-  LLAMA_PORT: "8001"
-  CHAT_PROXY_PORT: "8002"
-  LLAMA_SERVER_URL: http://127.0.0.1:8001
 
   OMP_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
@@ -107,14 +90,6 @@ jobs:
           echo "--- model sizes ---"
           du -sh "$MODELS_ROOT"/*
 
-      - name: Install Ollama (runs Unicollect Chat)
-        run: |
-          # Official install script: sets up the `ollama` CLI. No GitHub
-          # release-asset parsing involved, so this doesn't break when a
-          # third-party project changes how it publishes binaries.
-          curl -fsSL https://ollama.com/install.sh | sh
-          ollama --version
-
       - name: Install cloudflared
         run: |
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared
@@ -149,113 +124,46 @@ jobs:
         continue-on-error: true
         run: python scripts/smoke_test.py http://localhost:8000
 
-      - name: Start Unicollect Chat (Ollama server + proxy)
-        run: |
-          nohup bash scripts/start_chat_server.sh > llama.log 2>&1 &
-          echo "Waiting for Ollama to become healthy (~10-30s)..."
-          for i in $(seq 1 60); do
-            curl -fs "http://127.0.0.1:${LLAMA_PORT}/api/version" >/dev/null 2>&1 && { echo "Ollama ready after ${i}s"; break; }
-            sleep 1
-          done
-          curl -fs "http://127.0.0.1:${LLAMA_PORT}/api/version" >/dev/null 2>&1 || { echo "Ollama never became healthy"; tail -n 150 llama.log || true; exit 1; }
-
-          echo "Pulling ${OLLAMA_MODEL}..."
-          OLLAMA_HOST="127.0.0.1:${LLAMA_PORT}" ollama pull "$OLLAMA_MODEL"
-
-          nohup bash scripts/start_chat_proxy.sh > chat_proxy.log 2>&1 &
-          echo "Waiting for chat proxy to become healthy..."
-          for i in $(seq 1 60); do
-            STATUS=$(curl -fs "http://127.0.0.1:${CHAT_PROXY_PORT}/health" 2>/dev/null || true)
-            echo "$STATUS" | grep -q '"status":"ok"' && { echo "chat proxy ready after ${i}s"; break; }
-            sleep 1
-          done
-          curl -fs "http://127.0.0.1:${CHAT_PROXY_PORT}/health" | grep -q '"status":"ok"' || { echo "chat proxy never became healthy"; tail -n 150 chat_proxy.log || true; exit 1; }
-
-      - name: Start Cloudflare Quick Tunnels
+      - name: Start Cloudflare Quick Tunnel
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
-          nohup ./cloudflared tunnel --url "http://localhost:${CHAT_PROXY_PORT}" --no-autoupdate > tunnel_chat.log 2>&1 &
-
-          echo "Waiting for trycloudflare URLs..."
-          URL=""; CHAT_URL=""
+          echo "Waiting for trycloudflare URL..."
+          URL=""
           for i in $(seq 1 60); do
-            [ -z "$URL" ]      && URL=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel.log | head -n1 || true)
-            [ -z "$CHAT_URL" ] && CHAT_URL=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel_chat.log | head -n1 || true)
-            [ -n "$URL" ] && [ -n "$CHAT_URL" ] && break
+            [ -n "$URL" ] && break
+            URL=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel.log | head -n1 || true)
             sleep 2
           done
-          if [ -z "$URL" ] || [ -z "$CHAT_URL" ]; then
-            echo "Could not obtain one or both tunnel URLs"
-            echo "--- main tunnel log ---"; cat tunnel.log
-            echo "--- chat tunnel log ---"; cat tunnel_chat.log
-            exit 1
-          fi
+          [ -n "$URL" ] || { cat tunnel.log; exit 1; }
           echo "PUBLIC_URL=$URL" >> "$GITHUB_ENV"
-          echo "CHAT_PUBLIC_URL=$CHAT_URL" >> "$GITHUB_ENV"
-          {
-            echo "### Unicollect Ensemble is live at: $URL"
-            echo "### Unicollect Chat is live at: $CHAT_URL"
-            [ -n "${PAGES_URL:-}" ] && echo "Permanent status page (always shows both current links): ${PAGES_URL}"
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "$URL"
-          echo "$CHAT_URL"
-          bash scripts/publish_status.sh online "$URL" online "$CHAT_URL" || echo "::warning::status page not updated"
+          echo "### Unicollect API is live at: $URL" >> "$GITHUB_STEP_SUMMARY"
+          [ -n "${PAGES_URL:-}" ] && echo "Permanent status page: ${PAGES_URL}" >> "$GITHUB_STEP_SUMMARY"
+          bash scripts/publish_status.sh online "$URL" || echo "::warning::status page not updated"
 
       - name: Keep service alive
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Ensemble running at: $PUBLIC_URL"
-          echo "Chat running at: $CHAT_PUBLIC_URL"
+          echo "Unicollect API running at: $PUBLIC_URL"
           echo "Status page: ${PAGES_URL:-n/a}"
-          echo "Will self-terminate after ~5 hours."
           URL="$PUBLIC_URL"
-          CHAT_URL="$CHAT_PUBLIC_URL"
-          # Quick Tunnels have occasional transient blips; require 2
-          # consecutive failed checks (~2 minutes) before restarting one, so
-          # a single bad check doesn't trigger a needless restart-churn loop.
-          MAIN_FAILS=0
-          CHAT_FAILS=0
+          FAILS=0
           for i in $(seq 1 300); do
             sleep 60
-            CHANGED=0
-
-            pgrep -f "gunicorn app.main:app" >/dev/null || {
+            if ! pgrep -f "gunicorn app.main:app" >/dev/null; then
               echo "Gunicorn died, restarting..."
               nohup bash scripts/start_server.sh >> server.log 2>&1 &
-            }
-            pgrep -f "ollama serve" >/dev/null || {
-              echo "Ollama died, restarting..."
-              nohup bash scripts/start_chat_server.sh >> llama.log 2>&1 &
-              # Model weights are cached on disk from the first pull, so no
-              # need to "ollama pull" again on restart.
-            }
-            pgrep -f "app.chat_app:app" >/dev/null || {
-              echo "Chat proxy died, restarting..."
-              nohup bash scripts/start_chat_proxy.sh >> chat_proxy.log 2>&1 &
-            }
-
-            # Quick Tunnels can drop silently on Cloudflare's side while the
-            # local cloudflared process keeps running untouched, so a process
-            # check alone misses a dead tunnel. Treat it as down if either
-            # the process is gone OR the public URL itself stops answering.
-            MAIN_OK=0
+            fi
+            OK=0
             if pgrep -f "cloudflared tunnel --url http://localhost:8000" >/dev/null; then
-              curl -fs --max-time 15 "$URL/health" >/dev/null 2>&1 && MAIN_OK=1
+              curl -fs --max-time 15 "$URL/health" >/dev/null 2>&1 && OK=1
             fi
-            if [ "$MAIN_OK" = "1" ]; then
-              MAIN_FAILS=0
-            else
-              MAIN_FAILS=$((MAIN_FAILS + 1))
-              echo "Main tunnel health check failed (${MAIN_FAILS}/2)..."
-            fi
-            if [ "$MAIN_FAILS" -ge 2 ]; then
-              echo "Main tunnel unreachable twice in a row (dead process or silently dropped), restarting..."
-              MAIN_FAILS=0
+            if [ "$OK" = "1" ]; then FAILS=0; else FAILS=$((FAILS + 1)); fi
+            if [ "$FAILS" -ge 2 ]; then
+              FAILS=0
               pkill -f "cloudflared tunnel --url http://localhost:8000" 2>/dev/null || true
-              # a restarted quick tunnel gets a NEW random URL -> republish it
               nohup ./cloudflared tunnel --url http://localhost:8000 --no-autoupdate > tunnel.log 2>&1 &
               NEW=""
               for j in $(seq 1 60); do
@@ -263,48 +171,9 @@ jobs:
                 [ -n "$NEW" ] && break
                 sleep 2
               done
-              if [ -n "$NEW" ]; then
-                URL="$NEW"
-                echo "New main tunnel URL: $URL"
-                echo "Main tunnel restarted, new URL: $URL" >> "$GITHUB_STEP_SUMMARY"
-                CHANGED=1
-              fi
-            fi
-
-            CHAT_OK=0
-            if pgrep -f "cloudflared tunnel --url http://localhost:${CHAT_PROXY_PORT}" >/dev/null; then
-              curl -fs --max-time 15 "$CHAT_URL/health" >/dev/null 2>&1 && CHAT_OK=1
-            fi
-            if [ "$CHAT_OK" = "1" ]; then
-              CHAT_FAILS=0
-            else
-              CHAT_FAILS=$((CHAT_FAILS + 1))
-              echo "Chat tunnel health check failed (${CHAT_FAILS}/2)..."
-            fi
-            if [ "$CHAT_FAILS" -ge 2 ]; then
-              echo "Chat tunnel unreachable twice in a row (dead process or silently dropped), restarting..."
-              CHAT_FAILS=0
-              pkill -f "cloudflared tunnel --url http://localhost:${CHAT_PROXY_PORT}" 2>/dev/null || true
-              nohup ./cloudflared tunnel --url "http://localhost:${CHAT_PROXY_PORT}" --no-autoupdate > tunnel_chat.log 2>&1 &
-              NEW=""
-              for j in $(seq 1 60); do
-                NEW=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" tunnel_chat.log | head -n1 || true)
-                [ -n "$NEW" ] && break
-                sleep 2
-              done
-              if [ -n "$NEW" ]; then
-                CHAT_URL="$NEW"
-                echo "New chat tunnel URL: $CHAT_URL"
-                echo "Chat tunnel restarted, new URL: $CHAT_URL" >> "$GITHUB_STEP_SUMMARY"
-                CHANGED=1
-              fi
-            fi
-
-            if [ "$CHANGED" = "1" ]; then
-              bash scripts/publish_status.sh online "$URL" online "$CHAT_URL" || true
+              if [ -n "$NEW" ]; then URL="$NEW"; bash scripts/publish_status.sh online "$URL" || true; fi
             fi
           done
-
 
       # heartbeat.yml listens for this workflow's "workflow_run" completion
       # event natively, so it doesn't need to be dispatched here too. Doing

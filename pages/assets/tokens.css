@@ -1,0 +1,105 @@
+/* ============================================================
+   Unicollect - Design Tokens
+   Light is the default. Dark follows the OS unless the visitor
+   picked a theme (html[data-theme="light" | "dark"]).
+   ============================================================ */
+
+:root {
+  /* surfaces */
+  --paper: #f6f4fb;
+  --panel: #ffffff;
+  --panel-2: #efebf8;
+
+  /* text / ink */
+  --ink: #18132b;
+  --ink-2: #5b5470;
+  --ink-3: #8b84a0;
+
+  /* rules & interaction */
+  --line: rgba(24, 19, 43, .12);
+  --line-strong: rgba(24, 19, 43, .24);
+  --hover: rgba(24, 19, 43, .05);
+
+  /* accent (brand purple) */
+  --accent: #7c3aed;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(124, 58, 237, .10);
+
+  /* verdicts */
+  --safe: #16a34a;    --safe-soft: rgba(22, 163, 74, .10);
+  --suspect: #d97706; --suspect-soft: rgba(217, 119, 6, .12);
+  --toxic: #dc2626;   --toxic-soft: rgba(220, 38, 38, .10);
+
+  /* code surfaces */
+  --code-bg: #1c1730;
+  --code-ink: #ece8fb;
+  --code-dim: #a59dc4;
+
+  /* shadows & overlays */
+  --overlay: rgba(0, 0, 0, .5);
+  --shadow-1: 0 1px 2px rgba(24, 19, 43, .06), 0 8px 24px rgba(24, 19, 43, .06);
+  --shadow-2: 0 24px 60px rgba(0, 0, 0, .32), 0 2px 8px rgba(0, 0, 0, .08);
+  --shadow-toast: 0 12px 32px rgba(0, 0, 0, .18);
+
+  /* type */
+  --font: "Vazirmatn", Tahoma, "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Vazirmatn", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* shape & motion */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+
+  color-scheme: light;
+}
+
+/* dark tokens, applied by OS preference ... */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15111f;
+    --panel: #1c1730;
+    --panel-2: #241e3b;
+    --ink: #f3f1fa;
+    --ink-2: #b6aed1;
+    --ink-3: #847d9c;
+    --line: rgba(255, 255, 255, .12);
+    --line-strong: rgba(255, 255, 255, .24);
+    --hover: rgba(255, 255, 255, .06);
+    --accent: #a78bfa;
+    --accent-ink: #1c1730;
+    --accent-soft: rgba(167, 139, 250, .16);
+    --safe: #4ade80;    --safe-soft: rgba(74, 222, 128, .16);
+    --suspect: #fbbf24; --suspect-soft: rgba(251, 191, 36, .16);
+    --toxic: #f87171;   --toxic-soft: rgba(248, 113, 113, .16);
+    --code-bg: #100c1a;
+    --code-ink: #ece8fb;
+    --code-dim: #938bb3;
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+
+/* ... or by explicit choice */
+:root[data-theme="dark"] {
+  --paper: #15111f;
+  --panel: #1c1730;
+  --panel-2: #241e3b;
+  --ink: #f3f1fa;
+  --ink-2: #b6aed1;
+  --ink-3: #847d9c;
+  --line: rgba(255, 255, 255, .12);
+  --line-strong: rgba(255, 255, 255, .24);
+  --hover: rgba(255, 255, 255, .06);
+  --accent: #a78bfa;
+  --accent-ink: #1c1730;
+  --accent-soft: rgba(167, 139, 250, .16);
+  --safe: #4ade80;    --safe-soft: rgba(74, 222, 128, .16);
+  --suspect: #fbbf24; --suspect-soft: rgba(251, 191, 36, .16);
+  --toxic: #f87171;   --toxic-soft: rgba(248, 113, 113, .16);
+  --code-bg: #100c1a;
+  --code-ink: #ece8fb;
+  --code-dim: #938bb3;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
