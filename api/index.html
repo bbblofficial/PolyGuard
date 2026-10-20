@@ -6,18 +6,18 @@
 <title>مستندات API · Unicollect Guard</title>
 <meta name="description" content="API کامل Unicollect Guard: بررسی متن، دسته‌ای، سانسور، فینگیلیش، و لینک‌های زنده‌ی سرویس.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f7f3f8">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#212121" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="مستندات API · Unicollect Guard">
 <meta property="og:description" content="API کامل Unicollect Guard: بررسی متن، دسته‌ای، سانسور، فینگیلیش، و لینک‌های زنده‌ی سرویس.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&family=Khand:wght@600&display=swap">
-<link rel="stylesheet" href="../assets/site.css?v=4">
+<link rel="preload" href="../assets/fonts/Vazirmatn.woff2?v=1" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>
+  // same rule as the chat panel: explicit choice wins, otherwise dark unless the OS asks for light
   (function () {
     var t = null; try { t = localStorage.getItem('unicollect_theme'); } catch (e) {}
-    var dark = t ? t === 'dark' : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var dark = t ? t === 'dark' : !(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
     if (dark) document.documentElement.classList.add('dark');
   })();
 </script>
@@ -47,13 +47,15 @@
 
 <div class="wrap docs">
   <aside class="toc" aria-label="فهرست مسیرها" data-toc>
+    <label class="toc-search"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="sr-only">جستجوی مسیر</span><input type="search" data-toc-filter placeholder="جستجوی مسیر" spellcheck="false" autocomplete="off"><kbd>/</kbd></label>
+    <p class="toc-empty" data-toc-empty hidden>چیزی پیدا نشد.</p>
     <h4>شروع</h4>
-    <a href="#links"><span class="m">●</span><span>لینک‌های زنده</span></a>
-    <a href="#quick"><span class="m">→</span><span>شروع سریع</span></a>
-    <a href="#auth"><span class="m">🔑</span><span>کلید و محدودیت</span></a>
-    <a href="#errors"><span class="m">!</span><span>خطاها</span></a>
-    <a href="#console"><span class="m">▶</span><span>کنسول</span></a>
-    <a href="#clients"><span class="m">{}</span><span>کتابخانه‌ها</span></a>
+    <a href="#links"><span class="m"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="8.5" opacity=".35"/></svg></span><span>لینک‌های زنده</span></a>
+    <a href="#quick"><span class="m"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span><span>شروع سریع</span></a>
+    <a href="#auth"><span class="m"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 8.8-8.8M16 7l3 3M18 5l2 2"/></svg></span><span>کلید و محدودیت</span></a>
+    <a href="#errors"><span class="m"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5.5M12 16.5h.01"/></svg></span><span>خطاها</span></a>
+    <a href="#console"><span class="m"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z"/></svg></span><span>کنسول</span></a>
+    <a href="#clients"><span class="m"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg></span><span>کتابخانه‌ها</span></a>
     <h4>بررسی متن</h4><a href="#ep-check"><span class="m">POST</span><span class="p">/check</span></a><a href="#ep-check-get"><span class="m">GET</span><span class="p">/check?text=…</span></a><a href="#ep-batch"><span class="m">POST</span><span class="p">/check/batch</span></a><a href="#ep-verdict"><span class="m">POST</span><span class="p">/verdict</span></a><a href="#ep-score"><span class="m">POST</span><span class="p">/score</span></a><a href="#ep-sentences"><span class="m">POST</span><span class="p">/sentences</span></a><a href="#ep-censor"><span class="m">POST</span><span class="p">/censor</span></a><a href="#ep-moderations"><span class="m">POST</span><span class="p">/moderations</span></a><h4>ابزارهای متن (بدون مدل، فوری)</h4><a href="#ep-profanity"><span class="m">POST</span><span class="p">/profanity</span></a><a href="#ep-language"><span class="m">POST</span><span class="p">/language</span></a><a href="#ep-fing-detect"><span class="m">POST</span><span class="p">/fingilish/detect</span></a><a href="#ep-fing-tr"><span class="m">POST</span><span class="p">/fingilish/transliterate</span></a><a href="#ep-normalize"><span class="m">POST</span><span class="p">/normalize</span></a><h4>وضعیت و اطلاعات</h4><a href="#ep-index"><span class="m">GET</span><span class="p">/</span></a><a href="#ep-health"><span class="m">GET</span><span class="p">/health</span></a><a href="#ep-ready"><span class="m">GET</span><span class="p">/ready</span></a><a href="#ep-info"><span class="m">GET</span><span class="p">/info</span></a><a href="#ep-models"><span class="m">GET</span><span class="p">/models</span></a><a href="#ep-config"><span class="m">GET</span><span class="p">/config</span></a><a href="#ep-stats"><span class="m">GET</span><span class="p">/stats</span></a><h4>مدیریت</h4><a href="#ep-cache"><span class="m">POST</span><span class="p">/cache/clear</span></a>
   </aside>
 
@@ -143,16 +145,18 @@ Authorization: Bearer <span class="tok-s">your-key</span></code></pre></div></di
 
     <section class="doc-sec" id="console">
       <h2>کنسول</h2>
-      <p>مستقیم روی سرویس زنده اجرا می‌شود.</p>
+      <p>مستقیم روی سرویس زنده اجرا می‌شود. <bdi dir="ltr"><kbd>Ctrl</kbd> + <kbd>Enter</kbd></bdi> می‌فرستد؛ دکمه‌ی curl همین درخواست را کپی می‌کند.</p>
       <div class="console">
         <div class="console-row">
           <select class="field" data-con-ep aria-label="مسیر"><option value="0">POST  /api/v1/check</option><option value="1">GET  /api/v1/check?text=…</option><option value="2">POST  /api/v1/check/batch</option><option value="3">POST  /api/v1/verdict</option><option value="4">POST  /api/v1/score</option><option value="5">POST  /api/v1/sentences</option><option value="6">POST  /api/v1/censor</option><option value="7">POST  /api/v1/moderations</option><option value="8">POST  /api/v1/profanity</option><option value="9">POST  /api/v1/language</option><option value="10">POST  /api/v1/fingilish/detect</option><option value="11">POST  /api/v1/fingilish/transliterate</option><option value="12">POST  /api/v1/normalize</option><option value="13">GET  /api/v1</option><option value="14">GET  /api/v1/health</option><option value="15">GET  /api/v1/ready</option><option value="16">GET  /api/v1/info</option><option value="17">GET  /api/v1/models</option><option value="18">GET  /api/v1/config</option><option value="19">GET  /api/v1/stats</option><option value="20">POST  /api/v1/cache/clear</option></select>
           <input class="field key" data-con-key type="text" placeholder="X-API-Key (optional)" aria-label="کلید API" autocomplete="off" spellcheck="false">
+          <button class="btn btn-line" type="button" data-con-curl title="کپی همین درخواست به‌صورت curl"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 17 6-6-6-6M12 19h8"/></svg><span>curl</span></button>
           <button class="btn btn-ink" type="button" data-con-send><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>ارسال</span></button>
         </div>
         <textarea class="field" data-con-body rows="5" spellcheck="false" aria-label="بدنه‌ی درخواست"></textarea>
         <div class="resp" data-con-resp hidden>
           <div class="resp-head"><span class="status-code" data-con-status></span><span data-con-time></span><span class="mono ltr" data-con-url></span></div>
+          <div class="resp-hdrs" data-con-headers></div>
           <div class="code" style="margin-top:10px"><div class="code-bar"><span class="tab" aria-selected="true">response</span><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><pre><code data-con-out></code></pre></div>
         </div>
       </div>
@@ -160,17 +164,31 @@ Authorization: Bearer <span class="tok-s">your-key</span></code></pre></div></di
 
     <section class="doc-sec" id="clients">
       <h2>کتابخانه‌ها</h2>
-      <p>در مخزن، پوشه‌ی <span class="inline-code">clients/</span>: پایتون بدون وابستگی، جاوااسکریپت برای مرورگر و Node، و اسکریپت curl.</p>
-      <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="clients-0">Python</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="clients-1">JavaScript</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="clients-0"><pre><code>from unicollect_guard import Guard
+      <p>برای پایتون پکیج جدا لازم نیست؛ همان <span class="inline-code">requests</span> کافی است. برای جاوااسکریپت فایل <span class="inline-code">clients/js</span> و برای ترمینال <span class="inline-code">clients/curl-examples.sh</span> هست.</p>
+      <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="clients-0">Python · requests</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="clients-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="clients-2">curl</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="clients-0"><pre><code><span class="tok-k">import</span> requests
 
-g = Guard.from_status_page(<span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/"</span>)
-g.check(<span class="tok-s">"to khar hasti"</span>)[<span class="tok-s">"decision"</span>]   <span class="tok-c"># "TOXIC"</span>
-g.is_safe(<span class="tok-s">"Have a nice day"</span>)                <span class="tok-c"># True</span>
-g.censor(<span class="tok-s">"you are a k1r"</span>)                  <span class="tok-c"># "you are a ***"</span></code></pre></div><div class="panel" id="clients-1" hidden><pre><code>import { Guard } from <span class="tok-s">"./unicollect-guard.js"</span>;
+PAGES = <span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/api/links.json"</span>
+BASE = requests.get(PAGES, timeout=10).json()[<span class="tok-s">"base_url"</span>]   <span class="tok-c"># the live tunnel link</span>
+HEADERS = {}                                                <span class="tok-c"># {"X-API-Key": "..."} if the server needs a key</span>
 
-const g = await Guard.fromStatusPage(<span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/"</span>);
-const { decision } = await g.check(<span class="tok-s">"to khar hasti"</span>);
-if (!(await g.isSafe(comment))) warnUser();</code></pre></div></div>
+
+<span class="tok-k">def</span> guard(path, **body):
+    r = requests.post(BASE + <span class="tok-s">"/api/v1/"</span> + path, json=body, headers=HEADERS, timeout=60)
+    <span class="tok-k">if</span> r.status_code == 429:                                 <span class="tok-c"># rate limited</span>
+        <span class="tok-k">raise</span> RuntimeError(<span class="tok-s">f"retry in {{r.headers['Retry-After']}}s"</span>)
+    r.raise_for_status()
+    <span class="tok-k">return</span> r.json()
+
+
+guard(<span class="tok-s">"check"</span>, text=<span class="tok-s">"to khar hasti"</span>)[<span class="tok-s">"decision"</span>]           <span class="tok-c"># "TOXIC"</span>
+guard(<span class="tok-s">"verdict"</span>, text=<span class="tok-s">"Have a nice day"</span>)[<span class="tok-s">"flagged"</span>]        <span class="tok-c"># False</span>
+guard(<span class="tok-s">"censor"</span>, text=<span class="tok-s">"you are a k1r"</span>)[<span class="tok-s">"text"</span>]             <span class="tok-c"># "you are a ***"</span>
+guard(<span class="tok-s">"check/batch"</span>, texts=[<span class="tok-s">"salam"</span>, <span class="tok-s">"khafe sho"</span>])[<span class="tok-s">"summary"</span>]</code></pre></div><div class="panel" id="clients-1" hidden><pre><code><span class="tok-k">import</span> { Guard } <span class="tok-k">from</span> <span class="tok-s">"./unicollect-guard.js"</span>;   <span class="tok-c">// clients/js, browser + Node 18+</span>
+
+<span class="tok-k">const</span> g = <span class="tok-k">await</span> Guard.fromStatusPage(<span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/"</span>);
+<span class="tok-k">const</span> { decision } = <span class="tok-k">await</span> g.check(<span class="tok-s">"to khar hasti"</span>);
+<span class="tok-k">if</span> (!(<span class="tok-k">await</span> g.isSafe(comment))) warnUser();</code></pre></div><div class="panel" id="clients-2" hidden><pre><code><span class="tok-c"># every endpoint, one after another</span>
+./clients/curl-examples.sh <span class="base-url">https://YOUR-LINK.trycloudflare.com</span> [api_key]</code></pre></div></div>
     </section>
 
     <section class="doc-sec" id="g-guard"><h2>بررسی متن</h2><details class="ep reveal" id="ep-check" open>
@@ -795,6 +813,6 @@ print(r.json())</code></pre></div><div class="panel" id="x-cache-3" hidden><pre>
   </section>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span data-toast-text>کپی شد</span></div>
-<script src="../assets/site.js?v=4" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

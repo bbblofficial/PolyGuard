@@ -1,6 +1,7 @@
 /* Unicollect Guard: public site behaviour
-   theme · drawer · live links (api/links.json) · stamp demo · API docs
-   (tabs, copy, TOC, console) · secret "muvixo" access dialog. */
+   theme (same rule as the chat panel) · drawer · live links (api/links.json)
+   · stamp demo + real check on the live service · API docs (tabs, copy, TOC
+   search, console with copy-as-curl) · 404 helper · secret "muvixo" dialog. */
 (function () {
   "use strict";
 
@@ -17,7 +18,9 @@
   }
   var ASSETS = scriptBase();                       // .../assets/
   var ROOT = ASSETS.replace(/assets\/$/, "");      // site root (absolute)
-  var SERVED_BY_SERVICE = location.pathname.indexOf("/site/") === 0;
+  // served by the FastAPI service itself (/site/* or its HTML 404 page)
+  var SERVED_BY_SERVICE = ROOT.indexOf(location.origin + "/site/") === 0;
+  var ARROW = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
 
   function fa(n) { return String(n).replace(/[0-9]/g, function (d) { return "۰۱۲۳۴۵۶۷۸۹"[+d]; }); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -25,8 +28,8 @@
 
   /* ---------- theme ---------- */
   function paintThemeColor() {
-    var m = $('meta[name="theme-color"]');
-    if (m) m.setAttribute("content", document.documentElement.classList.contains("dark") ? "#120c2a" : "#f7f3f8");
+    var c = document.documentElement.classList.contains("dark") ? "#212121" : "#ffffff";
+    $$('meta[name="theme-color"]').forEach(function (m) { m.setAttribute("content", c); });
   }
   $$("[data-theme-toggle]").forEach(function (b) {
     b.addEventListener("click", function () {
@@ -37,10 +40,10 @@
     });
   });
   if (window.matchMedia) {
-    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var mq = window.matchMedia("(prefers-color-scheme: light)");
     var onMq = function () {
       var saved = null; try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
-      if (!saved) { document.documentElement.classList.toggle("dark", mq.matches); paintThemeColor(); }
+      if (!saved) { document.documentElement.classList.toggle("dark", !mq.matches); paintThemeColor(); }
     };
     if (mq.addEventListener) mq.addEventListener("change", onMq); else if (mq.addListener) mq.addListener(onMq);
   }
@@ -111,6 +114,7 @@
 
   /* ---------- live links ---------- */
   var live = { url: "", status: "unknown", updated: null, run: null };
+  var liveHooks = [];                         // called after every status repaint
 
   function setDots(cls, text) {
     $$("[data-status-dot]").forEach(function (d) { d.className = "dot " + cls; });
@@ -132,12 +136,16 @@
     $$("[data-live-text]").forEach(function (s) { s.textContent = url || "سرویس فعلاً آنلاین نیست"; });
     $$(".base-url").forEach(function (s) { s.textContent = url || PLACEHOLDER; });
     $$("[data-live-label]").forEach(function (s) { s.textContent = url ? "باز کردن پنل" : "پنل فعلاً آفلاین است"; });
+    $$("[data-needs-live]").forEach(function (el) { el.classList.toggle("is-offline", !url); });
+    var tn = $("[data-try-note]");
+    if (tn && !tn.dataset.touched) tn.textContent = url ? "متن خودت را روی سرویس زنده امتحان کن." : "سرویس فعلاً آفلاین است؛ نمونه‌ها را ببین.";
     var pages = SERVED_BY_SERVICE ? "https://USER.github.io/REPO/" : ROOT;
     $$("[data-pages-url]").forEach(function (s) { s.textContent = pages; });
     $$("[data-pages-url-js]").forEach(function (s) {
       var tail = /links\.json/.test(s.textContent) ? "api/links.json" : "";
       s.textContent = '"' + pages + tail + '"';
     });
+    liveHooks.forEach(function (fn) { try { fn(); } catch (e) {} });
     var when = $("[data-status-when]");
     if (when) {
       if (live.status === "online") when.textContent = "آنلاین" + (live.updated ? " · به‌روزرسانی " + relTime(live.updated) : "");
@@ -196,16 +204,17 @@
 
   $$("[data-copy-live]").forEach(function (b) { b.addEventListener("click", function () { copy(live.url); }); });
 
-  /* ---------- stamp demo (home) ---------- */
+  /* ---------- stamp demo (home) + real check on the live service ---------- */
   var MODELS = ["فارسی", "پرو", "سریع", "گسترده", "انگلیسی"];
+  var MODEL_KEYS = ["persian", "textdetox_lg", "textdetox_sm", "multilingual", "twitter_off"];
   var WORD = { safe: "ایمن", suspect: "مشکوک", toxic: "سمی" };
   var COLOR = { safe: "var(--safe)", suspect: "var(--suspect)", toxic: "var(--toxic)" };
   var EX = [
-    { t: "میشه لطفاً فردا ساعت ۵ وقت بذاریم صحبت کنیم؟", lang: "فارسی", v: "safe", s: 4, m: [3, 6, 4, 7, null] },
-    { t: "اصلاً حواست به کارت هست یا نه؟ این دومین باره.", lang: "فارسی", v: "suspect", s: 61, m: [61, 48, 35, 22, null] },
-    { t: "خیلی احمقی، دیگه هیچ‌وقت بهم پیام نده.", lang: "فارسی", v: "toxic", s: 96, m: [97, 93, 95, 88, null] },
-    { t: "salam, mamnoon az komaket, kheili lotf kardi", lang: "فینگیلیش → سلام، ممنون از کمکت…", v: "safe", s: 3, m: [2, 4, 3, 5, 6] },
-    { t: "khafe sho ahmagh", lang: "فینگیلیش → خفه شو احمق", v: "toxic", s: 91, m: [94, 89, 77, 41, 70] }
+    { t: "میشه لطفاً فردا ساعت ۵ وقت بذاریم صحبت کنیم؟", lang: ["فارسی"], v: "safe", s: 4, m: [3, 6, 4, 7, null] },
+    { t: "اصلاً حواست به کارت هست یا نه؟ این دومین باره.", lang: ["فارسی"], v: "suspect", s: 61, m: [61, 48, 35, 22, null] },
+    { t: "خیلی احمقی، دیگه هیچ‌وقت بهم پیام نده.", lang: ["فارسی"], v: "toxic", s: 96, m: [97, 93, 95, 88, null] },
+    { t: "salam, mamnoon az komaket, kheili lotf kardi", lang: ["فینگیلیش", "سلام، ممنون از کمکت…"], v: "safe", s: 3, m: [2, 4, 3, 5, 6] },
+    { t: "khafe sho ahmagh", lang: ["فینگیلیش", "خفه شو احمق"], v: "toxic", s: 91, m: [94, 89, 77, 41, 70] }
   ];
   var dText = $("[data-demo-text]"), dLang = $("[data-demo-lang]"), dVoters = $("[data-demo-voters]"), dStamp = $("[data-demo-stamp]");
   var chips = $$("[data-demo]"), runId = 0, auto = true;
@@ -214,41 +223,108 @@
     return '<div class="voter"><div class="meter"><i style="--n:' + i + '"></i><span></span></div>' + n + "</div>";
   }).join("");
 
+  function setLang(parts, prefix) {
+    if (!dLang) return;
+    var p = parts || [];
+    dLang.innerHTML = (prefix === false ? "" : "زبان: ") + esc(p[0] || "") +
+      (p[1] ? ARROW + '<span dir="rtl">' + esc(p[1]) + "</span>" : "");
+  }
   function setVoters(ex) {
     $$(".voter", dVoters).forEach(function (v, i) {
       var val = ex ? ex.m[i] : null, bar = $("i", v), lab = $("span", v);
       bar.style.setProperty("--h", val == null ? "0%" : Math.max(4, val) + "%");
       bar.style.setProperty("--c", val == null ? "var(--text-3)" : val >= 50 ? COLOR.toxic : val >= 30 ? COLOR.suspect : COLOR.safe);
-      lab.textContent = !ex ? "" : val == null ? "—" : fa(val);
+      lab.textContent = !ex ? "" : val == null ? "-" : fa(val);
       lab.style.color = val != null && val >= 40 ? "#fff" : "";
       v.style.opacity = ex && val == null ? ".45" : "1";
     });
   }
-  async function play(i) {
-    if (!dText) return;
-    var me = ++runId, ex = EX[i];
-    chips.forEach(function (c) { c.setAttribute("aria-pressed", String(+c.dataset.demo === i)); });
-    dStamp.className = "stamp"; setVoters(null);
-    dLang.textContent = "متن";
+  async function typeText(me, t, fast) {
     dText.innerHTML = '<span class="typed"></span><span class="caret"></span>';
-    var typed = $(".typed", dText), chars = Array.from(ex.t);
-    dText.dir = /[a-z]/i.test(ex.t) ? "ltr" : "rtl";
-    for (var c = 0; c < chars.length; c++) {
-      if (me !== runId) return;
-      typed.textContent += chars[c];
-      await wait(chars[c] === " " ? 38 : 26);
+    var typed = $(".typed", dText), chars = Array.from(t);
+    dText.dir = /[a-z]/i.test(t) && !/[\u0600-\u06FF]/.test(t) ? "ltr" : "rtl";
+    var step = fast ? Math.max(1, Math.ceil(chars.length / 60)) : 1;
+    for (var c = 0; c < chars.length; c += step) {
+      if (me !== runId) return false;
+      typed.textContent += chars.slice(c, c + step).join("");
+      await wait(fast ? 12 : chars[c] === " " ? 38 : 26);
     }
-    await wait(250); if (me !== runId) return;
+    return me === runId;
+  }
+  async function showVerdict(me, ex) {
     var caret = $(".caret", dText); if (caret) caret.remove();
-    dLang.textContent = "زبان: " + ex.lang;
+    setLang(ex.lang);
     setVoters(ex);
-    await wait(900); if (me !== runId) return;
+    await wait(900); if (me !== runId) return false;
     $("[data-demo-verdict]").textContent = WORD[ex.v];
     $("[data-demo-score]").textContent = ex.s + "%";
     void dStamp.offsetWidth;
     dStamp.className = "stamp " + ex.v + " on";
+    return true;
+  }
+  function resetDesk(pressed) {
+    chips.forEach(function (c) { c.setAttribute("aria-pressed", String(+c.dataset.demo === pressed)); });
+    dStamp.className = "stamp"; setVoters(null);
+    if (dLang) dLang.textContent = "متن";
+  }
+  async function play(i) {
+    if (!dText) return;
+    var me = ++runId, ex = EX[i];
+    resetDesk(i);
+    if (!(await typeText(me, ex.t))) return;
+    await wait(250); if (me !== runId) return;
+    if (!(await showVerdict(me, ex))) return;
     if (auto) { await wait(3200); if (me !== runId || !auto) return; play((i + 1) % EX.length); }
   }
+  // map a real /api/v1/check response onto the desk
+  function fromApi(text, d) {
+    var raw = d.raw_scores || {}, fing = d.fingilish_detected && d.fingilish_text;
+    var lang = fing ? ["فینگیلیش", d.fingilish_text] : [{ fa: "فارسی", en: "انگلیسی", mixed: "ترکیبی" }[d.script] || "خودکار"];
+    return {
+      t: text, lang: lang, v: String(d.decision || "SAFE").toLowerCase(),
+      s: Math.round((d.max_raw != null ? d.max_raw : 0) * 100),
+      m: MODEL_KEYS.map(function (k) { return raw[k] == null ? null : Math.round(raw[k] * 100); })
+    };
+  }
+  var tryForm = $("[data-try-form]"), tryIn = $("[data-try-text]"), tryBtn = $("[data-try-send]"), tryNote = $("[data-try-note]");
+  async function tryLive(text) {
+    if (!live.url) { toast("سرویس فعلاً آنلاین نیست"); return; }
+    auto = false;
+    var me = ++runId; resetDesk(-1);
+    tryBtn.setAttribute("aria-disabled", "true");
+    if (tryNote) tryNote.textContent = "در حال بررسی با پنج مدل…";
+    var req = fetch(live.url + "/api/v1/check", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text, detailed: true })
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); });
+    await typeText(me, text, true);
+    var caret = $(".caret", dText);
+    try {
+      var x = await req;
+      if (me !== runId) return;
+      if (!x.ok || x.j.error) {
+        var msg = x.j && x.j.error ? (x.j.error.message || x.j.error) : "خطای ناشناخته";
+        if (caret) caret.remove();
+        setLang(["خطا", String(msg)], false);
+        if (tryNote) tryNote.textContent = "پاسخ نداد؛ دوباره امتحان کن.";
+        return;
+      }
+      await showVerdict(me, fromApi(text, x.j));
+      if (tryNote) tryNote.innerHTML = (x.j.reason ? '<bdi dir="ltr">' + esc(x.j.reason) + "</bdi>" : "") + (x.j.latency_ms != null ? ' <span class="mono">' + fa(x.j.latency_ms) + "ms</span>" : "");
+    } catch (e) {
+      if (caret) caret.remove();
+      setLang(["خطا", "درخواست به سرویس نرسید"], false);
+      if (tryNote) tryNote.textContent = "سرویس در دسترس نیست.";
+    } finally {
+      tryBtn.removeAttribute("aria-disabled");
+    }
+  }
+  if (tryForm) tryForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var t = (tryIn.value || "").trim();
+    if (!t) { tryIn.focus(); return; }
+    tryLive(t);
+  });
   if (dText) {
     chips.forEach(function (c) { c.addEventListener("click", function () { auto = false; play(+c.dataset.demo); }); });
     var started = false, start = function () { if (!started) { started = true; play(0); } };
@@ -281,12 +357,47 @@
   }
   if (location.hash) { var h = document.getElementById(location.hash.slice(1)); if (h && h.tagName === "DETAILS") h.open = true; }
 
+  /* ---------- API docs: endpoint search ("/" focuses it) ---------- */
+  var tocFilter = $("[data-toc-filter]");
+  if (toc && tocFilter) {
+    var tocLinks = $$("a[href^='#']", toc), heads = $$("h4", toc), empty = $("[data-toc-empty]", toc);
+    var norm = function (x) { return String(x || "").toLowerCase().replace(/\s+/g, " ").trim(); };
+    var applyFilter = function () {
+      var q = norm(tocFilter.value), shown = 0;
+      tocLinks.forEach(function (a) {
+        var hit = !q || norm(a.textContent + " " + a.getAttribute("href")).indexOf(q) >= 0;
+        a.hidden = !hit; if (hit) shown++;
+      });
+      heads.forEach(function (h4) {
+        var n = h4.nextElementSibling, any = false;
+        while (n && n.tagName !== "H4") { if (n.tagName === "A" && !n.hidden) any = true; n = n.nextElementSibling; }
+        h4.hidden = !any;
+      });
+      if (empty) empty.hidden = shown > 0;
+    };
+    tocFilter.addEventListener("input", applyFilter);
+    tocFilter.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        var first = tocLinks.filter(function (a) { return !a.hidden; })[0];
+        if (first) { first.click(); location.hash = first.getAttribute("href"); tocFilter.blur(); }
+      } else if (e.key === "Escape") { tocFilter.value = ""; applyFilter(); tocFilter.blur(); }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+      var t = (document.activeElement && document.activeElement.tagName || "").toLowerCase();
+      if (t === "input" || t === "textarea" || t === "select") return;
+      e.preventDefault(); tocFilter.focus(); tocFilter.select();
+    });
+  }
+
   /* ---------- API console ---------- */
   var dataEl = $("#ep-data"), sel = $("[data-con-ep]");
   if (dataEl && sel) {
     var EPS = JSON.parse(dataEl.textContent);
     var body = $("[data-con-body]"), keyIn = $("[data-con-key]"), sendBtn = $("[data-con-send]");
     var resp = $("[data-con-resp]"), out = $("[data-con-out]"), stEl = $("[data-con-status]"), tmEl = $("[data-con-time]"), urlEl = $("[data-con-url]");
+    var hdrEl = $("[data-con-headers]"), curlBtn = $("[data-con-curl]");
     try { keyIn.value = sessionStorage.getItem("guard_key") || ""; } catch (e) {}
     var fill = function () {
       var ep = EPS[+sel.value];
@@ -320,6 +431,13 @@
         .then(function (r) { return r.text().then(function (t) { return { r: r, t: t }; }); })
         .then(function (x) {
           stEl.textContent = x.r.status; stEl.className = "status-code " + (x.r.ok ? "ok" : "err");
+          if (hdrEl) {
+            var hs = [["X-Request-ID", "request id"], ["X-RateLimit-Remaining", "باقی‌مانده"], ["X-Process-Time", "سرور"], ["Retry-After", "صبر"]];
+            hdrEl.innerHTML = hs.map(function (h) {
+              var v = x.r.headers.get(h[0]);
+              return v ? '<span class="hdr"><b>' + esc(h[1]) + '</b><span class="mono">' + esc(v) + "</span></span>" : "";
+            }).join("");
+          }
           tmEl.textContent = fa(Math.round(performance.now() - t0)) + " میلی‌ثانیه";
           var pretty = x.t; try { pretty = JSON.stringify(JSON.parse(x.t), null, 2); } catch (e) {}
           out.innerHTML = hlJson(pretty);
@@ -331,6 +449,18 @@
         .then(function () { sendBtn.removeAttribute("aria-disabled"); });
     };
     sendBtn.addEventListener("click", send);
+    // "copy as curl": the exact request the console would send
+    if (curlBtn) curlBtn.addEventListener("click", function () {
+      var ep = EPS[+sel.value], base = live.url || PLACEHOLDER, key = keyIn.value.trim();
+      var q = function (v) { return "'" + String(v).replace(/'/g, "'\\''") + "'"; };
+      var cmd = "curl" + (ep.m === "POST" ? " -X POST" : "") + " " + q(base + ep.p);
+      if (key) cmd += " \\\n  -H " + q("X-API-Key: " + key);
+      if (ep.m === "POST") {
+        var b; try { b = JSON.stringify(JSON.parse(body.value || "{}")); } catch (e) { toast("JSON نامعتبر است"); return; }
+        cmd += " \\\n  -H 'Content-Type: application/json' \\\n  -d " + q(b);
+      }
+      copy(cmd);
+    });
     body.addEventListener("keydown", function (e) { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") send(); });
     document.addEventListener("click", function (e) {
       var b = e.target.closest("[data-try]"); if (!b) return;
@@ -339,6 +469,32 @@
       if (idx >= 0) { sel.value = String(idx); fill(); }
       document.getElementById("console").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" });
     });
+  }
+
+  /* ---------- 404 page ---------- */
+  var nf = $("[data-404]");
+  if (nf) {
+    var path = location.pathname + location.search;
+    var rootPath = ROOT.replace(location.origin, "");
+    var rel = path.indexOf(rootPath) === 0 ? path.slice(rootPath.length) : path.replace(/^\//, "");
+    var pEl = $("[data-404-path]"); if (pEl) pEl.textContent = "/" + rel;
+    var low = rel.toLowerCase(), guess = null;
+    var GUESS = [[/^(api\/)?v1|^api\/v1|^docs|^redoc|^openapi/, "service"], [/api|endpoint|doc|swagger/, "api/"],
+                 [/how|work|process|farayand/, "how-it-works/"], [/about|darbare/, "about/"], [/priv|harim/, "privacy/"]];
+    for (var g = 0; g < GUESS.length; g++) if (GUESS[g][0].test(low)) { guess = GUESS[g][1]; break; }
+    var sug = $("[data-404-guess]");
+    if (sug && guess) {
+      var paint404 = function () {
+        if (guess === "service") {
+          var svc = "/" + (/^v1/.test(rel) ? "api/" + rel : rel);
+          if (live.url) { sug.innerHTML = 'این مسیر مال سرویس زنده است: <a class="inline-code" target="_blank" rel="noopener" href="' + esc(live.url + svc) + '">' + esc(svc) + "</a>"; sug.hidden = false; }
+          else { sug.textContent = "این مسیر روی سرویس زنده است که الان آفلاین است."; sug.hidden = false; }
+        } else {
+          sug.innerHTML = 'شاید دنبال <a class="inline-code" href="' + esc(ROOT + guess) + '">' + esc(guess) + "</a> بودی؟"; sug.hidden = false;
+        }
+      };
+      paint404(); liveHooks.push(paint404);
+    }
   }
 
   /* ---------- secret access dialog: type "muvixo" ---------- */
