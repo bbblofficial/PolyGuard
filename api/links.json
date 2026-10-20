@@ -1,6 +1,6 @@
 {
   "service": "unicollect-guard",
-  "status": "starting",
+  "status": "offline",
   "online": false,
   "base_url": null,
   "links": {
@@ -124,7 +124,7 @@
       "url": null
     }
   ],
-  "updated_at": "2026-10-20T18:30:44+00:00",
+  "updated_at": "2026-10-20T18:30:57+00:00",
   "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39475360004",
   "run_number": 95,
   "commit": "be03410"
