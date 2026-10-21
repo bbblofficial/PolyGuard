@@ -1,131 +1,131 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://blond-forever-democrats-picked.trycloudflare.com",
+  "status": "starting",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://blond-forever-democrats-picked.trycloudflare.com",
-    "api": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1",
-    "health": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/health",
-    "swagger": "https://blond-forever-democrats-picked.trycloudflare.com/docs",
-    "redoc": "https://blond-forever-democrats-picked.trycloudflare.com/redoc",
-    "openapi": "https://blond-forever-democrats-picked.trycloudflare.com/openapi.json",
-    "guide": "https://blond-forever-democrats-picked.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://blond-forever-democrats-picked.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-21T00:55:29+00:00",
-  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39524037732",
-  "run_number": 99,
+  "updated_at": "2026-10-21T05:44:42+00:00",
+  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39551276866",
+  "run_number": 100,
   "commit": "fd01c58"
 }
