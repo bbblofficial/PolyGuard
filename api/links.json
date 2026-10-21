@@ -1,131 +1,131 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://independence-barnes-promising-outcomes.trycloudflare.com",
+  "status": "starting",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://independence-barnes-promising-outcomes.trycloudflare.com",
-    "api": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1",
-    "health": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/health",
-    "swagger": "https://independence-barnes-promising-outcomes.trycloudflare.com/docs",
-    "redoc": "https://independence-barnes-promising-outcomes.trycloudflare.com/redoc",
-    "openapi": "https://independence-barnes-promising-outcomes.trycloudflare.com/openapi.json",
-    "guide": "https://independence-barnes-promising-outcomes.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://independence-barnes-promising-outcomes.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-21T05:46:52+00:00",
-  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39551276866",
-  "run_number": 100,
+  "updated_at": "2026-10-21T10:37:59+00:00",
+  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39585993628",
+  "run_number": 101,
   "commit": "fd01c58"
 }
