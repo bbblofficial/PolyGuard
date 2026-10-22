@@ -1,130 +1,130 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://fascinating-neighbors-finished-evening.trycloudflare.com",
+  "status": "offline",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://fascinating-neighbors-finished-evening.trycloudflare.com",
-    "api": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1",
-    "health": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/health",
-    "swagger": "https://fascinating-neighbors-finished-evening.trycloudflare.com/docs",
-    "redoc": "https://fascinating-neighbors-finished-evening.trycloudflare.com/redoc",
-    "openapi": "https://fascinating-neighbors-finished-evening.trycloudflare.com/openapi.json",
-    "guide": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://fascinating-neighbors-finished-evening.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-22T15:46:43+00:00",
+  "updated_at": "2026-10-22T20:48:27+00:00",
   "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39807655494",
   "run_number": 106,
   "commit": "c85bd88"
