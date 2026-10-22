@@ -12,7 +12,7 @@
 <meta property="og:description" content="API کامل Unicollect Guard: بررسی متن، دسته‌ای، سانسور، فینگیلیش، و لینک‌های زنده‌ی سرویس.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="preload" href="../assets/fonts/Vazirmatn.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="../assets/site.css?v=7">
+<link rel="stylesheet" href="../assets/site.css?v=13">
 <script>
   // same rule as the chat panel: explicit choice wins, otherwise dark unless the OS asks for light
   (function () {
@@ -167,7 +167,7 @@ Authorization: Bearer <span class="tok-s">your-key</span></code></pre></div></di
 
     <section class="doc-sec" id="clients">
       <h2>کتابخانه‌ها</h2>
-      <p>برای پایتون پکیج جدا لازم نیست؛ همان <span class="inline-code">requests</span> کافی است. برای جاوااسکریپت فایل <span class="inline-code">clients/js</span> و برای ترمینال <span class="inline-code">clients/curl-examples.sh</span> هست.</p>
+      <p>کتابخانه یا پکیج خاصی لازم نیست؛ فقط یک درخواست HTTP عادی به <span class="inline-code">BASE_URL</span> (لینک زنده از <span class="inline-code">api/links.json</span>) کافی است.</p>
       <div class="code" data-tabs><div class="code-bar" role="tablist"><button class="tab" type="button" role="tab" aria-selected="true" data-tab="clients-0">Python · requests</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="clients-1">JavaScript</button><button class="tab" type="button" role="tab" aria-selected="false" data-tab="clients-2">curl</button><button class="copy" type="button" data-copy-code><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>کپی</span></button></div><div class="panel" id="clients-0"><pre><code><span class="tok-k">import</span> requests
 
 PAGES = <span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/api/links.json"</span>
@@ -186,12 +186,25 @@ HEADERS = {}                                                <span class="tok-c">
 guard(<span class="tok-s">"check"</span>, text=<span class="tok-s">"to khar hasti"</span>)[<span class="tok-s">"decision"</span>]           <span class="tok-c"># "TOXIC"</span>
 guard(<span class="tok-s">"verdict"</span>, text=<span class="tok-s">"Have a nice day"</span>)[<span class="tok-s">"flagged"</span>]        <span class="tok-c"># False</span>
 guard(<span class="tok-s">"censor"</span>, text=<span class="tok-s">"you are a k1r"</span>)[<span class="tok-s">"text"</span>]             <span class="tok-c"># "you are a ***"</span>
-guard(<span class="tok-s">"check/batch"</span>, texts=[<span class="tok-s">"salam"</span>, <span class="tok-s">"khafe sho"</span>])[<span class="tok-s">"summary"</span>]</code></pre></div><div class="panel" id="clients-1" hidden><pre><code><span class="tok-k">import</span> { Guard } <span class="tok-k">from</span> <span class="tok-s">"./unicollect-guard.js"</span>;   <span class="tok-c">// clients/js, browser + Node 18+</span>
+guard(<span class="tok-s">"check/batch"</span>, texts=[<span class="tok-s">"salam"</span>, <span class="tok-s">"khafe sho"</span>])[<span class="tok-s">"summary"</span>]</code></pre></div><div class="panel" id="clients-1" hidden><pre><code><span class="tok-k">const</span> PAGES = <span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/api/links.json"</span>;
+<span class="tok-k">const</span> { base_url: BASE } = <span class="tok-k">await</span> (<span class="tok-k">await</span> fetch(PAGES)).json();   <span class="tok-c">// the live tunnel link</span>
 
-<span class="tok-k">const</span> g = <span class="tok-k">await</span> Guard.fromStatusPage(<span class="tok-s" data-pages-url-js>"https://USER.github.io/REPO/"</span>);
-<span class="tok-k">const</span> { decision } = <span class="tok-k">await</span> g.check(<span class="tok-s">"to khar hasti"</span>);
-<span class="tok-k">if</span> (!(<span class="tok-k">await</span> g.isSafe(comment))) warnUser();</code></pre></div><div class="panel" id="clients-2" hidden><pre><code><span class="tok-c"># every endpoint, one after another</span>
-./clients/curl-examples.sh <span class="base-url">https://YOUR-LINK.trycloudflare.com</span> [api_key]</code></pre></div></div>
+<span class="tok-k">async function</span> guard(path, body) {
+  <span class="tok-k">const</span> r = <span class="tok-k">await</span> fetch(<span class="tok-s">`${BASE}/api/v1/${path}`</span>, {
+    method: <span class="tok-s">"POST"</span>,
+    headers: { <span class="tok-s">"Content-Type"</span>: <span class="tok-s">"application/json"</span> },
+    body: JSON.stringify(body),
+  });
+  <span class="tok-k">return</span> r.json();
+}
+
+(<span class="tok-k">await</span> guard(<span class="tok-s">"check"</span>, { text: <span class="tok-s">"to khar hasti"</span> })).decision;   <span class="tok-c">// "TOXIC"</span></code></pre></div><div class="panel" id="clients-2" hidden><pre><code><span class="tok-c"># 1) live link</span>
+BASE=$(curl -s https://USER.github.io/REPO/api/links.txt)
+
+<span class="tok-c"># 2) check</span>
+curl -X POST <span class="tok-s">"$BASE/api/v1/check"</span> \
+  -H <span class="tok-s">"Content-Type: application/json"</span> \
+  -d <span class="tok-s">'{"text":"salam khoobi"}'</span></code></pre></div></div>
     </section>
 
     <div class="ep-tools" role="toolbar" aria-label="کنترل مسیرها"><span class="lbl">همه‌ی مسیرها <span class="mono" data-ep-count></span></span><button class="btn btn-line btn-sm" type="button" data-ep-all="open"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg><span>باز کردن همه</span></button><button class="btn btn-line btn-sm" type="button" data-ep-all="close"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 20 5-5 5 5M7 4l5 5 5-5"/></svg><span>بستن همه</span></button></div>
@@ -832,6 +845,6 @@ print(r.json())</code></pre></div><div class="panel" id="x-cache-3" hidden><pre>
   </section>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span data-toast-text>کپی شد</span></div>
-<script src="../assets/site.js?v=7" defer></script>
+<script src="../assets/site.js?v=13" defer></script>
 </body>
 </html>

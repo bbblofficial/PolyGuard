@@ -202,7 +202,10 @@ window.addEventListener('DOMContentLoaded', () => {
   paintLiveLinks();
   checkHealth().then(prefillFromUrl);
   setInterval(() => { if (!document.hidden) checkHealth(); }, 12000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkHealth(); });
+  document.addEventListener('visibilitychange', () => {
+    document.documentElement.classList.toggle('tab-hidden', document.hidden);
+    if (!document.hidden) checkHealth();
+  });
   watchSystemTheme();
   if (CAN_HOVER) $('prompt-input').focus();
   document.addEventListener('click', closeModelDropdown);
