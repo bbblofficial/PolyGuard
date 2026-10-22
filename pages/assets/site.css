@@ -650,3 +650,114 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
 .meta-row .meta-link { color: var(--text-2); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--line-2); }
 .meta-row .meta-link:hover { color: var(--text); text-decoration-color: currentColor; }
 .meta-row .meta-link[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+
+/* ==================================================================
+   v3 polish layer (site): richer depth, clearer hierarchy, and a
+   reveal that can't leave content invisible. Mirrors the chat panel.
+   ================================================================== */
+:root {
+  --ease-soft: cubic-bezier(.3, .7, .2, 1);
+  --ring: 0 0 0 3px var(--ink-soft);
+}
+html.dark { --ring: 0 0 0 3px rgba(214, 120, 200, .22); }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+::selection { background: var(--ink-soft); }
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* focus */
+a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 10px;
+}
+
+/* buttons: spring on press, brand glow on the primary one */
+.btn { transition: transform .22s var(--ease-soft), box-shadow .25s, background-color .2s, opacity .2s; }
+.btn:hover { opacity: 1; }
+.btn-ink:hover { box-shadow: 0 10px 28px -10px color-mix(in oklab, var(--ink) 55%, transparent); transform: scale(1.02); }
+.btn-line:hover { border-color: var(--ink-line); transform: scale(1.02); }
+.btn:active { transform: scale(.97); }
+
+/* nav + header */
+.nav a { transition: color .25s, background-color .2s; }
+.top { border-radius: 24px; }
+
+/* the desk (live demo): clearer depth and focus ring on the input */
+.desk { box-shadow: var(--shadow-lg), 0 0 0 1px var(--line); }
+.letter { transition: border-color .25s, background-color .25s; }
+.try:focus-within { border-color: var(--ink-line); box-shadow: var(--ring); }
+.voter .meter { transition: border-color .25s; }
+.voter .meter i { transition: transform .7s var(--ease-soft), opacity .3s; }
+
+/* ---- reveal fixes ----
+   - shorter, smaller travel so it feels like settling, not sliding
+   - without IntersectionObserver or after 2.5s everything shows anyway
+   - will-change only while the transition runs */
+.js .reveal {
+  transform: translateY(10px) scale(.992);
+  transition: opacity .55s var(--ease-soft), transform .6s var(--ease-soft);
+  transition-delay: calc(min(var(--rd, 0), 6) * 60ms);
+}
+.js .reveal.in { will-change: auto; }
+.no-io .reveal, .js .reveal.force { opacity: 1; transform: none; }
+
+/* endpoint panels and code tabs stay crisp */
+.ep { transition: border-color .25s, box-shadow .3s var(--ease-soft); }
+.ep:hover { border-color: var(--line-2); }
+.js .code .panel:not([hidden]) { animation-duration: .24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover, .btn-line:hover, .btn-ink:hover { transform: none; }
+  .js .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ==================================================================
+   v7 "report" (site): an editorial, ruled layout. A full-width header
+   with a bottom rule, section titles under a heavy rule, square-ish
+   cards with 1px edges, numbered steps as plum squares. Solid colours
+   only, original monochrome + plum theme.
+   ================================================================== */
+:root { --r: 14px; --on-ink: #ffffff; }
+html.dark { --on-ink: #1a0f18; }
+
+/* header: full-bleed bar, hairline underneath */
+.top { width: 100%; margin: 0; top: 0; border-radius: 0; border: 0; border-bottom: 1px solid var(--line-2); background: var(--paper); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.top.scrolled { background: var(--paper); box-shadow: none; border-color: var(--line-2); }
+.top-bar { max-width: calc(var(--wrap) + 40px); margin-inline: auto; }
+.nav, .nav a, .nav-ink { border-radius: 10px; }
+.nav-ink { background: var(--ink-soft); }
+.nav a[aria-current="page"] { color: var(--ink); }
+
+/* type: heavy display, ruled section titles */
+h1 { font-weight: 900; letter-spacing: -.035em; line-height: 1.15; }
+h2 { font-weight: 800; letter-spacing: -.02em; }
+.sec-head { border-top: 3px solid var(--text); padding-top: 20px; max-width: none; }
+.sec-head h2 { margin-top: 0; }
+.sec-head p { max-width: 640px; }
+.eyebrow { padding: 0; background: none; color: var(--ink); font-weight: 800; }
+.eyebrow .bar { width: 10px; height: 10px; border-radius: 2px; background: var(--ink); }
+
+/* buttons */
+.btn { border-radius: 12px; }
+.btn-ink { background: var(--ink); color: var(--on-ink); box-shadow: none; }
+.btn-ink:hover { background: var(--ink-2); box-shadow: none; transform: scale(1.02); }
+.btn-ink:active { transform: scale(.98); }
+.btn-line { background: transparent; border: 1.5px solid var(--text); color: var(--text); }
+.btn-line:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* desk: report-style panel with a plum top edge */
+.desk { background: var(--paper); border: 1px solid var(--line-2); border-top: 4px solid var(--ink); border-radius: var(--r); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.letter { border-radius: 10px; background: var(--paper-2); }
+.try { border-radius: 12px; }
+.voter .meter { border-radius: 8px; }
+
+/* cards, endpoints, steps: the same 1px edge */
+.card, .ep, .steps li { background: var(--paper); border: 1px solid var(--line-2); border-radius: var(--r); box-shadow: none; }
+.card:hover, .ep:hover { border-color: var(--ink); box-shadow: none; }
+.card .glyph { border-radius: 10px; background: var(--ink-soft); color: var(--ink); }
+.card.feature { background: var(--night); border-color: var(--night); }
+.steps li::before { border-radius: 10px; background: var(--ink); color: var(--on-ink); }
+.section.band { background: var(--side); border-block: 1px solid var(--line-2); }
+.foot-card { border-radius: var(--r); background: var(--paper); border: 1px solid var(--line-2); box-shadow: none; }
+.foot-card::before { display: none; }
+
+@media (prefers-reduced-motion: reduce) { .btn-ink:hover { transform: none; } }

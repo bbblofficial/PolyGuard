@@ -1281,3 +1281,163 @@ a[aria-disabled="true"] { opacity: .45; pointer-events: none; }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
 /* ==== /UNICOLLECT v2.2 ==== */
+
+/* ==================================================================
+   v3 polish layer: refined surfaces, focus states, calmer motion.
+   Same rule as the rest of the panel: only opacity + scale animate;
+   colour, border and shadow may transition. Nothing here moves layout.
+   ================================================================== */
+:root {
+  --ease-soft: cubic-bezier(.3, .7, .2, 1);
+  --ring: 0 0 0 3px var(--accent-soft);
+  --shadow-card: 0 1px 2px rgba(24,19,43,.05), 0 6px 20px -8px rgba(24,19,43,.10);
+}
+html.dark {
+  --ring: 0 0 0 3px rgba(214, 120, 200, .22);
+  --shadow-card: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -10px rgba(0,0,0,.5);
+}
+
+/* text rendering + selection */
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+::selection { background: var(--accent-soft); }
+
+/* focus: one consistent, visible ring (keyboard only) */
+button:focus-visible, .thread:focus-visible, .chip:focus-visible, a:focus-visible,
+summary:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 12px;
+}
+textarea:focus-visible, input:focus-visible { outline: none; }
+
+/* composer: glows in the brand colour while typing */
+.composer {
+  border-radius: 26px;
+  transition: border-color .25s var(--ease-soft), box-shadow .3s var(--ease-soft);
+}
+.composer:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  box-shadow: var(--shadow-composer), var(--ring);
+}
+
+/* send button: brand colour when it can send, quiet when it can't */
+.send-btn:not(:disabled) { background: var(--accent); color: #fff; }
+.send-btn:not(:disabled):hover { opacity: 1; filter: brightness(1.08); }
+.send-btn { transition: background-color .2s, filter .2s, opacity .2s, transform .22s var(--ease-spring); }
+.send-btn:disabled { background: var(--soft); color: var(--text3); opacity: .6; transform: scale(.92); }
+
+/* suggestion chips: soft hover, small press */
+.chip {
+  transition: border-color .2s, background-color .2s, color .2s, box-shadow .25s, transform .2s var(--ease-spring);
+}
+.chip:hover {
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+  background: var(--accent-soft); color: var(--text);
+  box-shadow: var(--shadow-card); transform: scale(1.025);
+}
+.chip:active { transform: scale(.96); }
+
+/* sidebar threads: accent marker on the active one, no layout shift */
+.thread { border-radius: 12px; transition: background-color .18s, transform .18s var(--ease-spring); }
+.thread.active { box-shadow: inset 3px 0 0 var(--accent); }
+[dir="rtl"] .thread.active, html[dir="rtl"] .thread.active { box-shadow: inset -3px 0 0 var(--accent); }
+.icon-btn, .model-btn { transition: background-color .18s, color .18s, transform .2s var(--ease-spring); }
+.icon-btn:hover { transform: scale(1.06); }
+.icon-btn:active { transform: scale(.94); }
+
+/* result: card feel, verdict icon, rounder bars */
+.res-ico { border-radius: 16px; box-shadow: var(--shadow-card); }
+.res-score { font-variant-numeric: tabular-nums; }
+.bar { height: 7px; background: color-mix(in oklab, var(--text) 8%, transparent); }
+.bar > div { transition: transform .6s var(--ease-soft); }
+.note { box-shadow: var(--shadow-card); }
+.note-flow .np { transition: border-color .2s; }
+.note-flow .np:hover { border-color: var(--accent); }
+
+/* modals + search: soft backdrop blur, springier open */
+.modal-card, .search-card {
+  transform: scale(.96);
+  transition: transform .32s var(--ease-spring), opacity .22s ease;
+}
+.modal-card { box-shadow: var(--shadow-pop), 0 0 0 1px var(--border); }
+
+/* ---- animation fixes ----
+   1) keep GPU layers only while something is actually animating
+   2) result bars finish at full width even if the animation is skipped
+   3) hidden reveal items can never block clicks
+   4) thinking/stream pulses stop when the tab is in the background */
+.reveal-item:not(.show) { pointer-events: none; }
+.anim .meter .meter-fill, .anim .bar > div { transform: scaleX(1); }
+.thinking-label, .stream-dot, .sdot.warn { will-change: opacity; }
+.thread.entering, .fade, .reveal-item { backface-visibility: hidden; }
+.pg-mark.live .pt, .pg-mark.live .core { animation-play-state: running; }
+html.tab-hidden *, html.tab-hidden *::before, html.tab-hidden *::after { animation-play-state: paused !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .chip:hover, .icon-btn:hover { transform: none; }
+  .composer, .send-btn, .chip, .thread { transition-duration: .001ms !important; }
+}
+
+/* ==================================================================
+   v7 "report": a working-tool layout. Edge-to-edge sidebar and chat
+   separated by 1px rules, a ruled top bar, results as report cards
+   with a verdict-coloured edge, a docked composer. Solid colours only,
+   original monochrome + plum theme. Motion: opacity + scale only.
+   ================================================================== */
+:root {
+  --on-accent: #ffffff;
+  --r-ctl: 10px; --r-card: 14px;
+  --ring: 0 0 0 3px var(--accent-soft);
+}
+html.dark { --on-accent: #1a0f18; }
+
+/* shell: flat, divided by rules */
+.sidebar { background: var(--sidebar); border-inline-end: 1px solid var(--border); }
+.app.collapsed .sidebar { border-inline-end-width: 0; }
+.main { background: var(--main); }
+.topbar { height: 56px; border-bottom: 1px solid var(--border); background: var(--main); padding-inline: 16px; }
+.main.welcome .topbar { border-bottom-color: transparent; }
+.model-btn { border-radius: var(--r-ctl); font-size: 16px; padding: 6px 10px; }
+
+/* sidebar list */
+.sb-item, .thread { border-radius: var(--r-ctl); }
+.sb-label { font-weight: 700; letter-spacing: 0; padding-top: 16px; }
+.thread.active { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); font-weight: 600; }
+.thread.active .t-title { color: var(--accent); }
+[dir="rtl"] .thread.active { box-shadow: inset -3px 0 0 var(--accent); }
+
+/* welcome: strong title, tidy tiles */
+.hero-text { font-weight: 800; letter-spacing: -.015em; }
+.chips { gap: 10px; }
+.chip { border-radius: var(--r-ctl); background: var(--composer); border: 1px solid var(--border-strong); font-weight: 500; box-shadow: none; }
+.chip svg.ic { color: var(--accent); }
+.chip:hover { background: var(--accent-soft); border-color: var(--accent); box-shadow: none; transform: scale(1.02); }
+
+/* conversation: user messages outlined in plum, results as report cards */
+.bubble { background: var(--accent-soft); color: var(--text); border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent); border-radius: var(--r-card); box-shadow: none; }
+.result {
+  background: var(--composer); border: 1px solid var(--border); border-inline-start-width: 5px;
+  border-radius: var(--r-card); padding: 18px 20px 12px;
+}
+.result.TOXIC { border-inline-start-color: var(--toxic); }
+.result.SUSPECT { border-inline-start-color: var(--suspect); }
+.result.SAFE { border-inline-start-color: var(--safe); }
+.res-ico { border-radius: var(--r-ctl); box-shadow: none; }
+.res-score { font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 4px; }
+.bar > div { border-radius: 4px; }
+.note { background: var(--soft); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: none; }
+
+/* composer: docked bar with a top rule, rectangular field */
+.composer-area { background: var(--main); border-top: 1px solid var(--border); padding-top: 12px; }
+.main.welcome .composer-area { border-top-color: transparent; background: transparent; }
+.composer { background: var(--composer); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: none; }
+html:not(.dark) .composer { border-color: var(--border-strong); }
+.composer:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
+.send-btn { border-radius: var(--r-ctl); }
+.send-btn:not(:disabled) { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.send-btn:not(:disabled):hover { filter: brightness(1.1); }
+.send-btn:disabled { background: var(--soft); color: var(--text3); box-shadow: none; }
+
+/* modals */
+.modal-card, .search-card { background: var(--popup); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: 0 16px 48px rgba(0,0,0,.18); backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+@media (prefers-reduced-motion: reduce) { .chip:hover { transform: none; } }

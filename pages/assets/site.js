@@ -179,7 +179,7 @@
   if (foot) reveals.push(foot);
   if ("IntersectionObserver" in window && !REDUCED) {
     var io = new IntersectionObserver(function (es) {
-      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+      es.forEach(function (e) { if (e.isIntersecting || e.boundingClientRect.top < 0) { e.target.classList.add("in"); io.unobserve(e.target); } });
     }, { rootMargin: "0px 0px -6% 0px" });
     reveals.forEach(function (el) { io.observe(el); });
   } else reveals.forEach(function (el) { el.classList.add("in"); });
@@ -246,7 +246,8 @@
     $$("[data-needs-live]").forEach(function (el) { el.classList.toggle("is-offline", !url); });
     var tn = $("[data-try-note]");
     if (tn && !tn.dataset.touched) tn.textContent = url ? "متن خودت را روی سرویس زنده امتحان کن." : "سرویس فعلاً آفلاین است؛ نمونه‌ها را ببین.";
-    var pages = SERVED_BY_SERVICE ? "https://USER.github.io/REPO/" : ROOT;
+    // code samples must show a public https link: a file:// or service URL is useless to copy
+    var pages = (SERVED_BY_SERVICE || !/^https?:/i.test(ROOT)) ? "https://USER.github.io/REPO/" : ROOT;
     $$("[data-pages-url]").forEach(function (s) { s.textContent = pages; });
     $$("[data-pages-url-js]").forEach(function (s) {
       var tail = /links\.json/.test(s.textContent) ? "api/links.json" : "";

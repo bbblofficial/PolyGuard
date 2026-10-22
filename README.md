@@ -146,12 +146,19 @@ guard("censor", text="you are a k1r")["text"]         # "you are a ***"
 ```
 
 ```js
-import { Guard } from "./clients/js/unicollect-guard.js";   // browser + Node 18+
-const g = await Guard.fromStatusPage("https://<user>.github.io/<repo>/");
-const { decision } = await g.check("to khar hasti");
+const BASE = (await (await fetch("https://<user>.github.io/<repo>/api/links.json")).json()).base_url;
+const r = await fetch(`${BASE}/api/v1/check`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: "to khar hasti" }),
+});
+console.log((await r.json()).decision);
 ```
 
-`clients/curl-examples.sh <base_url> [api_key]` calls every endpoint.
+```bash
+BASE=$(curl -s https://<user>.github.io/<repo>/api/links.txt)
+curl -X POST "$BASE/api/v1/check" -H "Content-Type: application/json" -d '{"text":"salam khoobi"}'
+```
 
 ## Live link via GitHub Pages
 
@@ -263,8 +270,6 @@ app/fingilish.py                 Fingilish detection, transliteration, insult fi
 app/static/                      Guard web panel
 pages/                           Public site + chat + API docs + 404 (GitHub Pages and /site on the service)
 pages/api/links.json             Placeholder, overwritten with the live link on gh-pages
-clients/js/                      JS client (browser + Node)
-clients/curl-examples.sh         Every endpoint with curl
 scripts/publish_status.sh        Publishes site + links.json + links.txt to gh-pages
 scripts/sync_chat.py             Copies the chat panel (app/static) into pages/chat + pages/assets/chat.*
 scripts/download_models.py       Downloads the 5 models
