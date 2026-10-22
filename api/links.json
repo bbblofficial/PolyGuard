@@ -1,130 +1,130 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://fiber-cornell-cannon-lace.trycloudflare.com",
+  "status": "offline",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://fiber-cornell-cannon-lace.trycloudflare.com",
-    "api": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1",
-    "health": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/health",
-    "swagger": "https://fiber-cornell-cannon-lace.trycloudflare.com/docs",
-    "redoc": "https://fiber-cornell-cannon-lace.trycloudflare.com/redoc",
-    "openapi": "https://fiber-cornell-cannon-lace.trycloudflare.com/openapi.json",
-    "guide": "https://fiber-cornell-cannon-lace.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://fiber-cornell-cannon-lace.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-21T22:45:29+00:00",
+  "updated_at": "2026-10-22T03:47:34+00:00",
   "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39688556044",
   "run_number": 103,
   "commit": "fd01c58"
