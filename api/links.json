@@ -1,130 +1,130 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://protocols-lasting-weed-boom.trycloudflare.com",
+  "status": "offline",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://protocols-lasting-weed-boom.trycloudflare.com",
-    "api": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1",
-    "health": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/health",
-    "swagger": "https://protocols-lasting-weed-boom.trycloudflare.com/docs",
-    "redoc": "https://protocols-lasting-weed-boom.trycloudflare.com/redoc",
-    "openapi": "https://protocols-lasting-weed-boom.trycloudflare.com/openapi.json",
-    "guide": "https://protocols-lasting-weed-boom.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://protocols-lasting-weed-boom.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-23T11:30:23+00:00",
+  "updated_at": "2026-10-23T16:32:26+00:00",
   "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39946305817",
   "run_number": 109,
   "commit": "c85bd88"
