@@ -1,130 +1,130 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://milwaukee-doom-shelf-visits.trycloudflare.com",
+  "status": "offline",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://milwaukee-doom-shelf-visits.trycloudflare.com",
-    "api": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1",
-    "health": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/health",
-    "swagger": "https://milwaukee-doom-shelf-visits.trycloudflare.com/docs",
-    "redoc": "https://milwaukee-doom-shelf-visits.trycloudflare.com/redoc",
-    "openapi": "https://milwaukee-doom-shelf-visits.trycloudflare.com/openapi.json",
-    "guide": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://milwaukee-doom-shelf-visits.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-23T06:01:47+00:00",
+  "updated_at": "2026-10-23T11:03:26+00:00",
   "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/39908849426",
   "run_number": 108,
   "commit": "c85bd88"
