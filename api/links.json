@@ -1,131 +1,131 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://shows-genuine-sum-grand.trycloudflare.com",
+  "status": "starting",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://shows-genuine-sum-grand.trycloudflare.com",
-    "api": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1",
-    "health": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/health",
-    "swagger": "https://shows-genuine-sum-grand.trycloudflare.com/docs",
-    "redoc": "https://shows-genuine-sum-grand.trycloudflare.com/redoc",
-    "openapi": "https://shows-genuine-sum-grand.trycloudflare.com/openapi.json",
-    "guide": "https://shows-genuine-sum-grand.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://shows-genuine-sum-grand.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-24T06:01:33+00:00",
-  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/40068413893",
-  "run_number": 112,
+  "updated_at": "2026-10-24T10:46:50+00:00",
+  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/40087259428",
+  "run_number": 113,
   "commit": "c85bd88"
 }
