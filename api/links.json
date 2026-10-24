@@ -1,131 +1,131 @@
 {
   "service": "unicollect-guard",
-  "status": "online",
-  "online": true,
-  "base_url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com",
+  "status": "starting",
+  "online": false,
+  "base_url": null,
   "links": {
-    "panel": "https://styles-rendering-sleeping-sponsors.trycloudflare.com",
-    "api": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1",
-    "health": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/health",
-    "swagger": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/docs",
-    "redoc": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/redoc",
-    "openapi": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/openapi.json",
-    "guide": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api-docs"
+    "panel": null,
+    "api": null,
+    "health": null,
+    "swagger": null,
+    "redoc": null,
+    "openapi": null,
+    "guide": null
   },
   "endpoints": [
     {
       "method": "GET",
       "path": "/api/v1",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/health",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/health"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/ready",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/ready"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/info",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/info"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/models",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/models"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/config",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/config"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/stats",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/stats"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/api/v1/check",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/check"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/check/batch",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/check/batch"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/verdict",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/verdict"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/score",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/score"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/sentences",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/sentences"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/censor",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/censor"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/moderations",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/moderations"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/profanity",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/profanity"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/language",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/language"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/detect",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/fingilish/detect"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/fingilish/transliterate",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/fingilish/transliterate"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/v1/normalize",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/v1/normalize"
+      "url": null
     },
     {
       "method": "POST",
       "path": "/api/check",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/api/check"
+      "url": null
     },
     {
       "method": "GET",
       "path": "/health",
-      "url": "https://styles-rendering-sleeping-sponsors.trycloudflare.com/health"
+      "url": null
     }
   ],
-  "updated_at": "2026-10-24T01:18:05+00:00",
-  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/40048551600",
-  "run_number": 111,
+  "updated_at": "2026-10-24T05:59:46+00:00",
+  "run_url": "https://github.com/bbblofficial/PolyGuard/actions/runs/40068413893",
+  "run_number": 112,
   "commit": "c85bd88"
 }
